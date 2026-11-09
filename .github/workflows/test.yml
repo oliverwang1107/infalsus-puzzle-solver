@@ -1,0 +1,17 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: 成品 infalsus_solver.html 必須是最新的（改完 src/ 或 data/ 要先 npm run build 再提交）
+        run: git diff --exit-code -- infalsus_solver.html

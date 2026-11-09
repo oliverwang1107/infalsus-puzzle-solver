@@ -1,0 +1,2184 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>In Falsus 製卡最佳化</title>
+<style>
+/* 工作台版面：頂端常駐列 + 狀態列 + 左側大板子 + 右側分頁（區域／粒子／結果／設定） */
+:root{
+  --bg:#0d1116; --panel:#141a21; --panel2:#1b2330; --raise:#222c3a; --line:#29323f;
+  --text:#e8eef5; --muted:#8996a6; --accent:#ff6aa8; --accent-ink:#240a16;
+  --good:#3fb97c; --warn:#e8b923; --bad:#ef5b61;
+  --c0:#e5484d; --c1:#e8b923; --c2:#2fb37a; --c3:#22b8e0; --c4:#a066f5;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Microsoft JhengHei","PingFang TC",system-ui,sans-serif}
+button,select,input,textarea{font:inherit;color:inherit}
+button,.btn{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+button:hover,.btn:hover{border-color:#44566d;background:var(--raise)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 16px}
+button.primary:hover{filter:brightness(1.08)}
+button.danger:hover{border-color:var(--bad);color:var(--bad)}
+button.ghost{background:transparent}
+input[type=text],input[type=number],select,textarea{background:#0f151b;border:1px solid var(--line);border-radius:7px;padding:4px 8px}
+input[type=number]{width:72px}
+.muted{color:var(--muted)}
+.hint{color:var(--muted);font-size:12px;margin:6px 0}
+.spacer{flex:1}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+svg{display:block}
+[hidden]{display:none!important}
+
+/* 頂端常駐列 */
+#topbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:20}
+.brand{font-weight:700;font-size:16px;letter-spacing:.2px;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fld{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
+#recipeSel{max-width:210px}
+#menu{position:absolute;right:14px;top:100%;margin-top:6px;width:300px;max-width:calc(100vw - 28px);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 12px 32px #000a}
+#menu .sec{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:2px;display:flex;flex-direction:column;gap:6px}
+#menu .row{display:flex;gap:6px}
+#menu .row input{flex:1;min-width:0}
+#menu button,#menu .btn{text-align:left}
+
+/* 狀態列 */
+#statusbar{display:flex;gap:8px;align-items:center;padding:6px 14px;background:#10161d;border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+.chip{border-radius:99px;padding:2px 11px;font-size:12px;border:1px solid var(--line);background:transparent}
+.chip.ok{border-color:#2a6a4c;color:#7fe3ae}
+.chip.warn{border-color:#7a6217;color:var(--warn)}
+.chip.bad{border-color:#7a2d32;color:#ff9aa0}
+#progress{font-size:12px;color:var(--muted);margin-left:6px}
+#barBox{width:90px;height:4px;background:var(--panel2);border-radius:4px;overflow:hidden;flex:none}
+#barBox i{display:block;height:100%;width:35%;background:var(--accent);animation:slide 1.1s infinite ease-in-out}
+@keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+@media(prefers-reduced-motion:reduce){#barBox i{animation:none;width:100%}}
+
+/* 工作區 */
+#workspace{display:grid;grid-template-columns:minmax(0,1fr) 440px;min-height:0}
+#boardPane{display:flex;flex-direction:column;min-width:0;min-height:0;padding:10px 12px;gap:8px}
+.board-head{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;padding:5px 14px}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.chk{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px;cursor:pointer}
+#editTools{display:flex;gap:6px 8px;align-items:center;flex-wrap:wrap;padding:6px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;width:100%}
+.tools{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.tool{display:inline-flex;align-items:center;gap:6px;padding:3px 9px}
+.tool.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.board-wrap{position:relative;flex:1;min-height:0;display:flex}
+#board{flex:1;width:100%;min-height:340px;touch-action:none;background:#0a0e12;border-radius:10px;border:1px solid var(--line);user-select:none}
+#boardHint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:#0a0e12cc;border-radius:6px;padding:2px 8px;pointer-events:none}
+#resultBadge{position:absolute;right:10px;top:10px;background:#141a21ee;border:1px solid var(--accent);border-radius:10px;padding:6px 12px;font-size:13px;pointer-events:none}
+#resultBadge b{font-size:20px;color:var(--accent)}
+#guide{position:absolute;left:12px;right:12px;top:12px;max-width:440px;background:#141a21f2;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px #0009}
+#guide ol{margin:6px 0 10px;padding-left:20px}
+#guide li{margin:3px 0}
+
+/* 右側分頁 */
+#sidePane{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-left:1px solid var(--line)}
+#tabs{display:flex;border-bottom:1px solid var(--line)}
+#tabs button{flex:1;border:0;border-radius:0;background:transparent;padding:9px 6px;color:var(--muted);border-bottom:2px solid transparent}
+#tabs button.on{color:var(--text);border-bottom-color:var(--accent);background:var(--panel2)}
+#tabs .bd{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:99px;font-size:11px;background:var(--raise);color:var(--muted)}
+#tabs .bd.warn{background:#4a3b0c;color:var(--warn)}
+#sideBody{flex:1;min-height:0;overflow:auto;padding:12px 14px}
+.sechead{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:700}
+
+/* 區域 */
+.zrow{display:grid;grid-template-columns:62px 48px 1fr 1fr;gap:6px;align-items:center;padding:6px 8px;border:1px solid transparent;border-bottom-color:var(--line);border-radius:8px;cursor:pointer}
+.zrow.sel{background:var(--panel2);border-color:var(--accent)}
+.zrow:hover{background:var(--panel2)}
+.zrow .zname{display:flex;align-items:center;gap:6px}
+.zrow label{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px}
+.zrow input{width:100%;min-width:0}
+.zwarn{grid-column:1/-1;font-size:12px;color:var(--warn)}
+.zextra{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.zextra .zwaive{white-space:nowrap}
+.zextra .zwaive input{width:44px;padding:2px 4px;font-size:12px}
+.zextra .zwaive.on{color:var(--good)}
+.zextra .zwaive select{width:auto;padding:2px 2px;margin:0 3px;font-size:12px}
+.zextra .zmust{display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;color:var(--muted);font-size:12px;padding:2px 8px;border:1px solid var(--line);border-radius:99px}
+.zextra .zmust input{width:auto}
+.zextra .zmust.on{color:#1b1200;background:var(--warn);border-color:var(--warn);font-weight:700}
+.zextra .znote{flex:1;min-width:0;padding:2px 6px;font-size:12px}
+.zrow.must{border-left:3px solid var(--warn)}
+#zoneQuick{width:100%;height:84px;resize:vertical;font-size:13px}
+
+/* 粒子庫存 */
+.cgroup{margin:12px 0 4px}
+.cgroup.off .tile{opacity:.4}
+.chead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.cswitch{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700}
+.chead .muted{font-size:12px}
+.chead button{padding:1px 8px;font-size:12px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:6px}
+.tile{display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#10161d;border:1px solid var(--line);border-radius:9px;min-width:0}
+.tile.on{border-color:var(--accent);background:#1a1420}
+.thead{display:flex;align-items:center;gap:7px;cursor:pointer;min-height:34px}
+.thead .tt{font-size:12px;line-height:1.25}
+.tile input[type=text]{width:100%;padding:2px 6px;font-size:12px}
+.tile .meta{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:4px;align-items:center}
+.tile .meta button{padding:0 6px;font-size:11px}
+.tile .off{font-size:11px;color:var(--muted)}
+
+/* 結果 */
+.runrow{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;background:#10161d}
+.runrow.sel{border-color:var(--accent);background:#1a1420}
+.runrow .nm{font-weight:700}
+.runrow .st{grid-column:1/-1;font-size:11px;color:var(--muted)}
+.runrow b.best{color:var(--accent)}
+.big{font-size:16px;margin:2px 0 8px}
+.big b{font-size:26px;color:var(--accent)}
+table.kv{border-collapse:collapse;width:100%;margin:6px 0 10px}
+table.kv td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+.pill.ok{border-color:var(--good);color:var(--good)}
+.pill.warn{border-color:var(--warn);color:var(--warn)}
+.pill.bad{border-color:var(--bad,#ff6b6b);color:var(--bad,#ff6b6b)}
+.piece{display:grid;grid-template-columns:28px auto 1fr;gap:10px;align-items:center;padding:5px 4px;border-bottom:1px solid var(--line);border-radius:6px}
+.piece:hover{background:var(--panel2)}
+.badge{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#111;font-size:12px}
+.msg{padding:9px 12px;border-radius:8px;background:#2a1a1e;border:1px solid #5a2a33;color:#ffb3bd;margin:8px 0;font-size:13px}
+
+/* 設定 */
+.set{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.set .sub{grid-column:1/-1;color:var(--muted);font-size:12px;margin-top:-4px}
+
+/* 彈出視窗與提示 */
+.modal{position:fixed;inset:0;background:#000b;z-index:60;display:grid;place-items:center;padding:16px}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;width:100%;max-width:1000px;max-height:94vh;overflow:auto}
+#shapeModal .modal-box{max-width:620px}
+.shot-wrap{background:#000;border-radius:8px;overflow:auto;max-height:58vh;margin:8px 0;border:1px solid var(--line)}
+#shotCanvas{display:block;max-width:100%;height:auto}
+.presets{display:flex;flex-wrap:wrap;gap:4px;max-width:330px;max-height:210px;overflow:auto}
+.presets button{padding:2px;background:#0b0f13}
+.tabs2{display:flex;gap:4px;margin-bottom:6px}
+.tabs2 button.on{border-color:var(--accent)}
+.sw{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.sw.on{border-color:#fff}
+#fabRun{position:fixed;right:14px;bottom:16px;z-index:40;box-shadow:0 8px 24px #000a;padding:10px 22px;border-radius:99px;display:none}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;background:#1b2330;border:1px solid var(--line);border-radius:10px;padding:9px 16px;box-shadow:0 10px 30px #000a;max-width:92vw}
+#toast.bad{border-color:var(--bad)}
+#toast.good{border-color:var(--good)}
+
+/* 桌面：整頁固定高度，板子與右側面板各自捲動；手機：直向堆疊 */
+@media(min-width:901px){
+  html,body{height:100%}
+  body{display:flex;flex-direction:column;overflow:hidden}
+  #workspace{flex:1}
+}
+@media(max-width:900px){
+  #fabRun{display:block}
+  #workspace{display:block}
+  #boardPane{padding:8px}
+  .board-wrap{height:56vh;flex:none}
+  #sidePane{border-left:0;border-top:1px solid var(--line)}
+  #sideBody{overflow:visible}
+  .brand small{display:none}
+}
+</style>
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">In Falsus 製卡最佳化<small>板子 + 粒子庫存 → 最佳擺放</small></div>
+  <div class="grp">
+    <select id="recipeSel" title="選配方"></select>
+    <button id="btnRecipeLoad" title="載入所選配方（板子＋粒子數上限）">載入</button>
+    <button id="btnImportShot" title="選一張遊戲「製作卡牌」畫面的截圖自動辨識板子（也可以直接 Ctrl+V 貼上，或把圖片拖到板子上）">📷 截圖匯入</button>
+    <input type="file" id="shotFile" accept="image/*" hidden>
+  </div>
+  <div class="grp">
+    <label class="fld">粒子上限<input type="number" id="sLimit" min="1" max="20"></label>
+    <label class="fld">目標<select id="sGoal"><option value="balanced">平衡（攻＋防）</option><option value="atk">攻擊特化</option><option value="def">防禦特化</option><option value="custom">自訂權重</option></select></label>
+  </div>
+  <div class="grp">
+    <button id="btnRun" class="primary" title="開始求解（Ctrl+Enter）">▶ 求解</button>
+    <button id="btnCompare" title="分別用「平衡／攻擊特化／防禦特化」各算一次，在『結果』分頁並排比較">三種目標比較</button>
+    <button id="btnStop" disabled title="停止（Esc）">■ 停止</button>
+  </div>
+  <div class="spacer"></div>
+  <button id="btnMenu" aria-haspopup="true" aria-expanded="false">⋯ 更多</button>
+  <div id="menu" hidden>
+    <div class="sec">
+      <b>配方存檔</b>
+      <div class="row"><input type="text" id="recipeName" placeholder="配方名稱，例如：終焉盡頭"><button id="btnRecipeSave">儲存目前板子</button></div>
+      <button id="btnRecipeDel" class="danger">刪除上方所選的「我的存檔」</button>
+    </div>
+    <button id="btnDemo">載入示範板子</button>
+    <button id="btnExport">匯出全部資料</button>
+    <button id="btnExportParticles">只匯出粒子庫存</button>
+    <label class="btn">匯入資料（板子／粒子庫存／全部）<input type="file" id="fileImport" accept=".json,application/json" hidden></label>
+    <button id="btnReset" class="danger">還原成初始狀態</button>
+  </div>
+</header>
+
+<div id="statusbar">
+  <button class="chip" id="chipBoard"></button>
+  <button class="chip" id="chipZones"></button>
+  <button class="chip" id="chipStacks"></button>
+  <span id="progress"></span><div id="barBox" hidden><i></i></div>
+</div>
+
+<div id="workspace">
+  <section id="boardPane">
+    <div class="board-head">
+      <div class="seg" role="group" aria-label="板子模式"><button id="modeView" title="檢視：拖曳平移、滾輪縮放、點區域選取（不會誤改板子）">檢視</button><button id="modeEdit" title="編輯：塗色修改板子">編輯板子</button></div>
+      <span class="spacer"></span>
+      <label class="chk"><input type="checkbox" id="showPieces" checked>顯示擺放</label>
+      <button id="btnZoomOut" title="縮小">－</button><button id="btnZoomIn" title="放大">＋</button><button id="btnFit" title="把畫面移到板子內容">置中</button>
+    </div>
+    <div id="editTools" hidden>
+      <div class="tools" id="tools"></div>
+      <select id="groupSel" title="同色相鄰但屬於不同區域時，用不同的區域標籤分開"></select>
+      <span class="spacer"></span>
+      <button id="btnUndo" title="復原（Ctrl+Z）">↶ 復原</button>
+      <button id="btnClearBoard" class="danger">清空板子</button>
+    </div>
+    <div class="board-wrap">
+      <svg id="board"></svg>
+      <div id="resultBadge" hidden></div>
+      <div id="guide" hidden>
+        <b>快速開始</b>
+        <ol>
+          <li>上方選一個<b>配方</b>按「載入」，或用 <b>📷 截圖匯入</b>、把截圖拖到板子上。</li>
+          <li>右側「區域」分頁填各區域的<b>攻擊／防禦</b>（點板子上的區域也能跳過去）。</li>
+          <li>檢查「粒子」分頁，按上方 <b>▶ 求解</b>，擺放結果會直接畫在這張板子上。</li>
+        </ol>
+        <button id="btnGuideOk" class="primary">知道了</button>
+      </div>
+      <div id="boardHint"></div>
+    </div>
+  </section>
+
+  <aside id="sidePane">
+    <nav id="tabs">
+      <button data-tab="zones">區域<span class="bd" id="bdZones"></span></button>
+      <button data-tab="stacks">粒子<span class="bd" id="bdStacks"></span></button>
+      <button data-tab="result">結果<span class="bd" id="bdResult"></span></button>
+      <button data-tab="settings">設定</button>
+    </nav>
+    <div id="sideBody">
+      <div class="tabpage" id="tab-zones">
+        <p class="hint">在遊戲裡把滑鼠移到色彩區域上會顯示「攻擊力 +x／防禦力 +y」，填在這裡。Enter 跳到下一格；區域編號由左到右。</p>
+        <div id="zoneList"></div>
+        <details style="margin-top:10px">
+          <summary class="muted" style="cursor:pointer;font-size:12px">快速輸入（一次貼上多個區域）</summary>
+          <p class="hint">每行一個區域，依 Z1、Z2… 的順序，寫「攻擊 防禦」；只寫一個數字代表攻防相同。空白、逗號、斜線都可以分隔。</p>
+          <textarea id="zoneQuick" placeholder="200 2000&#10;300&#10;150, 150"></textarea>
+          <div class="row-inline" style="display:flex;gap:8px;margin-top:6px"><button id="btnZoneQuick">套用到各區域</button><button id="btnZoneZero" class="ghost">全部歸零</button></div>
+        </details>
+      </div>
+
+      <div class="tabpage" id="tab-stacks" hidden>
+        <div class="grp" style="margin-bottom:4px">
+          <select id="presetSet" title="預設粒子庫存"></select>
+          <button id="btnPresetAll" title="把這一組的粒子全部加入；已有的會改成這一組的效能與數量">全部加入</button>
+          <button id="btnPresetNone" title="移除庫存裡和這一組形狀相同的粒子">全部移除</button>
+        </div>
+        <p class="hint" id="presetNote"></p>
+        <p class="hint">點圖塊上方的形狀加入／移除；加入後可直接改效能（寫「效能x數量」，例如 <code>133x3, 120x10</code>）。顏色旁的開關決定<b>這次求解要不要用該色</b>。</p>
+        <div id="invGrid"></div>
+        <div class="grp" style="margin-top:10px"><button id="btnAddStack">＋ 自訂粒子（自己畫形狀）</button></div>
+      </div>
+
+      <div class="tabpage" id="tab-result" hidden>
+        <div class="sechead">求解記錄<span class="spacer"></span><button id="btnClearRuns" class="ghost" title="清除所有求解記錄">清除</button></div>
+        <div id="runList"></div>
+        <div id="result"></div>
+      </div>
+
+      <div class="tabpage" id="tab-settings" hidden>
+        <div class="set">
+          <label for="sRot">允許旋轉粒子</label><input type="checkbox" id="sRot">
+          <div class="sub">遊戲中的粒子不能旋轉，所以預設不勾選：形狀要照遊戲裡粒子的原樣方向畫。</div>
+          <label for="sOv">允許粒子重疊（會吃懲罰）</label><input type="checkbox" id="sOv">
+          <label for="sCap">懲罰上限（倍率 = 1−(P/上限)²）</label><input type="number" id="sCap" min="1" max="20">
+          <label for="sTable">自訂倍率表（選填，百分比）</label><input type="text" id="sTable" placeholder="例：100, 89, 56" style="width:150px">
+          <div class="sub" id="tablePreview"></div>
+          <div class="sub" id="goalHint"></div>
+          <label for="sWA">自訂權重：攻擊力</label><input type="number" id="sWA" min="0" step="0.1">
+          <label for="sWD">自訂權重：防禦力</label><input type="number" id="sWD" min="0" step="0.1">
+          <label for="sTime">搜尋時間上限（秒）</label><input type="number" id="sTime" min="1" max="3600">
+          <div class="sub">「三種目標比較」會把這個時間平分給三次計算。</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div id="shotModal" class="modal" hidden>
+  <div class="modal-box">
+    <h2 style="margin:0 0 4px;font-size:16px">📷 從截圖匯入板子</h2>
+    <div id="shotMsg" class="hint"></div>
+    <div class="shot-wrap"><canvas id="shotCanvas"></canvas></div>
+    <div class="grp">
+      <span class="muted" style="font-size:12px">格距(px)</span><input type="number" id="shotD" step="0.1" min="10">
+      <button id="btnShotRedo" title="格距偵測不準時，手動填格距再重新偵測">以此格距重新偵測</button>
+      <span class="spacer"></span>
+      <button id="btnShotCancel">取消</button>
+      <button id="btnShotOk" class="primary" disabled>匯入到板子</button>
+    </div>
+    <p class="hint">灰點＝空白區、彩色點＝色彩區域。被遊戲提示框（滑鼠停在區域上跳出的攻擊／防禦數字）蓋住的格子偵測不到，截圖前請先把滑鼠移開。匯入後可按「復原」，也能在編輯模式修正。</p>
+  </div>
+</div>
+
+<div id="shapeModal" class="modal" hidden>
+  <div class="modal-box"><div id="shapeEditor"></div></div>
+</div>
+
+<button id="fabRun" class="primary" title="開始求解">▶ 求解</button>
+<div id="toast" hidden></div>
+
+<script id="solver-src">/*
+ * In Falsus 製作卡牌 — 最佳擺放求解器
+ *
+ * 座標：六角格軸向座標 (q, r)，平頂六角形（欄位垂直排列）。
+ * 顏色：0 紅、1 黃、2 綠、3 藍、4 紫。
+ *
+ * 計分公式（由遊戲實測，見 notes_cards_and_crafting.md）：
+ *   基礎攻/防 = 「已填滿的色彩區域」的攻/防加總
+ *   最終攻/防 = 基礎 × (平均粒子效能 / 100) × 懲罰倍率
+ *   懲罰倍率  = 1 - (P / penaltyCap)^2   （P >= penaltyCap 時為 0，無法製作）
+ *   P = 過載 + 超界 + 重疊 + 乖離
+ *     過載 = max(0, 使用粒子數 - 粒子數上限)
+ *     重疊 = 被多顆粒子覆蓋的格子數
+ *     乖離 = 互不相連的粒子群數 - 1
+ *   區域填滿 = 區域內每一格都被「同色」粒子覆蓋
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.InfalsusSolver = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const NEIGH = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+  const MUST_EPS = 1e-6; // 必觸發區域的最小價值（比任何實際的攻防數值都小）
+  const key = (q, r) => q + ',' + r;
+  const rot60 = (c) => [-c[1], c[0] + c[1]];
+
+  function pop32(x) {
+    x = x - ((x >>> 1) & 0x55555555);
+    x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
+    return Math.imul((x + (x >>> 4)) & 0x0f0f0f0f, 0x01010101) >>> 24;
+  }
+
+  function normalize(cells) {
+    let mq = Infinity, mr = Infinity;
+    for (const c of cells) { if (c[0] < mq) mq = c[0]; if (c[1] < mr) mr = c[1]; }
+    const out = cells.map((c) => [c[0] - mq, c[1] - mr]);
+    out.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    return out;
+  }
+  const shapeKey = (cells) => cells.map((c) => c[0] + ',' + c[1]).join(';');
+
+  function orientations(cells, rotation) {
+    let cur = normalize(cells);
+    const seen = new Map();
+    const n = rotation ? 6 : 1;
+    for (let i = 0; i < n; i++) {
+      const k = shapeKey(cur);
+      if (!seen.has(k)) seen.set(k, cur);
+      cur = normalize(cur.map(rot60));
+    }
+    return [...seen.values()];
+  }
+
+  function expandEffs(effs) {
+    const out = [];
+    for (const e of effs || []) {
+      if (typeof e === 'number') out.push(e);
+      else if (e && typeof e.v === 'number') for (let i = 0; i < (e.n || 1); i++) out.push(e.v);
+    }
+    return out.filter((x) => x > 0);
+  }
+
+  /* ------------------------------------------------------------------ */
+  function prepare(prob) {
+    const st = Object.assign(
+      { limit: 6, rotation: true, allowOverlap: false, penaltyCap: 3, wAtk: 1, wDef: 1 },
+      prob.settings || {}
+    );
+    // 懲罰倍率：預設用實測公式 1-(P/cap)^2；也可傳 penaltyTable（倍率陣列，索引 = 懲罰次數 P，0~1）
+    let cap, multArr;
+    if (Array.isArray(st.penaltyTable) && st.penaltyTable.length) {
+      multArr = st.penaltyTable.slice();
+      cap = multArr.findIndex((m) => !(m > 0));
+      if (cap < 0) cap = multArr.length;
+    } else {
+      cap = st.penaltyCap; multArr = [];
+      for (let P = 0; P < cap; P++) multArr.push(1 - (P / cap) * (P / cap));
+    }
+    const multOf = (P) => (P >= cap ? 0 : multArr[P]);
+    const cells = prob.cells;
+    const N = cells.length;
+    const idx = new Map();
+    cells.forEach((c, i) => idx.set(key(c[0], c[1]), i));
+    const W = Math.max(1, (N + 31) >> 5);
+    const mk = () => new Int32Array(W);
+    const setBit = (m, i) => { m[i >> 5] |= 1 << (i & 31); };
+    const nbCell = cells.map((c) => {
+      const m = mk();
+      for (const d of NEIGH) { const j = idx.get(key(c[0] + d[0], c[1] + d[1])); if (j !== undefined) setBit(m, j); }
+      return m;
+    });
+    const expand = (m) => {
+      const out = mk();
+      for (let i = 0; i < N; i++) if (m[i >> 5] & (1 << (i & 31))) for (let w = 0; w < W; w++) out[w] |= nbCell[i][w];
+      return out;
+    };
+    // 區域特殊效果「免除懲罰」：區域填滿後，免除某「一種」懲罰的 waive 點（wtype：disc 乖離／over 過載／overlap 重疊）。
+    // 各種類各自扣到 0 為止，不會互相抵銷。
+    // WD／WO／WV = 各種類最多可能免除幾點（只算有同色粒子、有機會填滿的區域），用來放寬粒子數上限與剪枝上界
+    const colorsAvail = new Set();
+    for (const s of prob.stacks || []) if (s.cells && s.cells.length && expandEffs(s.effs).length) colorsAvail.add(s.color);
+    const waiveOf = (z) => Math.max(0, Math.floor(+z.waive || 0));
+    const wtypeOf = (z) => (z.wtype === 'over' || z.wtype === 'overlap' ? z.wtype : 'disc');
+    let WD = 0, WO = 0, WV = 0;
+    for (const z of prob.zones || []) {
+      if (!colorsAvail.has(z.color)) continue;
+      const w = waiveOf(z), t = wtypeOf(z);
+      if (t === 'over') WO += w; else if (t === 'overlap') WV += w; else WD += w;
+    }
+    // 只有「過載」的免除會讓粒子數上限變大（n − limit − 免除 < 懲罰上限）
+    const maxPieces = st.maxPieces || st.limit + Math.max(0, cap - 1) + WO;
+
+    const zones = (prob.zones || []).map((z) => {
+      const m = mk(); const ci = [];
+      for (const c of z.cells) {
+        const i = idx.get(key(c[0], c[1]));
+        if (i === undefined) throw new Error('區域格子不在板子上: ' + key(c[0], c[1]));
+        ci.push(i); setBit(m, i);
+      }
+      // must：一定要填滿的區域（例如要拿它的特殊效果）。價值為 0 時給一個極小的價值，讓搜尋仍會去填它
+      const must = !!z.must;
+      const u0 = st.wAtk * (z.atk || 0) + st.wDef * (z.def || 0);
+      return {
+        color: z.color, cells: ci, mask: m, size: ci.length, atk: z.atk || 0, def: z.def || 0,
+        u: must ? Math.max(u0, MUST_EPS) : u0, must, waive: waiveOf(z), wtype: wtypeOf(z), name: z.name || '',
+      };
+    });
+    const mustIdx = []; zones.forEach((z, i) => { if (z.must) mustIdx.push(i); });
+
+    // 合併「同色且同形（旋轉後相同）」的粒子堆疊
+    const mergedMap = new Map(); const M = [];
+    for (const s of prob.stacks || []) {
+      const effs = expandEffs(s.effs);
+      if (!effs.length || !s.cells || !s.cells.length) continue;
+      const ors = orientations(s.cells, st.rotation);
+      const canon = ors.map(shapeKey).sort()[0];
+      const k = s.color + '|' + canon;
+      let m = mergedMap.get(k);
+      if (!m) { m = { color: s.color, orients: ors, effs: [], names: [], size: s.cells.length }; mergedMap.set(k, m); M.push(m); }
+      m.effs.push(...effs);
+      if (s.name) m.names.push(s.name);
+    }
+    for (const m of M) { m.effs.sort((a, b) => b - a); if (m.effs.length > maxPieces) m.effs.length = maxPieces; }
+
+    // 產生所有合法擺放（所有格子都在板子上）
+    const PL = []; const byStack = M.map(() => []);
+    for (let s = 0; s < M.length; s++) {
+      for (const o of M[s].orients) {
+        const q0 = o[0][0], r0 = o[0][1];
+        for (let bi = 0; bi < N; bi++) {
+          const bq = cells[bi][0], br = cells[bi][1];
+          const ci = []; let ok = true;
+          for (const c of o) {
+            const j = idx.get(key(bq + c[0] - q0, br + c[1] - r0));
+            if (j === undefined) { ok = false; break; }
+            ci.push(j);
+          }
+          if (!ok) continue;
+          const mask = mk(), nb = mk();
+          for (const j of ci) { setBit(mask, j); for (let w = 0; w < W; w++) nb[w] |= nbCell[j][w]; }
+          for (let w = 0; w < W; w++) nb[w] &= ~mask[w];
+          const pl = { s, color: M[s].color, size: ci.length, cells: ci, mask, nb, lv: null };
+          byStack[s].push(PL.length);
+          PL.push(pl);
+        }
+      }
+    }
+    // 距離 d 以內（不含自身）的鄰近格遮罩，用於判斷「橋接」可行性
+    const nbOf = (p, d) => {
+      if (!p.lv) p.lv = [null, p.nb];
+      while (p.lv.length <= d) {
+        const prev = p.lv[p.lv.length - 1];
+        const e = expand(prev);
+        for (let w = 0; w < W; w++) e[w] = (e[w] | prev[w]) & ~p.mask[w];
+        p.lv.push(e);
+      }
+      return p.lv[d];
+    };
+
+    const coverBy = cells.map(() => [[], [], [], [], []]);
+    PL.forEach((p, pid) => { for (const c of p.cells) coverBy[c][p.color].push(pid); });
+    // 效能高的先試：好解會很快被找到，之後大部分分支能被上界剪掉（只影響速度，不影響正確性）
+    for (const row of coverBy) for (const lst of row) lst.sort((a, b) => M[PL[b].s].effs[0] - M[PL[a].s].effs[0] || PL[b].size - PL[a].size);
+
+    const maxSize = [1, 1, 1, 1, 1]; const hasColor = [false, false, false, false, false];
+    for (const m of M) { hasColor[m.color] = true; if (m.size > maxSize[m.color]) maxSize[m.color] = m.size; }
+    let effMax = 0; for (const m of M) if (m.effs[0] > effMax) effMax = m.effs[0];
+
+    // 搜尋順序：必觸發的區域先處理（不可略過，放不下的分支很快就會被剪掉），其餘依價值由大到小
+    const order = [];
+    zones.forEach((z, i) => { if ((z.u > 0 || z.must || z.waive > 0) && hasColor[z.color]) order.push(i); });
+    order.sort((a, b) => (zones[b].must - zones[a].must) || zones[b].u - zones[a].u || zones[a].size - zones[b].size);
+    // 必觸發的區域如果完全沒有同色粒子，一定無解
+    const mustMissing = mustIdx.filter((i) => !hasColor[zones[i].color]);
+
+    return {
+      st, cap, limit: st.limit, allowOverlap: !!st.allowOverlap, maxPieces, cells, N, W, idx, nbCell,
+      zones, M, PL, byStack, coverBy, maxSize, effMax, order, nbOf, mk, multOf, multArr, mustIdx, mustMissing, WD, WO, WV,
+    };
+  }
+
+  /* ------------------------------------------------------------------ */
+  // 獨立計分（用於驗證與最終報告）。pieces: [{color, cells:[板子格索引], eff}]
+  function scoreExplicit(S, pieces) {
+    const n = pieces.length;
+    const res = {
+      n, atk: 0, def: 0, completeZones: [], avg: 0, over: 0, overlap: 0, disc: 0, P: 0, waive: 0, waived: 0, Peff: 0, mult: 0,
+      finalAtk: 0, finalDef: 0, value: 0, valid: false, forcedMissing: S.mustIdx.slice(),
+    };
+    if (n === 0) return res;
+    const cnt = new Int32Array(S.N);
+    const colorCover = [0, 1, 2, 3, 4].map(() => new Uint8Array(S.N));
+    for (const p of pieces) for (const c of p.cells) { cnt[c]++; colorCover[p.color][c] = 1; }
+    for (let i = 0; i < S.N; i++) if (cnt[i] >= 2) res.overlap++;
+    S.zones.forEach((z, zi) => {
+      if (z.cells.every((c) => colorCover[z.color][c])) { res.completeZones.push(zi); res.atk += z.atk; res.def += z.def; }
+    });
+    // 連通性：兩顆粒子共用或相鄰格子 → 相連
+    const par = pieces.map((_, i) => i);
+    const find = (x) => { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+    let comps = n;
+    const cellSets = pieces.map((p) => new Set(p.cells));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      let touch = false;
+      outer: for (const a of pieces[i].cells) {
+        if (cellSets[j].has(a)) { touch = true; break; }
+        for (const d of NEIGH) {
+          const nj = S.idx.get(key(S.cells[a][0] + d[0], S.cells[a][1] + d[1]));
+          if (nj !== undefined && cellSets[j].has(nj)) { touch = true; break outer; }
+        }
+      }
+      if (touch) { const ri = find(i), rj = find(j); if (ri !== rj) { par[ri] = rj; comps--; } }
+    }
+    res.disc = comps - 1;
+    res.over = Math.max(0, n - S.limit);
+    res.P = res.over + res.overlap + res.disc;
+    // 已填滿的區域各自免除某一種懲罰 waive 點（每種最多免到 0）。P 是原始懲罰，Peff 才是用來查倍率的
+    const wb = { disc: 0, over: 0, overlap: 0 };
+    for (const zi of res.completeZones) wb[S.zones[zi].wtype] += S.zones[zi].waive;
+    const raw = { disc: res.disc, over: res.over, overlap: res.overlap };
+    res.waiveBy = wb; res.effBy = {};
+    res.waive = wb.disc + wb.over + wb.overlap;
+    res.waived = 0;
+    for (const t of ['disc', 'over', 'overlap']) { res.effBy[t] = Math.max(0, raw[t] - wb[t]); res.waived += raw[t] - res.effBy[t]; }
+    res.Peff = res.P - res.waived;
+    res.mult = S.multOf(res.Peff);
+    res.avg = pieces.reduce((a, p) => a + p.eff, 0) / n;
+    res.finalAtk = res.atk * (res.avg / 100) * res.mult;
+    res.finalDef = res.def * (res.avg / 100) * res.mult;
+    res.value = S.st.wAtk * res.finalAtk + S.st.wDef * res.finalDef;
+    // 必觸發的區域沒填滿 → 這個擺放不算數
+    res.forcedMissing = S.mustIdx.filter((zi) => res.completeZones.indexOf(zi) < 0);
+    if (res.forcedMissing.length) res.value = 0;
+    res.valid = res.mult > 0 && res.forcedMissing.length === 0;
+    return res;
+  }
+
+  // 給測試用：以座標直接計分
+  function evaluatePlacement(prob, pieces) {
+    const S = prepare(prob);
+    return scoreExplicit(S, pieces.map((p) => ({
+      color: p.color, eff: p.eff,
+      cells: p.cells.map((c) => { const i = S.idx.get(key(c[0], c[1])); if (i === undefined) throw new Error('格子不在板子上'); return i; }),
+    })));
+  }
+
+  /* ------------------------------------------------------------------ */
+  function solve(prob, opts) {
+    opts = opts || {};
+    const S = prepare(prob);
+    const { W, zones, M, PL, coverBy, byStack, cap, limit, allowOverlap, maxPieces, effMax, order, maxSize } = S;
+    const timeLimit = opts.timeLimitMs || 60000;
+    const t0 = Date.now();
+    let nodes = 0, stop = false, bestVal = 0, best = null, lastProg = t0;
+    const stats = { leaves: 0, tiles: 0, extrasCalls: 0, extrasCands: 0, pruneZone: 0, pruneTile: 0 };
+
+    const occ = new Int32Array(W), cov = new Int32Array(5 * W);
+    const snapOcc = [], snapCov = [];
+    for (let i = 0; i <= maxPieces + 1; i++) { snapOcc.push(new Int32Array(W)); snapCov.push(new Int32Array(5 * W)); }
+    const pcs = new Int32Array(maxPieces + 2), effOf = new Float64Array(maxPieces + 2), ovArr = new Int32Array(maxPieces + 2);
+    const used = new Int32Array(M.length);
+    let n = 0, sumEff = 0, ov = 0;
+
+    // 島嶼：板子上彼此不相鄰的連通塊。不同島嶼的粒子不可能相連（乖離懲罰的下界）
+    const islandOf = new Int32Array(S.N).fill(-1);
+    let nIsl = 0;
+    for (let i = 0; i < S.N; i++) {
+      if (islandOf[i] >= 0) continue;
+      const stk = [i]; islandOf[i] = nIsl;
+      while (stk.length) {
+        const c = stk.pop();
+        for (let j = 0; j < S.N; j++) if (islandOf[j] < 0 && (S.nbCell[c][j >> 5] & (1 << (j & 31)))) { islandOf[j] = nIsl; stk.push(j); }
+      }
+      nIsl++;
+    }
+    const islCnt = new Int32Array(nIsl); let activeIsl = 0;
+
+    // 剩餘庫存中效能最高的 K 顆（用於平均效能上界）
+    const gE = [], gS = [], gJ = [];
+    { const tmp = []; M.forEach((m, si) => m.effs.forEach((e, j) => tmp.push([e, si, j]))); tmp.sort((a, b) => b[0] - a[0] || a[2] - b[2]); for (const t of tmp) { gE.push(t[0]); gS.push(t[1]); gJ.push(t[2]); } }
+    // 去重用的 Zobrist 雜湊（52 位元）
+    let zs = 987654321; const zr = () => { zs = (Math.imul(zs, 1103515245) + 12345) & 0x7fffffff; return zs; };
+    const z1 = new Float64Array(PL.length), z2 = new Float64Array(PL.length);
+    for (let i = 0; i < PL.length; i++) { z1[i] = ((zr() << 11) ^ zr()) & 0x3ffffff; z2[i] = ((zr() << 11) ^ zr()) & 0x3ffffff; }
+
+    const multOf = S.multOf;
+    // 免除懲罰。lbEff(過載, 重疊, 乖離)：已知各項原始懲罰「至少」是這些時，最終有效懲罰的下界
+    // （各種類最多被免除 WO／WV／WD 點）；剪枝用。evalCurrent 則用目前已填滿的區域「實際」的免除點數。
+    const WD = S.WD, WO = S.WO, WV = S.WV, hasW = WD + WO + WV > 0;
+    const lbEff = (o, v, d) => Math.max(0, o - WO) + Math.max(0, v - WV) + Math.max(0, d - WD);
+    const waiveZ = zones.filter((z) => z.waive > 0);
+    const overlapOf = (p) => { let c = 0; for (let w = 0; w < W; w++) { const x = occ[w] & p.mask[w]; if (x) c += pop32(x); } return c; };
+    const touches = (p) => { for (let w = 0; w < W; w++) if (occ[w] & p.nb[w]) return true; return false; };
+
+    function apply(pid, ovl) {
+      const p = PL[pid];
+      snapOcc[n].set(occ); snapCov[n].set(cov);
+      const e = M[p.s].effs[used[p.s]];
+      pcs[n] = pid; effOf[n] = e; ovArr[n] = ovl;
+      used[p.s]++; sumEff += e; ov += ovl; n++;
+      if (islCnt[islandOf[p.cells[0]]]++ === 0) activeIsl++;
+      const base = p.color * W;
+      for (let w = 0; w < W; w++) { occ[w] |= p.mask[w]; cov[base + w] |= p.mask[w]; }
+    }
+    function undo() {
+      n--; const p = PL[pcs[n]];
+      used[p.s]--; sumEff -= effOf[n]; ov -= ovArr[n];
+      if (--islCnt[islandOf[p.cells[0]]] === 0) activeIsl--;
+      occ.set(snapOcc[n]); cov.set(snapCov[n]);
+    }
+
+    const zoneUncovered = (z) => { let c = 0; const b = z.color * W; for (let w = 0; w < W; w++) c += pop32(z.mask[w] & ~cov[b + w]); return c; };
+    const zoneDone = (z) => { const b = z.color * W; for (let w = 0; w < W; w++) if (z.mask[w] & ~cov[b + w]) return false; return true; };
+    const currentU = () => { let u = 0; for (let i = 0; i < zones.length; i++) { const z = zones[i]; if (z.u > 0 && zoneDone(z)) u += z.u; } return u; };
+
+    const par = new Int32Array(maxPieces + 2);
+    const compOf = new Int32Array(maxPieces + 2);
+    function components() {
+      for (let i = 0; i < n; i++) par[i] = i;
+      const find = (x) => { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+      let comps = n;
+      for (let i = 0; i < n; i++) {
+        const a = PL[pcs[i]];
+        for (let j = i + 1; j < n; j++) {
+          const b = PL[pcs[j]];
+          let t = false;
+          for (let w = 0; w < W; w++) if ((a.nb[w] & b.mask[w]) | (a.mask[w] & b.mask[w])) { t = true; break; }
+          if (t) { const ra = find(i), rb = find(j); if (ra !== rb) { par[ra] = rb; comps--; } }
+        }
+      }
+      for (let i = 0; i < n; i++) compOf[i] = find(i);
+      return comps;
+    }
+
+    function snapshot() { const a = []; for (let i = 0; i < n; i++) a.push({ pid: pcs[i], eff: effOf[i] }); return a; }
+    function describe(list) {
+      return list.map((x) => {
+        const p = PL[x.pid];
+        return { stack: p.s, names: M[p.s].names, color: p.color, size: p.size, eff: x.eff, cells: p.cells.slice(), qr: p.cells.map((c) => S.cells[c]) };
+      });
+    }
+
+    function evalCurrent() {
+      if (n === 0) return 0;
+      for (const zi of S.mustIdx) if (!zoneDone(zones[zi])) return 0;
+      const U = currentU();
+      if (U <= 0) return 0;
+      let wd = 0, wo = 0, wv = 0;
+      if (hasW) for (const z of waiveZ) if (zoneDone(z)) { if (z.wtype === 'over') wo += z.waive; else if (z.wtype === 'overlap') wv += z.waive; else wd += z.waive; }
+      const P = Math.max(0, Math.max(0, n - limit) - wo) + Math.max(0, ov - wv) + Math.max(0, components() - 1 - wd);
+      const v = (U * (sumEff / n) / 100) * multOf(P);
+      if (v > bestVal + 1e-9 || (v > 0 && Math.abs(v - bestVal) <= 1e-9 && best && n < best.length)) {
+        const improved = v > bestVal + 1e-9;
+        bestVal = v; best = snapshot();
+        if (improved && opts.onImprove) opts.onImprove({ value: v, pieces: describe(best), ms: Date.now() - t0, nodes });
+      }
+      return v;
+    }
+
+    // 再多放 K 顆（取剩餘庫存中最好的）時，平均效能的上界。skipS/skipJ：略過某一顆（已被假設放下）
+    function avgUBk(nNow, sNow, K, skipS, skipJ) {
+      let b = nNow ? sNow / nNow : 0;
+      let sum = sNow, cnt = nNow, taken = 0;
+      for (let i = 0; i < gE.length && taken < K; i++) {
+        const si = gS[i], j = gJ[i];
+        if (j < used[si] || (si === skipS && j === skipJ)) continue;
+        sum += gE[i]; cnt++; taken++;
+        const a = sum / cnt; if (a > b) b = a;
+      }
+      return b;
+    }
+    const pndNow = () => lbEff(Math.max(0, n - limit), ov, Math.max(0, activeIsl - 1));
+    const ubValue = (Uopt, nNow, sNow, Pnd) => Uopt * avgUBk(nNow, sNow, maxPieces - nNow, -1, -1) / 100 * multOf(Pnd);
+
+    // 剩餘區域的價值上界（背包）。同色區域「合併」計算所需粒子數：
+    // 一顆粒子可以同時蓋住相鄰的兩個同色區域，所以不能各自進位後再加總。
+    // forced：必須選入的區域（正在鋪的那個），回傳 -Infinity 表示放不下。
+    const colTmp = [[], [], [], [], []];
+    const dpA = new Float64Array(maxPieces + 2), dpB = new Float64Array(maxPieces + 2), tb = new Float64Array(maxPieces + 2);
+    function knap(zi, budget, forced) {
+      if (budget < 0) return -Infinity;
+      for (let c = 0; c < 5; c++) colTmp[c].length = 0;
+      for (let k = zi; k < order.length; k++) {
+        const zid = order[k], z = zones[zid];
+        const unc = zoneUncovered(z);
+        if (unc === 0) continue;
+        colTmp[z.color].push(z.u, unc, (zid === forced || z.must) ? 1 : 0);
+      }
+      dpA.fill(0, 0, budget + 1);
+      for (let c = 0; c < 5; c++) {
+        const L = colTmp[c]; const m = L.length / 3;
+        if (!m) continue;
+        let fmask = 0; for (let i = 0; i < m; i++) if (L[i * 3 + 2]) fmask |= 1 << i;
+        tb.fill(-Infinity, 0, budget + 1);
+        for (let mask = 0; mask < (1 << m); mask++) {
+          if ((mask & fmask) !== fmask) continue;
+          let su = 0, sc = 0;
+          for (let i = 0; i < m; i++) if (mask & (1 << i)) { su += L[i * 3]; sc += L[i * 3 + 1]; }
+          const kk = sc ? Math.ceil(sc / maxSize[c]) : 0;
+          if (kk <= budget && su > tb[kk]) tb[kk] = su;
+        }
+        for (let b = 0; b <= budget; b++) {
+          let bestv = -Infinity;
+          for (let kk = 0; kk <= b; kk++) { if (tb[kk] === -Infinity || dpA[b - kk] === -Infinity) continue; const v = dpA[b - kk] + tb[kk]; if (v > bestv) bestv = v; }
+          dpB[b] = bestv;
+        }
+        for (let b = 0; b <= budget; b++) dpA[b] = dpB[b];
+      }
+      return dpA[budget];
+    }
+
+    function tick() {
+      if ((++nodes & 1023) === 0) {
+        const t = Date.now();
+        if (t - t0 > timeLimit) stop = true;
+        if (opts.shouldStop && opts.shouldStop()) stop = true;
+        if (opts.onProgress && t - lastProg > 250) { lastProg = t; opts.onProgress({ nodes, ms: t - t0, best: bestVal }); }
+      }
+    }
+
+    function dfsZone(zi) {
+      if (stop) return;
+      tick();
+      if (zi === order.length) { if (n > 0) { stats.leaves++; evalCurrent(); extrasSearch(); } return; }
+      const z = zones[order[zi]];
+      const kn = knap(zi, maxPieces - n, -1);
+      // -Infinity：剩下必觸發的區域在粒子數上限內放不下
+      if (kn === -Infinity) { stats.pruneZone++; return; }
+      const ub = ubValue(currentU() + kn, n, sumEff, pndNow());
+      if (ub <= bestVal + 1e-9) { stats.pruneZone++; return; }
+      if (zoneDone(z)) { dfsZone(zi + 1); return; }
+      tile(zi);
+      if (!z.must) dfsZone(zi + 1); // 必觸發的區域不能略過
+    }
+
+    function tile(zi) {
+      if (stop) return;
+      const z = zones[order[zi]];
+      let c = -1;
+      for (const ci of z.cells) { if (!(cov[z.color * W + (ci >> 5)] & (1 << (ci & 31)))) { c = ci; break; } }
+      if (c < 0) { dfsZone(zi + 1); return; }
+      if (n >= maxPieces) return;
+      const need = Math.ceil(zoneUncovered(z) / maxSize[z.color]);
+      if (need > maxPieces - n) return;
+      const Ubase = currentU() + knap(zi, maxPieces - n, order[zi]);
+      if (!(Ubase > 0) || ubValue(Ubase, n, sumEff, pndNow()) <= bestVal + 1e-9) { stats.pruneTile++; return; }
+      stats.tiles++;
+      const lst = coverBy[c][z.color];
+      const restK = maxPieces - n - 1;
+      for (let k = 0; k < lst.length; k++) {
+        const pid = lst[k], p = PL[pid];
+        const si = p.s;
+        if (used[si] >= M[si].effs.length) continue;
+        const ovl = overlapOf(p);
+        if (ovl && !allowOverlap) continue;
+        const pc = lbEff(Math.max(0, n + 1 - limit), ov + ovl, Math.max(0, activeIsl - 1));
+        if (pc >= cap) continue;
+        // 前置過濾：放這顆之後，就算其餘都補到最好，也贏不了目前最佳 → 不展開
+        if (Ubase * avgUBk(n + 1, sumEff + M[si].effs[used[si]], restK, si, used[si]) / 100 * multOf(pc) <= bestVal + 1e-9) continue;
+        tick(); if (stop) return;
+        apply(pid, ovl);
+        tile(zi);
+        undo();
+      }
+    }
+
+    // 額外粒子：用來拉高平均效能、或把分離的粒子群接起來
+    function extrasSearch() {
+      const K = maxPieces - n;
+      if (K <= 0) return;
+      const ub = ubValue(currentU(), n, sumEff, pndNow());
+      if (ub <= bestVal + 1e-9) return;
+      stats.extrasCalls++;
+      extrasRec(K, new Set(), currentU(), 0, 0);
+    }
+    function extrasRec(K, visited, U, h1, h2) {
+      if (stop) return;
+      const comps = components();
+      const avg = sumEff / n;
+      const compMask = [];
+      if (comps > 1) {
+        const ids = new Map();
+        for (let i = 0; i < n; i++) {
+          if (!ids.has(compOf[i])) { ids.set(compOf[i], compMask.length); compMask.push(new Int32Array(W)); }
+          const m = compMask[ids.get(compOf[i])], pm = PL[pcs[i]].mask;
+          for (let w = 0; w < W; w++) m[w] |= pm[w];
+        }
+      }
+      const ord = [];
+      for (let s = 0; s < M.length; s++) if (used[s] < M[s].effs.length) ord.push(s);
+      ord.sort((a, b) => M[b].effs[used[b]] - M[a].effs[used[a]]);
+      const pAfter = lbEff(Math.max(0, n + 1 - limit), ov, Math.max(0, activeIsl - 1));
+      for (const s of ord) {
+        const e = M[s].effs[used[s]];
+        // 前置過濾：就算之後再補最好的粒子，也贏不過目前最佳 → 這種粒子不用試
+        if (U * avgUBk(n + 1, sumEff + e, K - 1, s, used[s]) / 100 * multOf(pAfter) <= bestVal + 1e-9) continue;
+        let plainDone = false, farDone = false;
+        for (const pid of byStack[s]) {
+          const p = PL[pid];
+          let hit = false;
+          for (let w = 0; w < W; w++) if (occ[w] & p.mask[w]) { hit = true; break; }
+          if (hit) continue;
+          let allowed = false;
+          if (touches(p)) {
+            if (comps === 1) {
+              if (e > avg && !plainDone) { allowed = true; plainDone = true; }
+            } else {
+              // 直接接合兩群 → 一定考慮；若還有 K-1 顆可補，距離夠近的鏈式橋接也考慮
+              let touched = 0, near = 0;
+              const reach = S.nbOf(p, Math.min(K, 5));
+              for (const cm of compMask) {
+                let t = false, t2 = false;
+                for (let w = 0; w < W; w++) { if (cm[w] & p.nb[w]) t = true; if (cm[w] & reach[w]) t2 = true; }
+                if (t) touched++; if (t2) near++;
+              }
+              if (touched >= 2) allowed = true;
+              else if (K >= 2 && near >= 2) allowed = true;
+              else if (e > avg && !plainDone) { allowed = true; plainDone = true; }
+            }
+          } else if (!farDone) { allowed = true; farDone = true; }
+          if (!allowed) continue;
+          tick(); if (stop) return;
+          stats.extrasCands++;
+          const nh1 = h1 ^ z1[pid], nh2 = h2 ^ z2[pid];
+          const sig = nh1 * 67108864 + nh2;
+          if (!visited.has(sig)) {
+            visited.add(sig);
+            apply(pid, 0);
+            evalCurrent();
+            if (K > 1 && ubValue(U, n, sumEff, pndNow()) > bestVal + 1e-9) extrasRec(K - 1, visited, U, nh1, nh2);
+            undo();
+          }
+        }
+      }
+    }
+
+    if (order.length && M.length && !S.mustMissing.length) dfsZone(0);
+
+    const pieces = best ? describe(best) : [];
+    const score = best ? scoreExplicit(S, pieces.map((p) => ({ color: p.color, cells: p.cells, eff: p.eff }))) : null;
+    // 有指定必觸發區域，卻找不到任何擺放：缺同色粒子，或（搜尋跑完時）在粒子數與懲罰限制內放不下
+    const forced = { zones: S.mustIdx.slice(), missing: S.mustMissing.slice() };
+    const infeasible = S.mustIdx.length > 0 && !best && (S.mustMissing.length > 0 || !stop);
+    return {
+      // value 取獨立計分的結果（搜尋內部為了讓「必觸發」的 0 價值區域仍會被填，加了極小的 MUST_EPS，不該出現在回報的數字裡）
+      stats, value: score ? score.value : 0, internal: bestVal, pieces, score, nodes, ms: Date.now() - t0, finished: !stop, forced, infeasible,
+      S: { zones: S.zones.map((z) => ({ color: z.color, atk: z.atk, def: z.def, size: z.size, must: z.must, waive: z.waive, wtype: z.wtype })) },
+    };
+  }
+
+  // 最佳化目標 → 攻擊／防禦權重。
+  // 特化 = 先求該項最大，該項相同時才比另一項（用極小的權重當次要條件）。
+  function goalWeights(goal, wAtk, wDef) {
+    const EPS = 0.001;
+    if (goal === 'atk') return { wAtk: 1, wDef: EPS };
+    if (goal === 'def') return { wAtk: EPS, wDef: 1 };
+    if (goal === 'custom') return { wAtk: wAtk, wDef: wDef };
+    return { wAtk: 1, wDef: 1 };
+  }
+  // 只保留被勾選顏色的粒子堆疊。useColors: 長度 5 的 boolean 陣列（紅黃綠藍紫）；缺省 = 全部使用
+  function filterColors(stacks, useColors) {
+    if (!Array.isArray(useColors)) return stacks;
+    return stacks.filter((s) => useColors[s.color] !== false);
+  }
+
+  return { solve, prepare, scoreExplicit, evaluatePlacement, orientations, normalize, rot60, NEIGH, goalWeights, filterColors };
+});
+</script>
+<script id="importer-src">/*
+ * 從製作畫面截圖偵測板子（純 JS，無相依；瀏覽器與 Node 都能跑）
+ *
+ * 輸入：{ width, height, data, channels }（data 為 RGB 或 RGBA 的位元組陣列）
+ * 輸出：{ cells: {"欄,列": t}, zones, counts, lattice, debug }
+ *   t：0 空白區（灰）、1 紅、2 黃、3 綠、4 藍、5 紫
+ *   座標與介面相同：平頂六角格、奇數欄下移半格。
+ *
+ * 做法
+ *   1. 格線週期：整張圖（含板外淡淡的格線）都是同一組六角格線，用「格線邊中點的高通亮度」對
+ *      格距與相位做搜尋，得到晶格。
+ *   2. 逐格取樣：格子內部顏色 + 邊框亮度，判斷是不是板上格子、什麼顏色。
+ *   3. 修正：被區域計數標籤（0/8 之類）蓋住格心的色格，用相鄰同色格回推。
+ *   4. 只保留「連到至少一個色格」的連通塊，丟掉畫面上其他 UI 被誤判的零星格子。
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.InfalsusImporter = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const SQ3 = Math.sqrt(3);
+  // 實測：2000×1250 的截圖，垂直相鄰格心距離 = 56 px
+  const D_RATIO = 56 / 1250;
+  const GRAY = 0;
+
+  // 色相 → 顏色代碼（1 紅、2 黃、3 綠、4 藍、5 紫）；飽和度不足 → 0
+  function classifyRGB(r, g, b) {
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sum = r + g + b;
+    if (mx - mn >= 38 && mx >= 48) {
+      let h;
+      const dlt = mx - mn;
+      if (mx === r) h = 60 * (((g - b) / dlt + 6) % 6);
+      else if (mx === g) h = 60 * ((b - r) / dlt + 2);
+      else h = 60 * ((r - g) / dlt + 4);
+      if (h >= 330 || h < 20) return 1;
+      if (h >= 30 && h < 85) return 2;
+      // 實測色相：紅 343–347、黃 68–71、綠（偏青綠）≈177、藍 197–200、紫 267–274
+      if (h >= 95 && h < 188) return 3;
+      if (h >= 188 && h < 225) return 4;
+      if (h >= 240 && h < 320) return 5;
+      return -1; // 其他色相：不確定
+    }
+    return sum > 110 && mx - mn < 38 ? GRAY : -1;
+  }
+
+  function detectBoard(img, opts) {
+    opts = opts || {};
+    const W = img.width, H = img.height, ch = img.channels || 4, px = img.data;
+    const N = W * H;
+
+    /* ---------- 1. 高通亮度（線條強度） ---------- */
+    const lum = new Float32Array(N);
+    for (let i = 0, p = 0; i < N; i++, p += ch) lum[i] = 0.299 * px[p] + 0.587 * px[p + 1] + 0.114 * px[p + 2];
+    const iw = W + 1;
+    const integ = new Float64Array(iw * (H + 1));
+    for (let y = 0; y < H; y++) {
+      let row = 0;
+      for (let x = 0; x < W; x++) { row += lum[y * W + x]; integ[(y + 1) * iw + x + 1] = integ[y * iw + x + 1] + row; }
+    }
+    const E0 = new Float32Array(N);
+    const rad = 4;
+    for (let y = 0; y < H; y++) {
+      const y0 = Math.max(0, y - rad), y1 = Math.min(H - 1, y + rad);
+      for (let x = 0; x < W; x++) {
+        const x0 = Math.max(0, x - rad), x1 = Math.min(W - 1, x + rad);
+        const s = integ[(y1 + 1) * iw + x1 + 1] - integ[y0 * iw + x1 + 1] - integ[(y1 + 1) * iw + x0] + integ[y0 * iw + x0];
+        const v = lum[y * W + x] - s / ((x1 - x0 + 1) * (y1 - y0 + 1));
+        E0[y * W + x] = v > 0 ? v : 0;
+      }
+    }
+    // 3×3 最大值（容許半像素以內的誤差）
+    const Eh = new Float32Array(N), E = new Float32Array(N);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      let m = E0[y * W + x];
+      if (x > 0 && E0[y * W + x - 1] > m) m = E0[y * W + x - 1];
+      if (x < W - 1 && E0[y * W + x + 1] > m) m = E0[y * W + x + 1];
+      Eh[y * W + x] = m;
+    }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      let m = Eh[y * W + x];
+      if (y > 0 && Eh[(y - 1) * W + x] > m) m = Eh[(y - 1) * W + x];
+      if (y < H - 1 && Eh[(y + 1) * W + x] > m) m = Eh[(y + 1) * W + x];
+      E[y * W + x] = m;
+    }
+
+    /* ---------- 2. 晶格搜尋 ---------- */
+    const roi = { x0: 0.18 * W, x1: 0.82 * W, y0: 0.1 * H, y1: 0.85 * H };
+    function score(d, ox, oy) {
+      const R = d / SQ3, pxs = 1.5 * R, a = d / 2, hx = 0.75 * R, hy = d / 4;
+      let sum = 0, cnt = 0;
+      const iMin = Math.floor((roi.x0 - ox) / pxs) - 1, iMax = Math.ceil((roi.x1 - ox) / pxs) + 1;
+      for (let i = iMin; i <= iMax; i++) {
+        const cx = ox + pxs * i, off = (i & 1) ? d / 2 : 0;
+        const jMin = Math.floor((roi.y0 - oy - off) / d) - 1, jMax = Math.ceil((roi.y1 - oy - off) / d) + 1;
+        for (let j = jMin; j <= jMax; j++) {
+          const cy = oy + d * j + off;
+          if (cx - hx < roi.x0 || cx + hx > roi.x1 || cy < roi.y0 || cy + a > roi.y1) continue;
+          sum += E[Math.round(cy + a) * W + Math.round(cx)]
+               + E[Math.round(cy + hy) * W + Math.round(cx + hx)]
+               + E[Math.round(cy + hy) * W + Math.round(cx - hx)];
+          cnt += 3;
+        }
+      }
+      return cnt ? sum / cnt : 0;
+    }
+    if (opts.probe) opts.probe({ score, E, W, H });
+    const d0 = D_RATIO * H;
+    let best = { s: -1, d: d0, ox: 0, oy: 0 };
+    const dLo = opts.d ? opts.d : d0 * 0.7, dHi = opts.d ? opts.d : d0 * 1.3, dStep = opts.d ? 1 : Math.max(0.75, d0 / 56);
+    for (let d = dLo; d <= dHi + 1e-9; d += dStep) {
+      const pxs = 1.5 * d / SQ3;
+      for (let ox = 0; ox < pxs; ox += 2) for (let oy = 0; oy < d; oy += 2) {
+        const s = score(d, ox, oy);
+        if (s > best.s) best = { s, d, ox, oy };
+      }
+    }
+    // 細修
+    const c0 = best;
+    for (let d = c0.d - (opts.d ? 0 : 1.5); d <= c0.d + (opts.d ? 0 : 1.5) + 1e-9; d += 0.25) {
+      for (let ox = c0.ox - 2.5; ox <= c0.ox + 2.5; ox += 0.5) for (let oy = c0.oy - 2.5; oy <= c0.oy + 2.5; oy += 0.5) {
+        const s = score(d, ox, oy);
+        if (s > best.s) best = { s, d, ox, oy };
+      }
+      if (opts.d) break;
+    }
+    const d = best.d, R = d / SQ3, pxs = 1.5 * R, a = d / 2, hx = 0.75 * R, hy = d / 4;
+    const ox = best.ox, oy = best.oy;
+
+    /* ---------- 3. 逐格分類 ---------- */
+    const sc = d / 56, br = Math.max(1, Math.round(2 * sc));
+    function box(x, y, r) {
+      const cx = Math.round(x), cy = Math.round(y);
+      let sr = 0, sg = 0, sb = 0, n = 0;
+      for (let yy = cy - r; yy <= cy + r; yy++) for (let xx = cx - r; xx <= cx + r; xx++) {
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        const p = (yy * W + xx) * ch; sr += px[p]; sg += px[p + 1]; sb += px[p + 2]; n++;
+      }
+      return n ? [sr / n, sg / n, sb / n] : [0, 0, 0];
+    }
+    const med4 = (v) => { const s = v.slice().sort((p, q) => p - q); return (s[1] + s[2]) / 2; };
+    const cells = new Map(); // "i,j" → {i,j,x,y,k}
+    // 棋盤只會出現在左右 UI 面板之間、上方按鈕列與底部「色彩」分頁列之間
+    const bx0 = 0.175 * W, bx1 = 0.835 * W, by0 = 0.1 * H, by1 = 0.805 * H;
+    const iMin = Math.floor((bx0 - ox) / pxs), iMax = Math.ceil((bx1 - ox) / pxs);
+    for (let i = iMin; i <= iMax; i++) {
+      const x = ox + pxs * i, off = (i & 1) ? d / 2 : 0;
+      const jMin = Math.floor((by0 - oy - off) / d), jMax = Math.ceil((by1 - oy - off) / d);
+      for (let j = jMin; j <= jMax; j++) {
+        const y = oy + d * j + off;
+        if (x < bx0 || x > bx1 || y < by0 || y > by1) continue;
+        const up = box(x, y - 0.32 * d, br), dn = box(x, y + 0.32 * d, br), le = box(x - 0.36 * d, y, br), ri = box(x + 0.36 * d, y, br);
+        const c4 = [0, 1, 2].map((q) => med4([up[q], dn[q], le[q], ri[q]]));
+        let edge = 0;
+        for (const [ex, ey] of [[x, y - a], [x, y + a], [x + hx, y - hy], [x - hx, y - hy], [x + hx, y + hy], [x - hx, y + hy]]) {
+          const e = box(ex, ey, 1); const s = e[0] + e[1] + e[2]; if (s > edge) edge = s;
+        }
+        const k = classifyRGB(c4[0], c4[1], c4[2]);
+        if (k < 0) continue;
+        // 灰格要靠邊框亮度和板外區分（板外也有淡淡的格線）；色格的色差本身就足以判定，
+        // 而且縮小圖片後暗色格的邊框會變細變暗，不能拿邊框亮度卡它
+        if (k === GRAY && edge <= 150) continue;
+        cells.set(i + ',' + j, { i, j, x, y, k });
+      }
+    }
+    const nbrs = (i, j) => (i & 1)
+      ? [[i + 1, j], [i + 1, j + 1], [i - 1, j], [i - 1, j + 1], [i, j - 1], [i, j + 1]]
+      : [[i + 1, j - 1], [i + 1, j], [i - 1, j - 1], [i - 1, j], [i, j - 1], [i, j + 1]];
+    // 被標籤蓋住格心的色格：看格內四個角落點（避開標籤）投票，且至少 2 個相鄰格是同色
+    for (const c of cells.values()) {
+      if (c.k !== GRAY) continue;
+      const votes = [0, 0, 0, 0, 0, 0];
+      for (const [dx, dy] of [[-0.2, -0.36], [0.2, -0.36], [-0.2, 0.36], [0.2, 0.36]]) {
+        const v = box(c.x + dx * d, c.y + dy * d, br);
+        const kk = classifyRGB(v[0], v[1], v[2]);
+        if (kk > 0) votes[kk]++;
+      }
+      let k2 = 0;
+      for (let q = 1; q <= 5; q++) if (votes[q] >= 2 && (!k2 || votes[q] > votes[k2])) k2 = q;
+      if (!k2) continue;
+      let same = 0;
+      for (const [ni, nj] of nbrs(c.i, c.j)) { const n = cells.get(ni + ',' + nj); if (n && n.k === k2) same++; }
+      if (same >= 2) c.k = k2;
+    }
+
+    /* ---------- 4. 只留下連到色格的連通塊 ---------- */
+    const seen = new Set(), keep = [];
+    for (const c0c of cells.values()) {
+      const key0 = c0c.i + ',' + c0c.j;
+      if (seen.has(key0)) continue;
+      const comp = [c0c]; seen.add(key0);
+      for (let q = 0; q < comp.length; q++) {
+        for (const [ni, nj] of nbrs(comp[q].i, comp[q].j)) {
+          const kk = ni + ',' + nj, n = cells.get(kk);
+          if (n && !seen.has(kk)) { seen.add(kk); comp.push(n); }
+        }
+      }
+      // 真正的板子連通塊很大；畫面其他 UI 的誤判通常只有 1～3 格
+      if (comp.length >= (opts.minComponent || 6) && comp.some((c) => c.k > 0)) keep.push(...comp);
+    }
+
+    /* ---------- 5. 轉成介面座標 ---------- */
+    const out = { cells: {}, zones: [], counts: { gray: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, lattice: { d, ox, oy, score: best.s }, debug: { cells: keep.map((c) => ({ x: c.x, y: c.y, k: c.k })) } };
+    if (!keep.length) return out;
+    let i0 = Math.min(...keep.map((c) => c.i)); if (i0 & 1) i0 -= 1;
+    const j0 = Math.min(...keep.map((c) => c.j));
+    const grid = new Map();
+    for (const c of keep) {
+      const col = c.i - i0, row = c.j - j0;
+      out.cells[col + ',' + row] = c.k;
+      grid.set(col + ',' + row, c.k);
+      out.counts[c.k === 0 ? 'gray' : c.k]++;
+    }
+    // 分區（同色相連），編號順序與介面一致：先欄後列
+    const nb2 = (c, r) => (c & 1)
+      ? [[c + 1, r], [c + 1, r + 1], [c - 1, r], [c - 1, r + 1], [c, r - 1], [c, r + 1]]
+      : [[c + 1, r - 1], [c + 1, r], [c - 1, r - 1], [c - 1, r], [c, r - 1], [c, r + 1]];
+    const keys = Object.keys(out.cells).sort((p, q) => { const a1 = p.split(',').map(Number), b1 = q.split(',').map(Number); return a1[0] - b1[0] || a1[1] - b1[1]; });
+    const zs = new Set();
+    for (const k of keys) {
+      const t = out.cells[k]; if (t < 1 || zs.has(k)) continue;
+      const comp = [k]; zs.add(k);
+      for (let q = 0; q < comp.length; q++) {
+        const [c, r] = comp[q].split(',').map(Number);
+        for (const [nc, nr] of nb2(c, r)) { const nk = nc + ',' + nr; if (grid.get(nk) === t && !zs.has(nk)) { zs.add(nk); comp.push(nk); } }
+      }
+      out.zones.push({ color: t, size: comp.length });
+    }
+    return out;
+  }
+
+  return { detectBoard, classifyRGB, D_RATIO };
+});
+</script>
+<script id="presets-json" type="application/json">{"inventories":[{"id":"latest","name":"最新庫存（五色）","note":"來源：「找尋夥伴的溫暖目光」製作畫面截圖。形狀由小圖示轉錄，請對照遊戲確認；效能為每堆的最高值。","stacks":[{"id":"R1","color":0,"shape":[[0,0]],"effText":"254x44","efficacy":254,"count":44},{"id":"R2","color":0,"shape":[[0,0],[1,0]],"effText":"247x36","efficacy":247,"count":36},{"id":"R3","color":0,"shape":[[0,1],[0,2],[1,0]],"effText":"232x33","efficacy":232,"count":33},{"id":"R4","color":0,"shape":[[0,1],[1,0],[2,0],[2,1],[3,1]],"effText":"180x40","efficacy":180,"count":40},{"id":"R5","color":0,"shape":[[0,0],[0,1],[0,2],[1,1],[2,1]],"effText":"123x37","efficacy":123,"count":37},{"id":"R6","color":0,"shape":[[0,1],[1,0],[1,1],[2,1],[2,2]],"effText":"201x29","efficacy":201,"count":29},{"id":"Y1","color":1,"shape":[[0,0]],"effText":"237x49","efficacy":237,"count":49},{"id":"Y2","color":1,"shape":[[0,1],[1,0]],"effText":"237x41","efficacy":237,"count":41},{"id":"Y3","color":1,"shape":[[0,0],[0,1],[1,0]],"effText":"237x51","efficacy":237,"count":51},{"id":"Y4","color":1,"shape":[[0,1],[1,0],[1,1],[2,0]],"effText":"237x64","efficacy":237,"count":64},{"id":"Y5","color":1,"shape":[[0,1],[0,2],[1,0],[1,1],[2,0]],"effText":"237x74","efficacy":237,"count":74},{"id":"Y6","color":1,"shape":[[0,1],[0,2],[1,0],[1,1],[1,2],[2,1]],"effText":"237x66","efficacy":237,"count":66},{"id":"G1","color":2,"shape":[[0,0]],"effText":"286x41","efficacy":286,"count":41},{"id":"G2","color":2,"shape":[[0,0],[0,1]],"effText":"273x52","efficacy":273,"count":52},{"id":"G3","color":2,"shape":[[0,1],[1,0],[2,0]],"effText":"237x46","efficacy":237,"count":46},{"id":"G4","color":2,"shape":[[0,0],[0,1],[1,0],[1,1]],"effText":"237x40","efficacy":237,"count":40},{"id":"G5","color":2,"shape":[[0,0],[0,3],[1,0],[1,1],[1,2]],"effText":"237x40","efficacy":237,"count":40},{"id":"G6","color":2,"shape":[[0,1],[0,2],[0,3],[1,0],[1,2]],"effText":"237x36","efficacy":237,"count":36},{"id":"B1","color":3,"shape":[[0,0]],"effText":"190x43","efficacy":190,"count":43},{"id":"B2","color":3,"shape":[[0,0],[0,1]],"effText":"284x50","efficacy":284,"count":50},{"id":"B3","color":3,"shape":[[0,1],[1,1],[2,0]],"effText":"218x42","efficacy":218,"count":42},{"id":"B4","color":3,"shape":[[0,0],[0,1],[1,0],[2,0]],"effText":"162x54","efficacy":162,"count":54},{"id":"B5","color":3,"shape":[[0,1],[0,2],[1,0],[2,0],[2,1]],"effText":"235x50","efficacy":235,"count":50},{"id":"B6","color":3,"shape":[[0,1],[1,0],[1,2],[2,0],[2,1],[3,0]],"effText":"234x54","efficacy":234,"count":54},{"id":"P1","color":4,"shape":[[0,0]],"effText":"156x7","efficacy":156,"count":7},{"id":"P2","color":4,"shape":[[0,1],[1,0]],"effText":"177x28","efficacy":177,"count":28},{"id":"P3","color":4,"shape":[[0,0],[0,1],[0,2]],"effText":"169x31","efficacy":169,"count":31},{"id":"P4","color":4,"shape":[[0,2],[0,3],[1,1],[1,2],[2,0]],"effText":"194x51","efficacy":194,"count":51},{"id":"P5","color":4,"shape":[[0,2],[1,1],[2,1],[3,1],[4,0]],"effText":"177x32","efficacy":177,"count":32},{"id":"P6","color":4,"shape":[[0,2],[1,2],[2,1],[3,0],[4,0]],"effText":"204x46","efficacy":204,"count":46}]},{"id":"xin_peng_you","name":"較早庫存（只有紅、紫）","note":"來源：「新朋友」製作畫面截圖，是庫存較早的版本（用掉好粒子之前）。","stacks":[{"id":"R1","color":0,"shape":[[0,0]],"effText":"133x21","efficacy":133,"count":21},{"id":"R2","color":0,"shape":[[0,0],[1,0]],"effText":"177x20","efficacy":177,"count":20},{"id":"R3","color":0,"shape":[[0,1],[0,2],[1,0]],"effText":"133x16","efficacy":133,"count":16},{"id":"R4","color":0,"shape":[[0,1],[1,0],[2,0],[2,1],[3,1]],"effText":"150x35","efficacy":150,"count":35},{"id":"R5","color":0,"shape":[[0,0],[0,1],[0,2],[1,1],[2,1]],"effText":"133x33","efficacy":133,"count":33},{"id":"R6","color":0,"shape":[[0,1],[1,0],[1,1],[2,1],[2,2]],"effText":"177x29","efficacy":177,"count":29},{"id":"P1","color":4,"shape":[[0,0]],"effText":"156x7","efficacy":156,"count":7},{"id":"P2","color":4,"shape":[[0,1],[1,0]],"effText":"177x28","efficacy":177,"count":28},{"id":"P3","color":4,"shape":[[0,0],[0,1],[0,2]],"effText":"186x34","efficacy":186,"count":34},{"id":"P4","color":4,"shape":[[0,2],[0,3],[1,1],[1,2],[2,0]],"effText":"194x51","efficacy":194,"count":51},{"id":"P5","color":4,"shape":[[0,2],[1,1],[2,1],[3,1],[4,0]],"effText":"177x32","efficacy":177,"count":32},{"id":"P6","color":4,"shape":[[0,2],[1,2],[2,1],[3,0],[4,0]],"effText":"204x46","efficacy":204,"count":46}]}],"recipes":[{"name":"找尋夥伴的溫暖目光","limit":8,"board":{"1,0":{"t":3,"g":0},"2,0":{"t":0,"g":0},"2,1":{"t":0,"g":0},"3,0":{"t":3,"g":0},"3,1":{"t":3,"g":0},"4,0":{"t":3,"g":0},"4,1":{"t":3,"g":0},"4,2":{"t":3,"g":0},"3,2":{"t":3,"g":0},"5,0":{"t":3,"g":0},"5,1":{"t":3,"g":0},"5,2":{"t":3,"g":0},"4,3":{"t":3,"g":0},"6,1":{"t":0,"g":0},"6,2":{"t":0,"g":0},"7,0":{"t":3,"g":0},"7,1":{"t":0,"g":0},"7,2":{"t":3,"g":0},"8,0":{"t":0,"g":0},"8,1":{"t":0,"g":0},"8,2":{"t":3,"g":0},"8,3":{"t":3,"g":0},"9,0":{"t":3,"g":0},"9,1":{"t":0,"g":0},"9,2":{"t":3,"g":0},"10,1":{"t":0,"g":0},"10,2":{"t":0,"g":0},"11,0":{"t":2,"g":0},"11,1":{"t":2,"g":0},"11,2":{"t":2,"g":0},"12,0":{"t":2,"g":0},"12,1":{"t":2,"g":0},"12,2":{"t":2,"g":0},"12,3":{"t":2,"g":0},"13,0":{"t":2,"g":0},"13,1":{"t":2,"g":0},"13,2":{"t":2,"g":0},"14,0":{"t":0,"g":0},"14,1":{"t":0,"g":0},"15,0":{"t":2,"g":0}},"zv":[{"keys":["1,0"],"atk":0,"def":0},{"keys":["3,0","4,0","4,1","3,1","5,0","5,1","4,2","3,2","5,2","4,3"],"atk":0,"def":0},{"keys":["7,0"],"atk":0,"def":0},{"keys":["7,2","8,2","8,3","9,2"],"atk":0,"def":0},{"keys":["9,0"],"atk":0,"def":0},{"keys":["11,0","12,0","12,1","11,1","13,0","13,1","12,2","11,2","13,2","12,3"],"atk":0,"def":0},{"keys":["15,0"],"atk":0,"def":0}]},{"name":"新朋友","limit":6,"board":{"0,5":{"t":0,"g":0},"0,6":{"t":0,"g":0},"0,7":{"t":0,"g":0},"1,4":{"t":0,"g":0},"1,7":{"t":0,"g":0},"2,4":{"t":0,"g":0},"2,8":{"t":4,"g":0},"2,9":{"t":0,"g":0},"2,10":{"t":0,"g":0},"2,11":{"t":0,"g":0},"2,12":{"t":0,"g":0},"3,3":{"t":0,"g":0},"3,8":{"t":4,"g":0},"3,9":{"t":0,"g":0},"3,10":{"t":0,"g":0},"3,11":{"t":0,"g":0},"4,4":{"t":0,"g":0},"4,8":{"t":4,"g":0},"4,9":{"t":4,"g":0},"4,10":{"t":4,"g":0},"4,11":{"t":0,"g":0},"4,12":{"t":0,"g":0},"5,4":{"t":0,"g":0},"5,8":{"t":4,"g":0},"5,9":{"t":0,"g":0},"5,10":{"t":0,"g":0},"5,11":{"t":0,"g":0},"6,5":{"t":0,"g":0},"6,8":{"t":4,"g":0},"6,9":{"t":0,"g":0},"6,10":{"t":0,"g":0},"6,11":{"t":0,"g":0},"6,12":{"t":0,"g":0},"7,5":{"t":0,"g":0},"7,9":{"t":0,"g":0},"7,10":{"t":0,"g":0},"7,11":{"t":0,"g":0},"8,6":{"t":0,"g":0},"8,10":{"t":0,"g":0},"8,11":{"t":4,"g":0},"8,12":{"t":0,"g":0},"9,1":{"t":0,"g":0},"9,2":{"t":0,"g":0},"9,6":{"t":0,"g":0},"9,7":{"t":0,"g":0},"9,8":{"t":0,"g":0},"9,10":{"t":0,"g":0},"9,11":{"t":4,"g":0},"9,12":{"t":4,"g":0},"10,1":{"t":0,"g":0},"10,2":{"t":0,"g":0},"10,3":{"t":0,"g":0},"10,6":{"t":5,"g":0},"10,7":{"t":5,"g":0},"10,8":{"t":5,"g":0},"10,11":{"t":4,"g":0},"10,12":{"t":4,"g":0},"10,13":{"t":4,"g":0},"11,0":{"t":1,"g":0},"11,1":{"t":1,"g":0},"11,2":{"t":0,"g":0},"11,5":{"t":5,"g":0},"11,6":{"t":5,"g":0},"11,7":{"t":5,"g":0},"11,10":{"t":0,"g":0},"11,11":{"t":4,"g":0},"11,12":{"t":4,"g":0},"12,0":{"t":1,"g":0},"12,1":{"t":1,"g":0},"12,2":{"t":1,"g":0},"12,5":{"t":5,"g":0},"12,6":{"t":5,"g":0},"12,7":{"t":5,"g":0},"12,10":{"t":0,"g":0},"12,11":{"t":0,"g":0},"12,12":{"t":0,"g":0},"13,0":{"t":1,"g":0},"13,1":{"t":1,"g":0},"13,2":{"t":0,"g":0},"13,4":{"t":0,"g":0},"13,5":{"t":0,"g":0},"13,6":{"t":0,"g":0},"13,10":{"t":0,"g":0},"13,11":{"t":0,"g":0},"14,1":{"t":0,"g":0},"14,2":{"t":1,"g":0},"14,3":{"t":0,"g":0},"14,7":{"t":0,"g":0},"15,1":{"t":0,"g":0},"15,2":{"t":0,"g":0},"15,3":{"t":0,"g":0},"15,7":{"t":0,"g":0},"16,1":{"t":0,"g":0},"16,2":{"t":0,"g":0},"16,3":{"t":0,"g":0},"16,4":{"t":0,"g":0},"16,5":{"t":1,"g":0},"16,8":{"t":0,"g":0},"17,1":{"t":0,"g":0},"17,2":{"t":0,"g":0},"17,3":{"t":0,"g":0},"17,4":{"t":1,"g":0},"17,8":{"t":0,"g":0},"18,1":{"t":0,"g":0},"18,2":{"t":0,"g":0},"18,3":{"t":1,"g":0},"18,4":{"t":1,"g":0},"18,5":{"t":1,"g":0},"18,9":{"t":0,"g":0},"19,1":{"t":0,"g":0},"19,2":{"t":0,"g":0},"19,3":{"t":0,"g":0},"19,4":{"t":1,"g":0},"19,9":{"t":0,"g":0},"20,1":{"t":0,"g":0},"20,2":{"t":0,"g":0},"20,3":{"t":0,"g":0},"20,4":{"t":0,"g":0},"20,5":{"t":1,"g":0},"20,9":{"t":0,"g":0},"21,5":{"t":0,"g":0},"21,8":{"t":0,"g":0},"22,6":{"t":0,"g":0},"22,7":{"t":0,"g":0},"22,8":{"t":0,"g":0}},"zv":[{"keys":["2,8","3,8","4,8","4,9","5,8","4,10","6,8"],"atk":0,"def":0},{"keys":["8,11","9,11","10,11","10,12","9,12","11,11","11,12","10,13"],"atk":0,"def":0},{"keys":["10,6","11,5","11,6","10,7","12,5","12,6","12,7","11,7","10,8"],"atk":0,"def":0},{"keys":["11,0","12,0","12,1","11,1","13,0","13,1","12,2","14,2"],"atk":0,"def":0},{"keys":["16,5","17,4","18,4","18,5","19,4","18,3","20,5"],"atk":0,"def":0}]}]}</script>
+<script>
+(function () {
+'use strict';
+const Solver = window.InfalsusSolver;
+const SOLVER_SRC = document.getElementById('solver-src').textContent;
+const Importer = window.InfalsusImporter;
+// 內建的預設粒子庫存與預設配方（建置時由 data/ 內嵌）
+const BUILTIN = (function () { try { return JSON.parse(document.getElementById('presets-json').textContent); } catch (e) { return { inventories: [], recipes: [] }; } })();
+
+/* ------------------------------------------------------------ 常數與工具 */
+const COLORS = ['#e5484d', '#e8b923', '#2fb37a', '#22b8e0', '#a066f5'];
+const CNAME = ['紅', '黃', '綠', '藍', '紫'];
+const PIECE_STROKE = ['#ffffff', '#ffd166', '#06d6a0', '#ef476f', '#4cc9f0', '#f78c6b', '#c77dff', '#b8f27c', '#ff9f1c', '#8ecae6'];
+const GOAL_LABEL = { balanced: '平衡', atk: '攻擊特化', def: '防禦特化', custom: '自訂權重' };
+const SQ = Math.sqrt(3);
+const BR = 22;
+const STORE = 'infalsus_solver_v1';
+const $ = (s, el) => (el || document).querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs || {}) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function h(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+const offToAxial = (c, row) => [c, row - ((c - (c & 1)) >> 1)];
+const axialToOff = (q, r) => [q, r + ((q - (q & 1)) >> 1)];
+const center = (c, row, R) => [R + 1.5 * R * c, SQ * R / 2 + SQ * R * (row + 0.5 * (c & 1))];
+function hexPts(cx, cy, R) {
+  let s = '';
+  for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k; s += (cx + R * Math.cos(a)).toFixed(1) + ',' + (cy + R * Math.sin(a)).toFixed(1) + ' '; }
+  return s.trim();
+}
+const keyToOff = (k) => k.split(',').map(Number);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let toastTimer = 0;
+function toast(msg, kind, ms) {
+  const t = $('#toast'); t.textContent = msg; t.className = kind || ''; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, ms || 3800);
+}
+
+/* ------------------------------------------------------------ 狀態 */
+function defaultState() {
+  return {
+    board: {}, zv: [], stacks: [], recipes: {}, tool: '1', group: 0, presetSet: 'latest', view: { x: 260, y: 220, z: 1 },
+    ui: { mode: 'view', tab: 'zones', showPieces: true, guideDone: false },
+    settings: { limit: 6, rotation: false, overlap: false, cap: 3, table: '', goal: 'balanced', wAtk: 1, wDef: 1, timeSec: 30, useColors: [true, true, true, true, true] },
+  };
+}
+function normalizeState(s) {
+  const d = defaultState();
+  const out = Object.assign(d, s || {});
+  out.settings = Object.assign(defaultState().settings, (s && s.settings) || {});
+  out.ui = Object.assign(defaultState().ui, (s && s.ui) || {});
+  if (!Array.isArray(out.settings.useColors) || out.settings.useColors.length !== 5) out.settings.useColors = [true, true, true, true, true];
+  return out;
+}
+// 第一次打開（沒有任何存檔）：預設載入最新粒子庫存和第一個預設配方，一開始就有板子可看
+function firstRun() {
+  const st = defaultState();
+  const inv = BUILTIN.inventories && BUILTIN.inventories[0];
+  if (inv) { st.stacks = inv.stacks.map((p) => ({ color: p.color, shape: p.shape.map((c) => c.slice()), effText: p.effText })); st.presetSet = inv.id; }
+  const r = BUILTIN.recipes && BUILTIN.recipes[0];
+  if (r) { st.board = JSON.parse(JSON.stringify(r.board)); st.zv = JSON.parse(JSON.stringify(r.zv || [])); if (r.limit) st.settings.limit = r.limit; }
+  return st;
+}
+let FIRST = false;
+let state = (function () { try { const t = localStorage.getItem(STORE); if (t) return normalizeState(JSON.parse(t)); } catch (e) {} FIRST = true; return firstRun(); })();
+let saveTimer = 0;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }, 150); }
+
+/* ------------------------------------------------------------ 區域偵測 */
+function detectZones() {
+  const cells = state.board;
+  const keys = Object.keys(cells).sort((a, b) => { const x = keyToOff(a), y = keyToOff(b); return x[0] - y[0] || x[1] - y[1]; });
+  const axMap = new Map();
+  for (const k of keys) { const [c, row] = keyToOff(k); const a = offToAxial(c, row); axMap.set(a[0] + ',' + a[1], k); }
+  const seen = new Set(); const zones = [];
+  for (const k of keys) {
+    const cell = cells[k];
+    if (cell.t < 1 || seen.has(k)) continue;
+    const comp = [k]; seen.add(k);
+    for (let i = 0; i < comp.length; i++) {
+      const [c, row] = keyToOff(comp[i]); const [q, r] = offToAxial(c, row);
+      for (const d of Solver.NEIGH) {
+        const nk = axMap.get((q + d[0]) + ',' + (r + d[1]));
+        if (nk && !seen.has(nk)) { const nc = cells[nk]; if (nc.t === cell.t && nc.g === cell.g) { seen.add(nk); comp.push(nk); } }
+      }
+    }
+    zones.push({ color: cell.t - 1, keys: comp, cells: comp.map((kk) => { const [c, row] = keyToOff(kk); return offToAxial(c, row); }), size: comp.length, name: 'Z' + (zones.length + 1) });
+  }
+  // 沿用舊的效果值（以重疊最多者配對）
+  const old = state.zv || []; const used = new Set(); const out = [];
+  for (const z of zones) {
+    let bi = -1, bo = 0;
+    old.forEach((o, i) => { if (used.has(i)) return; const ov = o.keys.filter((k) => z.keys.includes(k)).length; if (ov > bo) { bo = ov; bi = i; } });
+    const v = bi >= 0 ? old[bi] : { atk: 0, def: 0 };
+    if (bi >= 0) used.add(bi);
+    z.atk = v.atk || 0; z.def = v.def || 0; z.must = !!v.must; z.note = v.note || ''; z.waive = Math.max(0, v.waive | 0);
+    z.wtype = v.wtype === 'over' || v.wtype === 'overlap' ? v.wtype : 'disc';
+    out.push({ keys: z.keys.slice(), atk: z.atk, def: z.def, must: z.must, note: z.note, waive: z.waive, wtype: z.wtype });
+  }
+  state.zv = out;
+  return zones;
+}
+const boardSig = () => Object.keys(state.board).sort().map((k) => k + ':' + state.board[k].t + ':' + state.board[k].g).join('|');
+
+/* ------------------------------------------------------------ 板子（無邊界畫布） */
+const boardSvg = $('#board');
+let zonesNow = [], hlKeys = [], selZone = -1, pieceHL = -1;
+let view = state.view || (state.view = { x: 260, y: 220, z: 1 });
+const Z_MIN = 0.3, Z_MAX = 3.2;
+const isEdit = () => state.ui.mode === 'edit';
+function cellFill(cell) { if (!cell) return '#10161c'; if (cell.t === 0) return '#56626e'; return COLORS[cell.t - 1]; }
+const hexPath = (cx, cy, R) => {
+  let d = '';
+  for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k; d += (k ? 'L' : 'M') + (cx + R * Math.cos(a)).toFixed(1) + ' ' + (cy + R * Math.sin(a)).toFixed(1); }
+  return d + 'Z';
+};
+function boardSize() { const r = boardSvg.getBoundingClientRect(); return [r.width || 700, r.height || 520]; }
+function toWorld(cx, cy) {
+  const r = boardSvg.getBoundingClientRect();
+  return [view.x + (cx - r.left - r.width / 2) / view.z, view.y + (cy - r.top - r.height / 2) / view.z];
+}
+// 世界座標 → 格子 key（平頂六角格，奇數行下移半格）
+function worldToKey(x, y) {
+  const px = x - BR, py = y - SQ * BR / 2;
+  const qf = (2 / 3 * px) / BR, rf = (-1 / 3 * px + SQ / 3 * py) / BR, yf = -qf - rf;
+  let rx = Math.round(qf), ry = Math.round(yf), rz = Math.round(rf);
+  const dx = Math.abs(rx - qf), dy = Math.abs(ry - yf), dz = Math.abs(rz - rf);
+  if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+  const [c, row] = axialToOff(rx, rz);
+  return c + ',' + row;
+}
+const cellPoly = new Map();
+let hoverPoly = null;
+let drawFrame = 0;
+function scheduleDraw() { if (!drawFrame) drawFrame = requestAnimationFrame(() => { drawFrame = 0; drawBoard(); }); }
+function drawBoard() {
+  const [W, H] = boardSize();
+  const vw = W / view.z, vh = H / view.z, x0 = view.x - vw / 2, y0 = view.y - vh / 2;
+  boardSvg.setAttribute('viewBox', x0 + ' ' + y0 + ' ' + vw + ' ' + vh);
+  boardSvg.innerHTML = '';
+  cellPoly.clear();
+  const cMin = Math.floor((x0 - BR) / (1.5 * BR)) - 1, cMax = Math.ceil((x0 + vw - BR) / (1.5 * BR)) + 1;
+  let d = '';
+  for (let c = cMin; c <= cMax; c++) {
+    const half = c & 1 ? 0.5 : 0;
+    const rMin = Math.floor((y0 - SQ * BR / 2) / (SQ * BR) - half) - 1;
+    const rMax = Math.ceil((y0 + vh - SQ * BR / 2) / (SQ * BR) - half) + 1;
+    for (let row = rMin; row <= rMax; row++) { const [cx, cy] = center(c, row, BR); d += hexPath(cx, cy, BR - 1); }
+  }
+  svgEl('path', { d, fill: 'none', stroke: '#1b2530', 'stroke-width': 1 }, boardSvg);
+  const g = svgEl('g', { id: 'cells' }, boardSvg);
+  for (const k in state.board) {
+    const [c, row] = keyToOff(k);
+    if (c < cMin || c > cMax) continue;
+    const [cx, cy] = center(c, row, BR);
+    if (cy < y0 - BR || cy > y0 + vh + BR) continue;
+    cellPoly.set(k, svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: cellFill(state.board[k]), stroke: '#1d2733', 'stroke-width': 1 }, g));
+  }
+  svgEl('g', { id: 'hl', 'pointer-events': 'none' }, boardSvg);
+  svgEl('g', { id: 'pieces', 'pointer-events': 'none' }, boardSvg);
+  svgEl('g', { id: 'labels', 'pointer-events': 'none' }, boardSvg);
+  hoverPoly = svgEl('polygon', { fill: 'none', stroke: '#fff', 'stroke-width': 1.6, 'pointer-events': 'none', visibility: 'hidden' }, boardSvg);
+  drawHighlight(); drawPieces(); drawLabels();
+}
+function drawHighlight() {
+  const g = $('#hl'); if (!g) return;
+  g.innerHTML = '';
+  hlKeys.forEach((k) => { const [c, row] = keyToOff(k); const [cx, cy] = center(c, row, BR); svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: 'none', stroke: '#fff', 'stroke-width': 2.5 }, g); });
+}
+// 目前選取的求解結果（板子沒被改過才有效）
+function activeRun() {
+  const run = runs[curRun];
+  return run && run.r && run.r.pieces && run.r.pieces.length && run.sig === boardSig() ? run : null;
+}
+function drawPieces() {
+  const g = $('#pieces'); if (!g) return;
+  g.innerHTML = '';
+  const run = activeRun();
+  if (!run || !state.ui.showPieces || isEdit()) return;
+  run.r.pieces.forEach((p, i) => {
+    const stroke = PIECE_STROKE[i % PIECE_STROKE.length], hl = pieceHL === i;
+    p.qr.forEach(([q, r]) => {
+      const [c, row] = axialToOff(q, r); const [cx, cy] = center(c, row, BR);
+      svgEl('polygon', { points: hexPts(cx, cy, BR - 3), fill: COLORS[p.color], 'fill-opacity': 0.95, stroke: hl ? '#fff' : stroke, 'stroke-width': hl ? 4 : 2.5 }, g);
+    });
+    const [c, row] = axialToOff(p.qr[0][0], p.qr[0][1]); const [cx, cy] = center(c, row, BR);
+    const t = svgEl('text', { x: cx, y: cy + 6, 'text-anchor': 'middle', 'font-size': 16, 'font-weight': 800, fill: '#fff', stroke: '#000', 'stroke-width': 3.5, 'paint-order': 'stroke' }, g);
+    t.textContent = i + 1;
+  });
+}
+function drawLabels() {
+  const g = $('#labels'); if (!g) return;
+  g.innerHTML = '';
+  const run = activeRun(); const done = run && run.r.score ? new Set(run.r.score.completeZones) : null;
+  zonesNow.forEach((z, zi) => {
+    const cell = state.board[z.keys[0]]; if (!cell) return;
+    const [c, row] = keyToOff(z.keys[0]); const [cx, cy] = center(c, row, BR);
+    const t = svgEl('text', { x: cx, y: cy - 1, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: '#fff', stroke: '#000', 'stroke-width': 2.5, 'paint-order': 'stroke' }, g);
+    t.textContent = (z.must ? '🔒' : '') + z.name + (cell.g ? '·' + cell.g : '') + (done && done.has(zi) ? ' ✓' : '');
+    const has = z.atk > 0 || z.def > 0;
+    const t2 = svgEl('text', { x: cx, y: cy + 11, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 600, fill: has ? '#e8eef5' : '#ffd166', stroke: '#000', 'stroke-width': 2.2, 'paint-order': 'stroke' }, g);
+    t2.textContent = (has ? z.atk + '/' + z.def : z.waive ? '' : '填數值') + (z.waive ? ' 🛡' + WTYPE_SHORT[z.wtype || 'disc'] + z.waive : '');
+  });
+}
+function fitView() {
+  const keys = Object.keys(state.board);
+  const [W, H] = boardSize();
+  if (!keys.length) { view.x = 260; view.y = 220; view.z = 1; scheduleDraw(); save(); return; }
+  const pts = keys.map((k) => { const [c, row] = keyToOff(k); return center(c, row, BR); });
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  view.x = (x0 + x1) / 2; view.y = (y0 + y1) / 2;
+  view.z = clamp(Math.min(W / (x1 - x0 + 5 * BR), H / (y1 - y0 + 5 * BR)), 0.5, 2.4);
+  scheduleDraw(); save();
+}
+function zoomBy(f, cx, cy) {
+  const r = boardSvg.getBoundingClientRect();
+  const px = cx === undefined ? r.left + r.width / 2 : cx, py = cy === undefined ? r.top + r.height / 2 : cy;
+  const [wx, wy] = toWorld(px, py);
+  view.z = clamp(view.z * f, Z_MIN, Z_MAX);
+  view.x = wx - (px - r.left - r.width / 2) / view.z;
+  view.y = wy - (py - r.top - r.height / 2) / view.z;
+  scheduleDraw(); save();
+}
+
+/* 復原（只記板子與區域數值） */
+const hist = [];
+function pushHist() { hist.push(JSON.stringify({ board: state.board, zv: state.zv })); if (hist.length > 40) hist.shift(); updateUndoBtn(); }
+function updateUndoBtn() { const b = $('#btnUndo'); if (b) b.disabled = !hist.length; }
+function undoBoard() {
+  const s = hist.pop(); if (!s) { toast('沒有可以復原的動作'); return; }
+  const o = JSON.parse(s); state.board = o.board; state.zv = o.zv; save(); drawBoard(); refreshZones(); updateUndoBtn();
+}
+
+/* 塗色與滑鼠操作：檢視模式＝左鍵拖曳平移、點區域選取；編輯模式＝左鍵塗色、右鍵／空白鍵／移動工具平移 */
+let painting = false, drag = null, lastPainted = '', lastPt = null, spaceDown = false;
+function cursorFor() { return isEdit() ? (state.tool === 'pan' ? 'grab' : 'crosshair') : 'grab'; }
+function paint(k) {
+  if (k === lastPainted) return;
+  lastPainted = k;
+  const t = state.tool;
+  if (t === 'erase') delete state.board[k];
+  else if (t === '0') state.board[k] = { t: 0, g: 0 };
+  else state.board[k] = { t: +t, g: state.group };
+  const old = cellPoly.get(k);
+  if (!state.board[k]) { if (old) { old.remove(); cellPoly.delete(k); } }
+  else if (old) old.setAttribute('fill', cellFill(state.board[k]));
+  else {
+    const [c, row] = keyToOff(k); const [cx, cy] = center(c, row, BR);
+    cellPoly.set(k, svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: cellFill(state.board[k]), stroke: '#1d2733', 'stroke-width': 1 }, $('#cells')));
+  }
+  scheduleZones();
+}
+function paintAt(cx, cy) { const [x, y] = toWorld(cx, cy); paint(worldToKey(x, y)); }
+function paintLine(a, b) {
+  const dist = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const steps = Math.max(1, Math.ceil(dist / (BR * view.z * 0.5)));
+  for (let i = 1; i <= steps; i++) paintAt(a[0] + (b[0] - a[0]) * i / steps, a[1] + (b[1] - a[1]) * i / steps);
+}
+function updateHover(cx, cy) {
+  if (!hoverPoly) return;
+  if (!isEdit() || state.tool === 'pan' || drag) { hoverPoly.setAttribute('visibility', 'hidden'); return; }
+  const [x, y] = toWorld(cx, cy); const [c, row] = keyToOff(worldToKey(x, y)); const [hx, hy] = center(c, row, BR);
+  hoverPoly.setAttribute('points', hexPts(hx, hy, BR - 1)); hoverPoly.setAttribute('visibility', 'visible');
+}
+let zFrame = 0;
+function scheduleZones() { if (!zFrame) zFrame = requestAnimationFrame(() => { zFrame = 0; refreshZones(); save(); }); }
+function boardClick(cx, cy) {
+  const [x, y] = toWorld(cx, cy); const k = worldToKey(x, y);
+  const i = zonesNow.findIndex((z) => z.keys.includes(k));
+  if (i >= 0) selectZone(i, true); else selectZone(-1);
+}
+boardSvg.addEventListener('contextmenu', (e) => e.preventDefault());
+boardSvg.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  try { boardSvg.setPointerCapture(e.pointerId); } catch (err) {}
+  const edit = isEdit();
+  const pan = e.button === 1 || e.button === 2 || spaceDown || (edit && state.tool === 'pan') || (!edit && e.button === 0);
+  if (pan) { drag = { sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y, moved: false, button: e.button }; boardSvg.style.cursor = 'grabbing'; return; }
+  if (edit && e.button === 0) { pushHist(); painting = true; lastPainted = ''; lastPt = [e.clientX, e.clientY]; paintAt(e.clientX, e.clientY); }
+});
+boardSvg.addEventListener('pointermove', (e) => {
+  if (drag) {
+    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (Math.hypot(dx, dy) > 4) drag.moved = true;
+    if (drag.moved) { view.x = drag.vx - dx / view.z; view.y = drag.vy - dy / view.z; scheduleDraw(); }
+    return;
+  }
+  if (painting) { paintLine(lastPt, [e.clientX, e.clientY]); lastPt = [e.clientX, e.clientY]; }
+  updateHover(e.clientX, e.clientY);
+});
+boardSvg.addEventListener('pointerleave', () => { if (hoverPoly) hoverPoly.setAttribute('visibility', 'hidden'); });
+function endPointer(e) {
+  if (drag) {
+    const d = drag; drag = null;
+    if (d.moved) save(); else if (!isEdit() && d.button === 0 && e && e.clientX !== undefined) boardClick(e.clientX, e.clientY);
+  }
+  painting = false; lastPainted = '';
+  boardSvg.style.cursor = cursorFor();
+}
+window.addEventListener('pointerup', endPointer);
+window.addEventListener('pointercancel', () => endPointer());
+boardSvg.addEventListener('wheel', (e) => { e.preventDefault(); zoomBy(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
+if (window.ResizeObserver) new ResizeObserver(() => scheduleDraw()).observe(boardSvg);
+$('#btnZoomIn').onclick = () => zoomBy(1.25);
+$('#btnZoomOut').onclick = () => zoomBy(1 / 1.25);
+$('#btnFit').onclick = fitView;
+
+function buildTools() {
+  const box = $('#tools'); box.innerHTML = '';
+  const defs = [['0', '#56626e', '空白區'], ['1', COLORS[0], '紅'], ['2', COLORS[1], '黃'], ['3', COLORS[2], '綠'], ['4', COLORS[3], '藍'], ['5', COLORS[4], '紫'], ['erase', '#10161c', '橡皮擦'], ['pan', null, '✋ 移動']];
+  defs.forEach(([v, col, name]) => {
+    const b = h('button', 'tool' + (state.tool === v ? ' on' : ''));
+    b.innerHTML = (col ? '<span class="dot" style="background:' + col + ';border:1px solid #fff3"></span>' : '') + name;
+    b.onclick = () => { state.tool = v; boardSvg.style.cursor = cursorFor(); save(); buildTools(); };
+    box.appendChild(b);
+  });
+  const gs = $('#groupSel'); gs.innerHTML = '';
+  for (let g = 0; g < 6; g++) { const o = h('option', '', g === 0 ? '區域標籤 0（預設）' : '區域標籤 ' + g); o.value = g; if (state.group === g) o.selected = true; gs.appendChild(o); }
+  gs.onchange = () => { state.group = +gs.value; save(); };
+}
+const HINTS = {
+  view: '拖曳平移・滾輪縮放・點區域選取（要改格子請按「編輯板子」）',
+  edit: '左鍵塗色・右鍵／空白鍵拖曳平移・滾輪縮放・Ctrl+Z 復原',
+};
+function setMode(m) {
+  state.ui.mode = m; save();
+  $('#modeView').classList.toggle('on', m === 'view'); $('#modeEdit').classList.toggle('on', m === 'edit');
+  $('#editTools').hidden = m !== 'edit';
+  boardSvg.style.cursor = cursorFor();
+  $('#boardHint').textContent = HINTS[m];
+  scheduleDraw();
+}
+$('#modeView').onclick = () => setMode('view');
+$('#modeEdit').onclick = () => setMode('edit');
+$('#btnUndo').onclick = undoBoard;
+$('#showPieces').onchange = (e) => { state.ui.showPieces = e.target.checked; save(); scheduleDraw(); updateBadge(); };
+
+/* ------------------------------------------------------------ 區域 */
+function usableColors() {
+  const s = new Set();
+  state.stacks.forEach((q) => { if (state.settings.useColors[q.color] !== false && parseEffs(q.effText).length) s.add(q.color); });
+  return s;
+}
+function refreshZones() {
+  zonesNow = detectZones();
+  if (selZone >= zonesNow.length) selZone = -1;
+  hlKeys = selZone >= 0 ? zonesNow[selZone].keys : [];
+  drawHighlight(); drawLabels(); renderZoneList(); updateReady();
+}
+function selectZone(i, focus) {
+  selZone = i; hlKeys = i >= 0 ? zonesNow[i].keys : []; drawHighlight();
+  const rows = [...$('#zoneList').children];
+  rows.forEach((r, j) => r.classList.toggle('sel', j === i));
+  if (i >= 0 && focus) {
+    showTab('zones');
+    const row = rows[i]; if (row) { row.scrollIntoView({ block: 'nearest' }); const inp = row.querySelector('input'); if (inp) { inp.focus(); inp.select(); } }
+  }
+}
+const WTYPE_OPTS = [['disc', '乖離'], ['over', '過載'], ['overlap', '重疊']];
+const WTYPE_SHORT = { disc: '乖', over: '載', overlap: '疊' };
+const WTYPE_NAME = { disc: '乖離', over: '過載', overlap: '重疊' };
+function renderZoneList() {
+  const box = $('#zoneList'); box.innerHTML = '';
+  if (!zonesNow.length) { box.innerHTML = '<p class="hint">板子上還沒有彩色區域。上方選一個配方按「載入」，或用「📷 截圖匯入」。</p>'; return; }
+  const usable = usableColors();
+  zonesNow.forEach((z, i) => {
+    const row = h('div', 'zrow' + (i === selZone ? ' sel' : '') + (z.must ? ' must' : ''));
+    row.innerHTML = '<span class="zname"><span class="dot" style="background:' + COLORS[z.color] + '"></span><b>' + z.name + '</b></span><span class="muted">' + z.size + ' 格</span>' +
+      '<label>攻<input type="number" min="0" inputmode="numeric" placeholder="0" value="' + (z.atk || '') + '"></label><label>防<input type="number" min="0" inputmode="numeric" placeholder="0" value="' + (z.def || '') + '"></label>' +
+      '<div class="zextra"><label class="zmust' + (z.must ? ' on' : '') + '" title="勾選後，求解結果一定會把這個區域填滿（拿到它的特殊效果）；放不下就會告訴你無解"><input type="checkbox" class="zm"' + (z.must ? ' checked' : '') + '>🔒 一定要觸發</label>' +
+      '<label class="zwaive' + (z.waive ? ' on' : '') + '" title="特殊效果：這個區域填滿後，免除某「一種」懲罰幾點（該種懲罰減去它，最低到 0）。沒有就留空。免除「重疊」要在設定分頁開啟「允許重疊」才有用">🛡 免除<select class="zwt">' +
+        WTYPE_OPTS.map(([v, t]) => '<option value="' + v + '"' + (z.wtype === v ? ' selected' : '') + '>' + t + '</option>').join('') +
+      '</select>懲罰<input type="number" class="zw" min="0" max="9" inputmode="numeric" placeholder="0" value="' + (z.waive || '') + '">點</label>' +
+      '<input type="text" class="znote" maxlength="60" placeholder="其他特殊效果（備註，不影響計算）" value="' + (z.note || '').replace(/"/g, '&quot;') + '"></div>' +
+      (usable.has(z.color) ? '' : '<span class="zwarn">⚠ 目前沒有（或沒勾選）' + CNAME[z.color] + '色粒子，這個區域不可能填滿' + (z.must ? '，而你設了「一定要觸發」→ 求解會無解' : '') + '</span>');
+    const ins = row.querySelectorAll('input[type=number]:not(.zw)');
+    const setVals = () => { state.zv[i].atk = +ins[0].value || 0; state.zv[i].def = +ins[1].value || 0; z.atk = state.zv[i].atk; z.def = state.zv[i].def; save(); drawLabels(); updateReady(); };
+    ins.forEach((inp) => {
+      inp.oninput = setVals;
+      inp.onfocus = () => selectZone(i);
+      inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); const all = [...box.querySelectorAll('input[type=number]:not(.zw)')]; const n = all[all.indexOf(inp) + 1]; if (n) { n.focus(); n.select(); } } };
+    });
+    const zw = row.querySelector('.zw'), zwt = row.querySelector('.zwt');
+    zwt.onchange = () => { z.wtype = zwt.value; state.zv[i].wtype = zwt.value; save(); drawLabels(); };
+    zwt.onfocus = () => selectZone(i);
+    zw.oninput = () => { const w = Math.max(0, Math.min(9, zw.value | 0)); z.waive = w; state.zv[i].waive = w; zw.parentNode.classList.toggle('on', w > 0); save(); drawLabels(); };
+    zw.onfocus = () => selectZone(i);
+    const zm = row.querySelector('.zm'), zn = row.querySelector('.znote');
+    zm.onchange = () => { z.must = zm.checked; state.zv[i].must = z.must; save(); row.classList.toggle('must', z.must); zm.parentNode.classList.toggle('on', z.must); drawLabels(); updateReady(); if (!usable.has(z.color)) renderZoneList(); };
+    zn.oninput = () => { z.note = zn.value; state.zv[i].note = zn.value; save(); };
+    zn.onfocus = () => selectZone(i);
+    row.onclick = (e) => { if (!e.target.closest('input,label')) selectZone(i, true); };
+    row.onmouseenter = () => { hlKeys = z.keys; drawHighlight(); };
+    row.onmouseleave = () => { hlKeys = selZone >= 0 ? zonesNow[selZone].keys : []; drawHighlight(); };
+    box.appendChild(row);
+  });
+}
+$('#btnZoneQuick').onclick = () => {
+  const lines = $('#zoneQuick').value.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) { toast('請先貼上數值'); return; }
+  let n = 0;
+  lines.forEach((l, i) => {
+    if (i >= zonesNow.length) return;
+    const nums = l.split(/[\s,，、;；/／\t]+/).filter(Boolean).map(Number).filter((x) => isFinite(x));
+    if (!nums.length) return;
+    const a = nums[0], d = nums.length > 1 ? nums[1] : nums[0];
+    state.zv[i].atk = a; state.zv[i].def = d; zonesNow[i].atk = a; zonesNow[i].def = d; n++;
+  });
+  save(); renderZoneList(); drawLabels(); updateReady();
+  toast('已套用到 ' + n + ' 個區域' + (lines.length > zonesNow.length ? '（多出的 ' + (lines.length - zonesNow.length) + ' 行被忽略）' : ''), 'good');
+};
+$('#btnZoneZero').onclick = () => { zonesNow.forEach((z, i) => { z.atk = z.def = 0; state.zv[i].atk = state.zv[i].def = 0; }); save(); renderZoneList(); drawLabels(); updateReady(); };
+
+/* ------------------------------------------------------------ 形狀工具 */
+function parseEffs(t) {
+  const out = [];
+  for (const tok of String(t || '').split(/[,，;；\s]+/)) {
+    if (!tok) continue;
+    const m = tok.match(/^(\d+(?:\.\d+)?)(?:[x×*](\d+))?$/i);
+    if (m) out.push({ v: +m[1], n: Math.min(99, m[2] ? +m[2] : 1) });
+  }
+  return out;
+}
+function effSummary(t) {
+  const e = parseEffs(t); if (!e.length) return '尚未輸入效能';
+  const total = e.reduce((a, x) => a + x.n, 0), top = Math.max(...e.map((x) => x.v));
+  return total + ' 顆・最高 ' + top;
+}
+function connected(cells) {
+  if (!cells.length) return false;
+  const set = new Set(cells.map((c) => c[0] + ',' + c[1]));
+  const seen = new Set([cells[0][0] + ',' + cells[0][1]]); const st = [cells[0]];
+  while (st.length) { const c = st.pop(); for (const d of Solver.NEIGH) { const k = (c[0] + d[0]) + ',' + (c[1] + d[1]); if (set.has(k) && !seen.has(k)) { seen.add(k); st.push([c[0] + d[0], c[1] + d[1]]); } } }
+  return seen.size === set.size;
+}
+function shapeSvg(cells, color, R) {
+  const svg = svgEl('svg', {});
+  const pts = cells.map(([q, r]) => { const [c, row] = axialToOff(q, r); return center(c, row, R); });
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const x0 = Math.min(...xs) - R, y0 = Math.min(...ys) - R * SQ / 2, w = Math.max(...xs) - x0 + R, h2 = Math.max(...ys) - y0 + R * SQ / 2;
+  svg.setAttribute('viewBox', x0 + ' ' + y0 + ' ' + w + ' ' + h2);
+  svg.setAttribute('width', Math.max(22, w)); svg.setAttribute('height', Math.max(22, h2));
+  svg.style.flex = 'none';
+  pts.forEach((p) => svgEl('polygon', { points: hexPts(p[0], p[1], R - 1), fill: color, stroke: '#0008', 'stroke-width': 1 }, svg));
+  return svg;
+}
+// 自由多六邊形預設（到 5 格）：形狀編輯器用
+const POLY = (function () {
+  const canon = (cells) => Solver.orientations(cells, true).map((o) => o.map((c) => c.join(',')).join(';')).sort()[0];
+  let level = new Map([[canon([[0, 0]]), [[0, 0]]]]);
+  const all = { 1: [[[0, 0]]] };
+  for (let s = 2; s <= 5; s++) {
+    const next = new Map();
+    for (const cells of level.values()) {
+      const have = new Set(cells.map((c) => c.join(',')));
+      for (const c of cells) for (const d of Solver.NEIGH) {
+        const n = [c[0] + d[0], c[1] + d[1]];
+        if (have.has(n.join(','))) continue;
+        const nc = Solver.normalize(cells.concat([n]));
+        const k = canon(nc); if (!next.has(k)) next.set(k, nc);
+      }
+    }
+    level = next; all[s] = [...level.values()];
+  }
+  return all;
+})();
+
+/* ------------------------------------------------------------ 粒子庫存 */
+let editing = -1, edCells = new Set(), edTab = 3;
+const stackKey = (color, shape) => color + '|' + JSON.stringify(Solver.normalize(shape));
+function findStack(color, shape) { const k = stackKey(color, shape); return state.stacks.findIndex((q) => stackKey(q.color, q.shape) === k); }
+function presetAdd(p) {
+  const i = findStack(p.color, p.shape);
+  if (i >= 0) state.stacks[i].effText = p.effText; // 已有同形狀：改成這一組的效能與數量（避免同一堆重複計算）
+  else state.stacks.push({ color: p.color, shape: p.shape.map((c) => c.slice()), effText: p.effText });
+}
+function presetRemove(p) { const i = findStack(p.color, p.shape); if (i >= 0) state.stacks.splice(i, 1); }
+function currentInv() { const L = BUILTIN.inventories || []; return L.find((q) => q.id === state.presetSet) || L[0] || null; }
+function invChanged() { save(); renderInventory(); renderZoneList(); updateReady(); }
+function renderInventory() {
+  const inv = currentInv();
+  const sel = $('#presetSet'); sel.innerHTML = '';
+  (BUILTIN.inventories || []).forEach((q) => { const o = h('option', '', q.name + '（' + q.stacks.length + ' 種）'); o.value = q.id; if (inv && q.id === inv.id) o.selected = true; sel.appendChild(o); });
+  sel.onchange = () => { state.presetSet = sel.value; save(); renderInventory(); };
+  $('#presetNote').textContent = inv ? (inv.note || '') : '';
+  $('#btnPresetAll').onclick = () => { if (inv) inv.stacks.forEach(presetAdd); invChanged(); };
+  $('#btnPresetNone').onclick = () => { if (inv) inv.stacks.forEach(presetRemove); invChanged(); };
+  const box = $('#invGrid'); box.innerHTML = '';
+  let any = false;
+  for (let ci = 0; ci < 5; ci++) {
+    const lib = inv ? inv.stacks.filter((p) => p.color === ci) : [];
+    const libKeys = new Set(lib.map((p) => stackKey(p.color, p.shape)));
+    const custom = []; state.stacks.forEach((s, i) => { if (s.color === ci && !libKeys.has(stackKey(s.color, s.shape))) custom.push(i); });
+    if (!lib.length && !custom.length) continue;
+    any = true;
+    const used = state.settings.useColors[ci] !== false;
+    const onN = state.stacks.filter((s) => s.color === ci).length;
+    const grp = h('div', 'cgroup' + (used ? '' : ' off'));
+    const head = h('div', 'chead');
+    const sw = h('label', 'cswitch'); sw.title = used ? '這次求解會使用' + CNAME[ci] + '色粒子（取消勾選＝這次不用，庫存不會刪）' : '這次求解不使用' + CNAME[ci] + '色粒子';
+    const cb = h('input'); cb.type = 'checkbox'; cb.checked = used;
+    cb.onchange = () => { state.settings.useColors[ci] = cb.checked; invChanged(); };
+    const dot = h('span', 'dot'); dot.style.background = COLORS[ci];
+    sw.append(cb, dot, h('span', '', CNAME[ci] + '色'));
+    head.append(sw, h('span', 'muted', '已加入 ' + onN + ' 種'));
+    if (lib.length) {
+      const a = h('button', '', '全部加入'); a.onclick = () => { lib.forEach(presetAdd); invChanged(); };
+      const r = h('button', '', '全部移除'); r.onclick = () => { lib.forEach(presetRemove); invChanged(); };
+      head.append(a, r);
+    }
+    grp.appendChild(head);
+    const grid = h('div', 'tgrid');
+    lib.forEach((p) => grid.appendChild(libTile(p)));
+    custom.forEach((i) => grid.appendChild(customTile(i)));
+    grp.appendChild(grid); box.appendChild(grp);
+  }
+  if (!any) box.innerHTML = '<p class="hint">還沒有粒子。選一組預設庫存按「全部加入」，或按下面「自訂粒子」。</p>';
+}
+function effInput(s, meta) {
+  const inp = h('input'); inp.type = 'text'; inp.value = s.effText; inp.placeholder = '133x3, 120x10'; inp.title = '效能x數量，例如 133x3, 120x10';
+  inp.oninput = () => { s.effText = inp.value; meta.textContent = effSummary(s.effText); save(); renderZoneListSoon(); updateReady(); };
+  return inp;
+}
+let zlTimer = 0;
+function renderZoneListSoon() { clearTimeout(zlTimer); zlTimer = setTimeout(() => { if (!document.activeElement || document.activeElement.closest('#zoneList') === null) renderZoneList(); }, 400); }
+function libTile(p) {
+  const i = findStack(p.color, p.shape), on = i >= 0;
+  const t = h('div', 'tile' + (on ? ' on' : ''));
+  const head = h('div', 'thead'); head.title = on ? '點一下移除這種粒子' : '點一下加入這種粒子';
+  const tt = h('div', 'tt'); tt.innerHTML = '<b>' + esc2(p.id) + '</b><br>' + p.shape.length + ' 格';
+  head.append(shapeSvg(p.shape, COLORS[p.color], 7), tt);
+  head.onclick = () => { if (on) presetRemove(p); else presetAdd(p); invChanged(); };
+  t.appendChild(head);
+  if (on) {
+    const s = state.stacks[i];
+    const meta = h('div', 'meta'); const sum = h('span', '', effSummary(s.effText)); const ed = h('button', 'ghost', '✎'); ed.title = '編輯形狀'; ed.onclick = () => openEditor(i);
+    meta.append(sum, ed);
+    t.append(effInput(s, sum), meta);
+  } else t.appendChild(h('div', 'off', '效能 ' + p.efficacy + ' ×' + p.count));
+  return t;
+}
+function customTile(i) {
+  const s = state.stacks[i];
+  const t = h('div', 'tile on');
+  const head = h('div', 'thead'); head.style.cursor = 'default';
+  const tt = h('div', 'tt'); tt.innerHTML = '<b>自訂</b><br>' + s.shape.length + ' 格';
+  head.append(shapeSvg(s.shape, COLORS[s.color], 7), tt);
+  t.appendChild(head);
+  const meta = h('div', 'meta'); const sum = h('span', '', effSummary(s.effText));
+  const ed = h('button', 'ghost', '✎'); ed.title = '編輯形狀／顏色'; ed.onclick = () => openEditor(i);
+  const del = h('button', 'ghost danger', '✕'); del.title = '刪除這種粒子'; del.onclick = () => { state.stacks.splice(i, 1); invChanged(); };
+  const bt = h('span'); bt.style.display = 'flex'; bt.append(ed, del);
+  meta.append(sum, bt);
+  t.append(effInput(s, sum), meta);
+  return t;
+}
+function esc2(t) { return String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function openEditor(i) {
+  editing = i;
+  edCells = new Set(state.stacks[i].shape.map(([q, r]) => { const [c, row] = axialToOff(q + 2, r + 1); return c + ',' + row; }));
+  $('#shapeModal').hidden = false; drawEditor();
+}
+function closeEditor() { editing = -1; $('#shapeModal').hidden = true; }
+function drawEditor() {
+  const box = $('#shapeEditor'); box.innerHTML = '';
+  const s = state.stacks[editing]; if (!s) { closeEditor(); return; }
+  const head = h('div', 'grp'); head.style.marginBottom = '8px';
+  head.innerHTML = '<b>編輯形狀</b><span class="muted" style="font-size:12px">點格子加入／移除；或從右邊挑一個預設' + (state.settings.rotation ? '' : '（不能旋轉，已列出所有方向，請挑和遊戲裡一樣的）') + '</span>';
+  box.appendChild(head);
+  const cs = h('div', 'grp'); cs.style.marginBottom = '8px'; cs.appendChild(h('span', 'muted', '顏色'));
+  COLORS.forEach((col, ci) => { const b = h('button', 'sw' + (s.color === ci ? ' on' : '')); b.style.background = col; b.title = CNAME[ci]; b.onclick = () => { s.color = ci; drawEditor(); }; cs.appendChild(b); });
+  box.appendChild(cs);
+  const wrap = h('div', 'grp'); wrap.style.alignItems = 'flex-start'; wrap.style.gap = '14px'; box.appendChild(wrap);
+  const R = 14, EC = 10, ER = 9;
+  const svg = svgEl('svg', { viewBox: '0 0 ' + (2 * R + 1.5 * R * (EC - 1)) + ' ' + (SQ * R * (ER + 0.5)), width: 230 });
+  svg.style.background = '#0b0f13'; svg.style.borderRadius = '6px';
+  for (let c = 0; c < EC; c++) for (let row = 0; row < ER; row++) {
+    const [cx, cy] = center(c, row, R); const k = c + ',' + row;
+    const p = svgEl('polygon', { points: hexPts(cx, cy, R - 1), fill: edCells.has(k) ? COLORS[s.color] : '#151c24', stroke: '#26313d', 'stroke-width': 1, style: 'cursor:pointer' }, svg);
+    p.onclick = () => { if (edCells.has(k)) edCells.delete(k); else edCells.add(k); drawEditor(); };
+  }
+  wrap.appendChild(svg);
+  const right = h('div'); wrap.appendChild(right);
+  const tabs = h('div', 'tabs2');
+  for (let n = 1; n <= 5; n++) { const b = h('button', n === edTab ? 'on' : '', n + ' 格'); b.onclick = () => { edTab = n; drawEditor(); }; tabs.appendChild(b); }
+  right.appendChild(tabs);
+  const pres = h('div', 'presets');
+  const list = state.settings.rotation ? POLY[edTab] : [].concat(...POLY[edTab].map((c) => Solver.orientations(c, true)));
+  list.forEach((cells) => {
+    const b = h('button'); b.appendChild(shapeSvg(cells, COLORS[s.color], 7));
+    b.onclick = () => { edCells = new Set(cells.map(([q, r]) => { const [c, row] = axialToOff(q + 2, r + 1); return c + ',' + row; })); drawEditor(); };
+    pres.appendChild(b);
+  });
+  right.appendChild(pres);
+  const act = h('div', 'grp'); act.style.marginTop = '12px';
+  const ok = h('button', 'primary', '完成');
+  ok.onclick = () => {
+    const ax = [...edCells].map((k) => { const [c, row] = keyToOff(k); return offToAxial(c, row); });
+    if (!ax.length) { toast('至少要有 1 格', 'bad'); return; }
+    if (!connected(ax)) { toast('形狀必須是相連的', 'bad'); return; }
+    s.shape = Solver.normalize(ax); closeEditor(); invChanged();
+  };
+  const cancel = h('button', '', '取消'); cancel.onclick = () => { closeEditor(); invChanged(); };
+  const clear = h('button', '', '清空'); clear.onclick = () => { edCells = new Set(); drawEditor(); };
+  act.append(ok, cancel, clear); box.appendChild(act);
+}
+$('#btnAddStack').onclick = () => {
+  state.stacks.push({ color: 0, shape: [[0, 0]], effText: '150x10' }); invChanged(); openEditor(state.stacks.length - 1);
+};
+
+/* ------------------------------------------------------------ 規則設定 */
+function parseTable(t) {
+  const arr = String(t || '').split(/[,，;；\s]+/).filter(Boolean).map((x) => parseFloat(x) / 100);
+  return arr.length && arr.every((x) => isFinite(x) && x >= 0) ? arr : null;
+}
+function bindSettings() {
+  const st = state.settings;
+  const map = [['#sLimit', 'limit', 'num'], ['#sRot', 'rotation', 'bool'], ['#sOv', 'overlap', 'bool'], ['#sCap', 'cap', 'num'], ['#sTable', 'table', 'str'], ['#sGoal', 'goal', 'str'], ['#sWA', 'wAtk', 'num'], ['#sWD', 'wDef', 'num'], ['#sTime', 'timeSec', 'num']];
+  for (const [sel, key, type] of map) {
+    const el = $(sel);
+    if (type === 'bool') el.checked = !!st[key]; else el.value = st[key];
+    el.oninput = el.onchange = () => { st[key] = type === 'bool' ? el.checked : type === 'num' ? (+el.value) : el.value; save(); tablePreview(); goalUi(); if (key === 'rotation' && editing >= 0) drawEditor(); };
+  }
+  tablePreview(); goalUi();
+}
+function goalUi() {
+  const g = state.settings.goal;
+  $('#sWA').disabled = $('#sWD').disabled = g !== 'custom';
+  $('#goalHint').textContent = '目標「' + GOAL_LABEL[g] + '」：' + ({ balanced: '攻擊力與防禦力一樣重要，求兩者總和最大。', atk: '先求攻擊力最大；攻擊力一樣時，才比防禦力。', def: '先求防禦力最大；防禦力一樣時，才比攻擊力。', custom: '用下面兩個權重自訂：目標 = 攻擊力×權重 + 防禦力×權重。' }[g] || '');
+}
+function tablePreview() {
+  const st = state.settings; const t = parseTable(st.table); const parts = [];
+  if (t) { t.forEach((m, P) => parts.push('P=' + P + '：' + (m * 100).toFixed(1) + '%')); parts.push('其餘：不能製作'); }
+  else { const cap = Math.max(1, st.cap | 0); for (let P = 0; P < cap; P++) parts.push('P=' + P + '：' + ((1 - (P / cap) * (P / cap)) * 100).toFixed(1) + '%'); parts.push('P≥' + cap + '：不能製作'); }
+  $('#tablePreview').textContent = '目前倍率 → ' + parts.join('　');
+}
+
+/* ------------------------------------------------------------ 求解 */
+function buildProblem(goal) {
+  const cells = Object.keys(state.board).map((k) => { const [c, row] = keyToOff(k); return offToAxial(c, row); });
+  const zones = zonesNow.map((z) => ({ color: z.color, cells: z.cells, atk: z.atk, def: z.def, name: z.name, must: !!z.must, waive: z.waive | 0, wtype: z.wtype || 'disc' }));
+  const st = state.settings;
+  const stacks = Solver.filterColors(state.stacks.map((s) => ({ color: s.color, cells: s.shape, effs: parseEffs(s.effText), name: CNAME[s.color] + s.shape.length + '格' })), st.useColors);
+  const gw = Solver.goalWeights(goal || st.goal, +st.wAtk, +st.wDef);
+  return {
+    cells, zones, stacks,
+    settings: { limit: Math.max(1, st.limit | 0), rotation: !!st.rotation, allowOverlap: !!st.overlap, penaltyCap: Math.max(1, st.cap | 0), penaltyTable: parseTable(st.table) || undefined, wAtk: gw.wAtk, wDef: gw.wDef },
+  };
+}
+// 回傳 { msg, tab }（缺什麼、該去哪個分頁補），沒問題回傳 null
+function validate(p) {
+  if (!p.zones.length) return { msg: '板子上還沒有彩色區域。先選一個配方，或用「📷 截圖匯入」。', tab: 'zones' };
+  if (!p.zones.some((z) => z.atk > 0 || z.def > 0 || z.must)) return { msg: '所有區域的攻擊／防禦都是 0，請先填「區域」分頁的數值。', tab: 'zones' };
+  if (!p.stacks.some((s) => s.effs.length)) return { msg: state.stacks.length ? '目前勾選的顏色裡沒有粒子（見「粒子」分頁的顏色開關），或效能欄沒寫。' : '還沒有粒子庫存，請到「粒子」分頁加入。', tab: 'stacks' };
+  const colors = new Set(p.stacks.filter((s) => s.effs.length).map((s) => s.color));
+  const lost = p.zones.filter((z) => z.must && !colors.has(z.color));
+  if (lost.length) return { msg: '「一定要觸發」的 ' + lost.map((z) => z.name + '（' + CNAME[z.color] + '）').join('、') + ' 沒有可用的同色粒子，不可能填滿。請加入／勾選該色粒子，或取消「一定要觸發」。', tab: 'zones' };
+  if (!p.zones.some((z) => (z.atk > 0 || z.def > 0) && colors.has(z.color))) return { msg: '沒有任何與色彩區域「同色」的粒子，無法填滿任何區域。', tab: 'stacks' };
+  return null;
+}
+
+let workerURL = null;
+function getWorkerURL() {
+  if (!workerURL) {
+    const glue = '\nself.onmessage=function(e){var m=e.data;var r=self.InfalsusSolver.solve(m.prob,{timeLimitMs:m.timeLimitMs,onProgress:function(p){self.postMessage({type:"progress",p:p});},onImprove:function(b){self.postMessage({type:"improve",b:b});}});self.postMessage({type:"done",r:r});};';
+    workerURL = URL.createObjectURL(new Blob([SOLVER_SRC + glue], { type: 'application/javascript' }));
+  }
+  return workerURL;
+}
+// 在背景執行緒求解一次；背景執行緒用不了時退回主執行緒（求解期間畫面會暫時凍結）
+function solveOnce(prob, limitMs, hooks) {
+  let finished = false, resolveFn, best = null, w = null;
+  const promise = new Promise((resolve) => { resolveFn = resolve; });
+  const finish = (r, status) => { if (finished) return; finished = true; if (w) { w.terminate(); w = null; } resolveFn({ r, status }); };
+  const fallback = () => setTimeout(() => { const r = Solver.solve(prob, { timeLimitMs: limitMs }); finish(r, r.finished ? 'proved' : 'timeout'); }, 30);
+  try {
+    w = new Worker(getWorkerURL());
+    w.onmessage = (e) => {
+      const m = e.data;
+      if (m.type === 'progress') { if (hooks.progress) hooks.progress(m.p); }
+      else if (m.type === 'improve') { best = m.b; if (hooks.improve) hooks.improve(m.b); }
+      else if (m.type === 'done') finish(m.r, m.r.finished ? 'proved' : 'timeout');
+    };
+    w.onerror = () => { if (w) { w.terminate(); w = null; } if (!finished) fallback(); };
+    w.postMessage({ prob, timeLimitMs: limitMs });
+  } catch (e) { fallback(); }
+  const cancel = () => { if (!finished) finish(best ? { pieces: best.pieces, value: best.value, score: null, nodes: 0, ms: 0, finished: false } : { pieces: [], score: null, nodes: 0, ms: 0, finished: false }, 'stopped'); };
+  return { promise, cancel };
+}
+function scoreOf(run, pieces) {
+  if (!run.S) run.S = Solver.prepare(run.prob);
+  return Solver.scoreExplicit(run.S, pieces.map((p) => ({ color: p.color, cells: p.cells, eff: p.eff })));
+}
+
+let runs = [], curRun = -1, runSeq = 0, running = false, cancelled = false, curCancel = null, runUITimer = 0;
+function setProgress(p, label) {
+  $('#progress').textContent = p ? (label ? label + '：' : '') + '搜尋中 ' + (p.ms / 1000).toFixed(1) + ' 秒・目前最佳 ' + Math.round(p.best) : '';
+}
+function setRunningUI(on) {
+  $('#fabRun').disabled = on; $('#btnRun').disabled = on; $('#btnCompare').disabled = on; $('#btnStop').disabled = !on;
+  $('#barBox').hidden = !on;
+}
+function scheduleRunUI() { if (!runUITimer) runUITimer = setTimeout(() => { runUITimer = 0; renderRuns(); scheduleDraw(); }, 200); }
+async function runGoals(goals) {
+  if (running) return;
+  const err = validate(buildProblem(goals[0]));
+  if (err) { toast(err.msg, 'bad', 5200); showTab(err.tab); return; }
+  running = true; cancelled = false; setRunningUI(true);
+  const total = Math.max(1, state.settings.timeSec) * 1000;
+  const per = goals.length > 1 ? Math.max(4000, Math.round(total / goals.length)) : total;
+  showTab('result');
+  let firstId = 0;
+  try {
+    for (const g of goals) {
+      if (cancelled) break;
+      const prob = buildProblem(g);
+      const run = { id: ++runSeq, goal: g, label: GOAL_LABEL[g] || g, prob, sig: boardSig(), status: 'running', r: null, S: null };
+      if (!firstId) firstId = run.id;
+      runs.unshift(run); curRun = 0; renderRuns(); scheduleDraw();
+      const hnd = solveOnce(prob, per, {
+        progress: (p) => setProgress(p, goals.length > 1 ? run.label : ''),
+        improve: (b) => { run.r = { pieces: b.pieces, score: scoreOf(run, b.pieces), value: b.value }; scheduleRunUI(); },
+      });
+      curCancel = hnd.cancel;
+      const { r, status } = await hnd.promise;
+      curCancel = null;
+      run.r = r.pieces && r.pieces.length && !r.score ? { pieces: r.pieces, score: scoreOf(run, r.pieces), value: r.value } : r;
+      const has = run.r && run.r.pieces && run.r.pieces.length;
+      run.status = has ? status : (r.infeasible ? 'infeasible' : status === 'proved' ? 'none' : status);
+      run.ms = r.ms; run.nodes = r.nodes;
+      renderRuns(); scheduleDraw();
+    }
+  } finally {
+    if (goals.length > 1 && firstId) { const i = runs.findIndex((q) => q.id === firstId); if (i >= 0) curRun = i; }
+    running = false; curCancel = null; setRunningUI(false); setProgress(null);
+    renderRuns(); scheduleDraw();
+    const run = runs[curRun];
+    if (run && run.r && run.r.score && !cancelled) toast((goals.length > 1 ? '三種目標都算完了' : '完成') + '：' + run.label + ' 攻擊 ' + Math.round(run.r.score.finalAtk) + '、防禦 ' + Math.round(run.r.score.finalDef), 'good');
+  }
+}
+$('#btnRun').onclick = () => runGoals([state.settings.goal]);
+$('#fabRun').onclick = () => $('#btnRun').click();
+$('#btnCompare').onclick = () => runGoals(['balanced', 'atk', 'def']);
+$('#btnStop').onclick = () => { cancelled = true; if (curCancel) curCancel(); };
+$('#btnClearRuns').onclick = () => { runs = []; curRun = -1; renderRuns(); scheduleDraw(); };
+
+/* ------------------------------------------------------------ 結果 */
+const STATUS = {
+  running: ['warn', '搜尋中…目前最佳'], proved: ['ok', '已搜尋完畢：最優解'], timeout: ['warn', '時間到：目前最佳（不保證最優）'],
+  stopped: ['warn', '已停止：目前最佳'], none: ['warn', '找不到可行擺放'], infeasible: ['bad', '無解：放不下「一定要觸發」的區域'],
+};
+function pill(status) { const s = STATUS[status] || STATUS.none; return '<span class="pill ' + s[0] + '">' + s[1] + '</span>'; }
+function renderRuns() {
+  const box = $('#runList'); box.innerHTML = '';
+  const bd = $('#bdResult'); bd.textContent = runs.length ? runs.length : '';
+  if (!runs.length) { box.innerHTML = '<p class="hint">按上方「▶ 求解」，結果會出現在這裡，擺放會直接畫在左邊的板子上。想比較攻擊／防禦特化，按「三種目標比較」。</p>'; $('#result').innerHTML = ''; updateBadge(); return; }
+  const sc = (q) => (q.r && q.r.score ? q.r.score : null);
+  const maxA = Math.max(0, ...runs.map((q) => (sc(q) ? Math.round(sc(q).finalAtk) : 0)));
+  const maxD = Math.max(0, ...runs.map((q) => (sc(q) ? Math.round(sc(q).finalDef) : 0)));
+  runs.forEach((run, i) => {
+    const s = sc(run);
+    const row = h('div', 'runrow' + (i === curRun ? ' sel' : ''));
+    const a = s ? Math.round(s.finalAtk) : null, d = s ? Math.round(s.finalDef) : null;
+    row.innerHTML = '<span class="nm">' + run.label + '</span>' +
+      '<span>攻 <b class="' + (a !== null && a === maxA && runs.length > 1 ? 'best' : '') + '">' + (a === null ? '—' : a) + '</b></span>' +
+      '<span>防 <b class="' + (d !== null && d === maxD && runs.length > 1 ? 'best' : '') + '">' + (d === null ? '—' : d) + '</b></span>' +
+      '<span class="st">' + (s ? s.n + ' / ' + run.prob.settings.limit + ' 顆・' : '') + (STATUS[run.status] || STATUS.none)[1] + (run.sig !== boardSig() ? '・板子已改，擺放不再對應' : '') + '</span>';
+    row.onclick = () => { curRun = i; renderRuns(); scheduleDraw(); };
+    box.appendChild(row);
+  });
+  renderRunDetail();
+}
+function updateBadge() {
+  const b = $('#resultBadge'), run = activeRun();
+  if (!run || !run.r.score || !state.ui.showPieces || isEdit()) { b.hidden = true; return; }
+  const s = run.r.score;
+  b.innerHTML = run.label + '　攻擊 <b>' + Math.round(s.finalAtk) + '</b>　防禦 <b>' + Math.round(s.finalDef) + '</b>';
+  b.hidden = false;
+}
+function renderRunDetail() {
+  const box = $('#result'); box.innerHTML = '';
+  updateBadge();
+  const run = runs[curRun]; if (!run) return;
+  const r = run.r;
+  if (!r || !r.pieces || !r.pieces.length || !r.score) {
+    const musts = run.prob.zones.filter((z) => z.must).map((z) => z.name);
+    box.innerHTML = '<div class="msg">' + (run.status === 'running' ? '搜尋中…找到可行解會立刻顯示。'
+      : run.status === 'infeasible' ? '沒有任何擺放能同時填滿「一定要觸發」的 ' + musts.join('、') + '。可能原因：粒子數上限（含可承受的懲罰）放不下、該色粒子形狀／數量不夠、或懲罰太重。請取消其中幾個「一定要觸發」，或放寬「設定」分頁的粒子數／懲罰。'
+      : run.status === 'none' ? '找不到任何有效的擺放：沒有任何區域能被同色粒子填滿（請檢查粒子顏色、形狀、數量與粒子數上限）。' : '目前還沒找到可行解。') + '</div>';
+    return;
+  }
+  const sc = r.score, prob = run.prob;
+  const zNames = sc.completeZones.map((i) => prob.zones[i].name + (prob.zones[i].must ? '🔒' : ''));
+  const html = [];
+  html.push('<div class="big">攻擊力 <b>' + Math.round(sc.finalAtk) + '</b>　防禦力 <b>' + Math.round(sc.finalDef) + '</b></div>');
+  html.push('<div style="margin-bottom:8px">' + pill(run.status) + '</div>');
+  if (run.sig !== boardSig()) html.push('<div class="msg">板子在求解後被改過，這份擺放不再對應目前的板子，所以沒有畫在板子上。</div>');
+  html.push('<table class="kv">' +
+    '<tr><td>填滿的區域</td><td>' + (zNames.length ? zNames.join('、') : '無') + '</td></tr>' +
+    '<tr><td>基礎 攻 / 防</td><td>' + sc.atk + ' / ' + sc.def + '</td></tr>' +
+    '<tr><td>平均粒子效能</td><td>' + sc.avg.toFixed(1) + '　→ ×' + (sc.avg / 100).toFixed(2) + '</td></tr>' +
+    '<tr><td>懲罰</td><td>乖離 ' + sc.disc + '・過載 ' + sc.over + '・重疊 ' + sc.overlap + (sc.waive ? '・🛡免除 ' + ['disc', 'over', 'overlap'].filter((t) => sc.waiveBy[t] > 0).map((t) => WTYPE_NAME[t] + ' −' + (sc[t] - sc.effBy[t]) + (sc[t] - sc.effBy[t] < sc.waiveBy[t] ? '（可免 ' + sc.waiveBy[t] + '）' : '')).join('、') : '') + '　→ 倍率 ' + (sc.mult * 100).toFixed(1) + '%</td></tr>' +
+    '<tr><td>使用粒子</td><td>' + sc.n + ' / ' + prob.settings.limit + '</td></tr></table>');
+  box.innerHTML = html.join('');
+  const list = h('div');
+  const head = h('div', 'sechead', '擺放步驟（滑鼠移上去，板子上會亮起對應的粒子）'); head.style.fontSize = '12px'; head.style.color = 'var(--muted)'; head.style.fontWeight = '400';
+  list.appendChild(head);
+  r.pieces.forEach((p, i) => {
+    const row = h('div', 'piece');
+    const badge = h('div', 'badge', String(i + 1)); badge.style.background = PIECE_STROKE[i % PIECE_STROKE.length];
+    const cover = [];
+    prob.zones.forEach((z) => { if (z.color === p.color) { const zs = new Set(z.cells.map((c) => c[0] + ',' + c[1])); if (p.qr.some((c) => zs.has(c[0] + ',' + c[1]))) cover.push(z.name); } });
+    const info = h('div'); info.innerHTML = CNAME[p.color] + '色・' + p.size + ' 格・效能 <b>' + p.eff + '</b>' + (cover.length ? '<div class="muted" style="font-size:12px">蓋在：' + cover.join('、') + '</div>' : '<div class="muted" style="font-size:12px">額外粒子（拉高平均效能／連接粒子群）</div>');
+    row.append(badge, shapeSvg(p.qr, COLORS[p.color], 8), info);
+    row.onmouseenter = () => { pieceHL = i; scheduleDraw(); };
+    row.onmouseleave = () => { pieceHL = -1; scheduleDraw(); };
+    list.appendChild(row);
+  });
+  box.appendChild(list);
+}
+
+/* ------------------------------------------------------------ 配方、匯入匯出、示範 */
+function renderRecipes() {
+  const sel = $('#recipeSel'); const keep = sel.value; sel.innerHTML = '';
+  const addGroup = (label, items) => {
+    if (!items.length) return;
+    const g = document.createElement('optgroup'); g.label = label;
+    items.forEach(([v, t]) => { const o = h('option', '', t); o.value = v; g.appendChild(o); });
+    sel.appendChild(g);
+  };
+  addGroup('預設配方（板子 + 粒子數上限；攻防值要自己填）', (BUILTIN.recipes || []).map((r, i) => ['preset:' + i, r.name]));
+  addGroup('我的存檔', Object.keys(state.recipes).map((n) => ['my:' + n, n]));
+  if (keep && [...sel.options].some((o) => o.value === keep)) sel.value = keep;
+}
+function loadRecipeByValue(v) {
+  let r = null;
+  if (v.indexOf('preset:') === 0) r = (BUILTIN.recipes || [])[+v.slice(7)]; else if (v.indexOf('my:') === 0) r = state.recipes[v.slice(3)];
+  if (!r) return false;
+  if (Object.keys(state.board).length && !confirm('載入配方會取代目前的板子，確定嗎？（可以用「編輯板子」裡的復原回來）')) return false;
+  pushHist();
+  state.board = JSON.parse(JSON.stringify(r.board)); state.zv = JSON.parse(JSON.stringify(r.zv || []));
+  if (r.limit) { state.settings.limit = r.limit; $('#sLimit').value = r.limit; }
+  selZone = -1; save(); drawBoard(); refreshZones(); fitView();
+  return true;
+}
+$('#btnRecipeLoad').onclick = () => { if (loadRecipeByValue($('#recipeSel').value)) toast('已載入配方：區域攻防值請到「區域」分頁填寫', 'good'); };
+$('#btnRecipeSave').onclick = () => {
+  const name = $('#recipeName').value.trim(); if (!name) { toast('請先輸入配方名稱', 'bad'); return; }
+  state.recipes[name] = { board: JSON.parse(JSON.stringify(state.board)), zv: JSON.parse(JSON.stringify(state.zv)), limit: state.settings.limit };
+  save(); renderRecipes(); $('#recipeSel').value = 'my:' + name; toast('已儲存配方「' + name + '」（含各區域的攻防值）', 'good');
+};
+$('#btnRecipeDel').onclick = () => {
+  const v = $('#recipeSel').value; if (v.indexOf('my:') !== 0) { toast('預設配方不能刪除，只能刪除自己存的。', 'bad'); return; }
+  const n = v.slice(3); if (confirm('刪除配方「' + n + '」？')) { delete state.recipes[n]; save(); renderRecipes(); }
+};
+$('#btnClearBoard').onclick = () => { if (confirm('清空整個板子？（可以復原）')) { pushHist(); state.board = {}; state.zv = []; save(); drawBoard(); refreshZones(); } };
+$('#btnReset').onclick = () => { if (confirm('把所有資料還原成初始狀態（預設粒子庫存、預設配方的板子；自己存的配方會被清除）？')) { state = firstRun(); hist.length = 0; runs = []; curRun = -1; save(); initAll(true); if ((BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0'; } };
+function download(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; a.click(); }
+$('#btnExport').onclick = () => download('infalsus-data.json', JSON.stringify(state, null, 1));
+$('#btnExportParticles').onclick = () => download('infalsus-particles.json', JSON.stringify({ stacks: state.stacks }, null, 1));
+$('#fileImport').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      // 只覆蓋檔案裡有的欄位：只含 stacks 的檔案（粒子庫存）不會洗掉板子；配方存檔也會保留
+      const o = JSON.parse(rd.result);
+      const merged = Object.assign({}, state, o);
+      if (o.recipes) merged.recipes = Object.assign({}, state.recipes, o.recipes);
+      if (o.settings) merged.settings = Object.assign({}, state.settings, o.settings);
+      if (o.ui) merged.ui = Object.assign({}, state.ui, o.ui);
+      state = normalizeState(merged); save(); initAll(!!o.board); toast('已匯入', 'good');
+    } catch (err) { toast('匯入失敗：' + err.message, 'bad'); }
+  };
+  rd.readAsText(f); e.target.value = '';
+};
+// 示範板子（「終焉盡頭」上半部形狀；效果值僅供示範）：只換板子與區域數值，不動粒子庫存
+$('#btnDemo').onclick = () => {
+  if (Object.keys(state.board).length && !confirm('載入示範會取代目前的板子，確定嗎？')) return;
+  pushHist();
+  const B = {};
+  const put = (c, row, t) => { B[c + ',' + row] = { t, g: 0 }; };
+  [[2, 0]].forEach(([c, r]) => put(c, r, 1));
+  [[0, 1], [4, 1], [1, 1], [3, 1], [2, 2]].forEach(([c, r]) => put(c, r, 1));
+  [[0, 5], [2, 5], [1, 5], [3, 5], [1, 6], [3, 6], [2, 7], [4, 7]].forEach(([c, r]) => put(c, r, 1));
+  [[1, 0], [3, 0], [1, 2], [3, 2], [2, 3], [2, 4], [4, 5], [0, 6], [0, 7], [4, 6], [2, 8]].forEach(([c, r]) => put(c, r, 0));
+  state.board = B; state.zv = []; state.settings.limit = 6; selZone = -1;
+  initAll(true);
+  const vals = { 1: 300, 5: 700, 8: 800 };
+  zonesNow.forEach((z, i) => { const v = vals[z.size] || 0; state.zv[i].atk = v; state.zv[i].def = v; z.atk = v; z.def = v; });
+  renderZoneList(); drawLabels(); updateReady(); save();
+};
+
+/* ------------------------------------------------------------ 從截圖匯入板子 */
+let shot = null;
+const SHOT_COL = { 0: '#e6edf3', 1: COLORS[0], 2: COLORS[1], 3: COLORS[2], 4: COLORS[3], 5: COLORS[4] };
+const SHOT_NAME = { 1: '紅', 2: '黃', 3: '綠', 4: '藍', 5: '紫' };
+function shotOpenFile(file) {
+  const url = URL.createObjectURL(file); const im = new Image();
+  im.onload = () => {
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
+    const id = g.getImageData(0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    shotStart({ width: c.width, height: c.height, data: id.data, channels: 4 }, c);
+  };
+  im.onerror = () => { URL.revokeObjectURL(url); toast('讀不了這個圖片檔', 'bad'); };
+  im.src = url;
+}
+function shotStart(img, srcCanvas) {
+  shot = { img, src: srcCanvas, r: null };
+  $('#shotModal').hidden = false; $('#btnShotOk').disabled = true;
+  $('#shotMsg').textContent = '分析中…（約 1～2 秒）';
+  const cv = $('#shotCanvas'); cv.width = 10; cv.height = 10;
+  setTimeout(() => shotRun(undefined), 40);
+}
+function shotRun(d) {
+  const t0 = performance.now();
+  let r;
+  try { r = Importer.detectBoard(shot.img, d ? { d } : {}); } catch (e) { $('#shotMsg').textContent = '偵測失敗：' + e.message; return; }
+  shot.r = r;
+  $('#shotD').value = r.lattice.d.toFixed(2);
+  const cv = $('#shotCanvas'), sc = Math.min(1, 1100 / shot.img.width);
+  cv.width = Math.round(shot.img.width * sc); cv.height = Math.round(shot.img.height * sc);
+  const g = cv.getContext('2d'); g.drawImage(shot.src, 0, 0, cv.width, cv.height);
+  r.debug.cells.forEach((c) => { g.beginPath(); g.arc(c.x * sc, c.y * sc, Math.max(3, r.lattice.d * sc * 0.14), 0, 6.283); g.fillStyle = SHOT_COL[c.k]; g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#000'; g.stroke(); });
+  const n = Object.keys(r.cells).length;
+  const zs = r.zones.map((z, i) => 'Z' + (i + 1) + ' ' + SHOT_NAME[z.color] + z.size + '格').join('、');
+  $('#shotMsg').innerHTML = n ? '偵測到 <b>' + n + '</b> 格（空白 ' + r.counts.gray + '，色格 ' + (n - r.counts.gray) + '）；格距 ' + r.lattice.d.toFixed(1) + ' px；耗時 ' + Math.round(performance.now() - t0) + ' ms<br>區域：' + (zs || '無') + '<br><span class="muted">請拿區域格數對照遊戲裡的 0/8、0/7… 計數。</span>'
+    : '<span style="color:var(--bad)">沒有偵測到任何板上格子。請確認截圖是遊戲的「製作卡牌」畫面，且板子沒被視窗遮住；或試著手動輸入格距。</span>';
+  $('#btnShotOk').disabled = !n;
+}
+$('#btnImportShot').onclick = () => $('#shotFile').click();
+$('#shotFile').onchange = (e) => { const f = e.target.files[0]; if (f) shotOpenFile(f); e.target.value = ''; };
+$('#btnShotCancel').onclick = () => { $('#shotModal').hidden = true; shot = null; };
+$('#btnShotRedo').onclick = () => { if (shot) { $('#shotMsg').textContent = '重新偵測中…'; const d = +$('#shotD').value; setTimeout(() => shotRun(d > 10 ? d : undefined), 30); } };
+$('#btnShotOk').onclick = () => {
+  if (!shot || !shot.r) return;
+  if (Object.keys(state.board).length && !confirm('匯入會取代目前板子上的內容（可以復原），確定嗎？')) return;
+  pushHist();
+  const B = {}; for (const k in shot.r.cells) B[k] = { t: shot.r.cells[k], g: 0 };
+  state.board = B; state.zv = []; selZone = -1; save();
+  $('#shotModal').hidden = true; shot = null;
+  drawBoard(); refreshZones(); fitView(); showTab('zones');
+  toast('已匯入板子：請到「區域」分頁填各區域的攻防值', 'good', 5000);
+};
+window.addEventListener('paste', (e) => {
+  const items = (e.clipboardData && e.clipboardData.items) || [];
+  for (const it of items) if (it.type && it.type.indexOf('image') === 0) { const f = it.getAsFile(); if (f) { e.preventDefault(); shotOpenFile(f); return; } }
+});
+// 把圖片檔拖到板子區也能匯入
+const pane = $('#boardPane');
+pane.addEventListener('dragover', (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+pane.addEventListener('drop', (e) => {
+  const f = e.dataTransfer && [...e.dataTransfer.files].find((x) => x.type.indexOf('image') === 0);
+  if (f) { e.preventDefault(); shotOpenFile(f); }
+});
+
+/* ------------------------------------------------------------ 分頁、狀態列、選單、快速鍵 */
+function showTab(t) {
+  state.ui.tab = t; save();
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.tabpage').forEach((p) => { p.hidden = p.id !== 'tab-' + t; });
+}
+document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
+function setChip(sel, kind, text, tab) {
+  const c = $(sel); c.className = 'chip ' + kind; c.textContent = text; c.onclick = () => { if (tab) showTab(tab); };
+}
+function updateReady() {
+  const nCells = Object.keys(state.board).length, nz = zonesNow.length;
+  const filled = zonesNow.filter((z) => z.atk > 0 || z.def > 0).length;
+  const nst = state.stacks.length;
+  const usedColors = [0, 1, 2, 3, 4].filter((ci) => state.settings.useColors[ci] !== false && state.stacks.some((s) => s.color === ci)).length;
+  setChip('#chipBoard', nz ? 'ok' : 'bad', '板子 ' + nCells + ' 格・' + nz + ' 區域', 'zones');
+  setChip('#chipZones', nz === 0 ? '' : filled === nz ? 'ok' : filled ? 'warn' : 'bad', '區域數值 ' + filled + '/' + nz, 'zones');
+  setChip('#chipStacks', nst && usedColors ? 'ok' : 'bad', '粒子 ' + nst + ' 種・使用 ' + usedColors + ' 色', 'stacks');
+  const bz = $('#bdZones'); bz.textContent = nz && filled < nz ? (nz - filled) + ' 待填' : ''; bz.className = 'bd' + (nz && filled < nz ? ' warn' : '');
+  $('#bdStacks').textContent = nst ? nst : '';
+  const miss = []; if (!nz) miss.push('板子'); else if (!filled) miss.push('區域數值'); if (!nst || !usedColors) miss.push('粒子');
+  $('#btnRun').title = miss.length ? '還缺：' + miss.join('、') + '（Ctrl+Enter）' : '開始求解（Ctrl+Enter）';
+}
+function updateGuide() { $('#guide').hidden = !!state.ui.guideDone; }
+$('#btnGuideOk').onclick = () => { state.ui.guideDone = true; save(); updateGuide(); };
+const menu = $('#menu');
+$('#btnMenu').onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; $('#btnMenu').setAttribute('aria-expanded', String(!menu.hidden)); };
+document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target) && e.target !== $('#btnMenu')) { menu.hidden = true; } });
+menu.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' && e.target.id !== 'btnRecipeSave' && e.target.id !== 'btnRecipeDel') menu.hidden = true; });
+window.addEventListener('keydown', (e) => {
+  const tag = e.target && e.target.tagName; const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if (e.key === 'Escape') {
+    if (!$('#shotModal').hidden) { $('#btnShotCancel').click(); return; }
+    if (!$('#shapeModal').hidden) { closeEditor(); invChanged(); return; }
+    if (!menu.hidden) { menu.hidden = true; return; }
+    if (running) { $('#btnStop').click(); return; }
+  }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (!running) $('#btnRun').click(); return; }
+  if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && !typing) { e.preventDefault(); undoBoard(); return; }
+  if (e.code === 'Space' && !typing && tag !== 'BUTTON') { spaceDown = true; boardSvg.style.cursor = 'grab'; e.preventDefault(); }
+});
+window.addEventListener('keyup', (e) => { if (e.code === 'Space') { spaceDown = false; boardSvg.style.cursor = cursorFor(); } });
+
+/* ------------------------------------------------------------ 初始化 */
+function initAll(fit) {
+  view = state.view || (state.view = { x: 260, y: 220, z: 1 });
+  buildTools(); drawBoard(); refreshZones(); renderInventory(); bindSettings(); renderRecipes(); closeEditor();
+  showTab(state.ui.tab || 'zones'); setMode(state.ui.mode || 'view'); renderRuns(); updateGuide(); updateReady(); updateUndoBtn();
+  $('#showPieces').checked = !!state.ui.showPieces;
+  if (fit) { requestAnimationFrame(fitView); setTimeout(fitView, 120); }
+}
+initAll(FIRST);
+if (FIRST && (BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0';
+window.__app = {
+  get state() { return state; }, get runs() { return runs; }, buildProblem, refreshZones, runGoals, Solver,
+  startSolve() { return runGoals([state.settings.goal]); },
+  load(obj) { state = normalizeState(obj); save(); initAll(false); },
+};
+})();
+</script>
+</body>
+</html>

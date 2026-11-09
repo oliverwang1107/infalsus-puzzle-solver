@@ -1,0 +1,16 @@
+# 依賴與暫存
+node_modules/
+*.log
+tmp*/
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 遊戲存檔與個人資料：永遠不要提交
+*.sav
+*.prefs
+savestate*
+remotecache.vdf
+Player.log
