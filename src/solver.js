@@ -77,6 +77,9 @@
       cap = st.penaltyCap; multArr = [];
       for (let P = 0; P < cap; P++) multArr.push(1 - (P / cap) * (P / cap));
     }
+    // 任務條件「總懲罰最多 N 點」：有效懲罰超過 N 就當作無法製作（等於把懲罰上限降到 N+1）。未設定（空白、負數）＝不限制
+    const maxPen = st.maxPenalty === '' || st.maxPenalty === null || st.maxPenalty === undefined || !(st.maxPenalty >= 0) ? Infinity : Math.floor(st.maxPenalty);
+    if (maxPen + 1 < cap) { cap = maxPen + 1; multArr = multArr.slice(0, cap); }
     const multOf = (P) => (P >= cap ? 0 : multArr[P]);
     const cells = prob.cells;
     const N = cells.length;
@@ -95,21 +98,28 @@
       for (let i = 0; i < N; i++) if (m[i >> 5] & (1 << (i & 31))) for (let w = 0; w < W; w++) out[w] |= nbCell[i][w];
       return out;
     };
-    // 區域特殊效果「免除懲罰」：區域填滿後，免除某「一種」懲罰的 waive 點（wtype：disc 乖離／over 過載／overlap 重疊）。
-    // 各種類各自扣到 0 為止，不會互相抵銷。
-    // WD／WO／WV = 各種類最多可能免除幾點（只算有同色粒子、有機會填滿的區域），用來放寬粒子數上限與剪枝上界
+    // 區域特殊效果「免除懲罰」：區域填滿後免除 waive 點懲罰。wtype：disc 乖離／over 過載／overlap 重疊＝只免那一種，
+    // 各種類各自扣到 0 為止，不會互相抵銷；all 整體＝從「各種懲罰扣完之後的總和」再扣（不分種類）。
+    // WD／WO／WV／WA = 各種類最多可能免除幾點（只算有同色粒子、有機會填滿的區域），用來放寬粒子數上限與剪枝上界
     const colorsAvail = new Set();
     for (const s of prob.stacks || []) if (s.cells && s.cells.length && expandEffs(s.effs).length) colorsAvail.add(s.color);
     const waiveOf = (z) => Math.max(0, Math.floor(+z.waive || 0));
-    const wtypeOf = (z) => (z.wtype === 'over' || z.wtype === 'overlap' ? z.wtype : 'disc');
-    let WD = 0, WO = 0, WV = 0;
+    const wtypeOf = (z) => (z.wtype === 'over' || z.wtype === 'overlap' || z.wtype === 'all' ? z.wtype : 'disc');
+    // 固定免除（settings.globalWaive：{ disc, over, overlap, all }）：角色技能／卡牌效果，不用填滿任何區域，一直生效
+    const gwIn = st.globalWaive || {}, gwN = (v) => Math.max(0, Math.floor(+v || 0));
+    const gw = { disc: gwN(gwIn.disc), over: gwN(gwIn.over), overlap: gwN(gwIn.overlap), all: gwN(gwIn.all) };
+    let WD = gw.disc, WO = gw.over, WV = gw.overlap, WA = gw.all;
     for (const z of prob.zones || []) {
       if (!colorsAvail.has(z.color)) continue;
       const w = waiveOf(z), t = wtypeOf(z);
-      if (t === 'over') WO += w; else if (t === 'overlap') WV += w; else WD += w;
+      if (t === 'over') WO += w; else if (t === 'overlap') WV += w; else if (t === 'all') WA += w; else WD += w;
     }
-    // 只有「過載」的免除會讓粒子數上限變大（n − limit − 免除 < 懲罰上限）
-    const maxPieces = st.maxPieces || st.limit + Math.max(0, cap - 1) + WO;
+    // 「過載」與「整體」的免除會讓粒子數上限變大（n − limit − 免除 < 懲罰上限）
+    const maxPieces = st.maxPieces || st.limit + Math.max(0, cap - 1) + WO + WA;
+
+    // 基礎攻防門檻（任務條件）：填滿的區域的攻／防加總（遊戲裡的「基礎攻擊力／基礎防禦力」）至少要達到的值。0 = 不限制。
+    // 基礎值只看哪些區域填滿，和平均效能、懲罰倍率無關（懲罰過多無法製作的限制照舊）。
+    const minA = Math.max(0, +st.minBaseAtk || 0), minD = Math.max(0, +st.minBaseDef || 0);
 
     const zones = (prob.zones || []).map((z) => {
       const m = mk(); const ci = [];
@@ -119,11 +129,13 @@
         ci.push(i); setBit(m, i);
       }
       // must：一定要填滿的區域（例如要拿它的特殊效果）。價值為 0 時給一個極小的價值，讓搜尋仍會去填它
+      // need：對基礎攻防門檻有貢獻的區域；即使目標權重讓它的價值是 0，搜尋也要考慮去填它
       const must = !!z.must;
+      const need = (minD > 0 && (z.def || 0) > 0) || (minA > 0 && (z.atk || 0) > 0);
       const u0 = st.wAtk * (z.atk || 0) + st.wDef * (z.def || 0);
       return {
         color: z.color, cells: ci, mask: m, size: ci.length, atk: z.atk || 0, def: z.def || 0,
-        u: must ? Math.max(u0, MUST_EPS) : u0, must, waive: waiveOf(z), wtype: wtypeOf(z), name: z.name || '',
+        u: must || need ? Math.max(u0, MUST_EPS) : u0, must, waive: waiveOf(z), wtype: wtypeOf(z), name: z.name || '',
       };
     });
     const mustIdx = []; zones.forEach((z, i) => { if (z.must) mustIdx.push(i); });
@@ -193,10 +205,15 @@
     order.sort((a, b) => (zones[b].must - zones[a].must) || zones[b].u - zones[a].u || zones[a].size - zones[b].size);
     // 必觸發的區域如果完全沒有同色粒子，一定無解
     const mustMissing = mustIdx.filter((i) => !hasColor[zones[i].color]);
+    // 基礎攻防門檻的理論上限：所有「有同色粒子」的區域全部填滿時的攻／防加總；連這個都不到就一定無解
+    let capA = 0, capD = 0;
+    for (const z of zones) if (hasColor[z.color]) { capA += z.atk; capD += z.def; }
+    const baseUnreach = capA < minA || capD < minD;
 
     return {
       st, cap, limit: st.limit, allowOverlap: !!st.allowOverlap, maxPieces, cells, N, W, idx, nbCell,
-      zones, M, PL, byStack, coverBy, maxSize, effMax, order, nbOf, mk, multOf, multArr, mustIdx, mustMissing, WD, WO, WV,
+      zones, M, PL, byStack, coverBy, maxSize, effMax, order, nbOf, mk, multOf, multArr, mustIdx, mustMissing, WD, WO, WV, WA, gw,
+      minA, minD, capA, capD, baseUnreach,
     };
   }
 
@@ -206,7 +223,7 @@
     const n = pieces.length;
     const res = {
       n, atk: 0, def: 0, completeZones: [], avg: 0, over: 0, overlap: 0, disc: 0, P: 0, waive: 0, waived: 0, Peff: 0, mult: 0,
-      finalAtk: 0, finalDef: 0, value: 0, valid: false, forcedMissing: S.mustIdx.slice(),
+      finalAtk: 0, finalDef: 0, value: 0, valid: false, forcedMissing: S.mustIdx.slice(), baseOk: S.minA <= 0 && S.minD <= 0,
     };
     if (n === 0) return res;
     const cnt = new Int32Array(S.N);
@@ -236,14 +253,17 @@
     res.over = Math.max(0, n - S.limit);
     res.P = res.over + res.overlap + res.disc;
     // 已填滿的區域各自免除某一種懲罰 waive 點（每種最多免到 0）。P 是原始懲罰，Peff 才是用來查倍率的
-    const wb = { disc: 0, over: 0, overlap: 0 };
+    // 先各種類各自扣（最多扣到 0），再用「整體」的免除從剩下的總和裡扣
+    const wb = { disc: S.gw.disc, over: S.gw.over, overlap: S.gw.overlap, all: S.gw.all };
     for (const zi of res.completeZones) wb[S.zones[zi].wtype] += S.zones[zi].waive;
     const raw = { disc: res.disc, over: res.over, overlap: res.overlap };
     res.waiveBy = wb; res.effBy = {};
-    res.waive = wb.disc + wb.over + wb.overlap;
-    res.waived = 0;
-    for (const t of ['disc', 'over', 'overlap']) { res.effBy[t] = Math.max(0, raw[t] - wb[t]); res.waived += raw[t] - res.effBy[t]; }
-    res.Peff = res.P - res.waived;
+    res.waive = wb.disc + wb.over + wb.overlap + wb.all;
+    let typed = 0;
+    for (const t of ['disc', 'over', 'overlap']) { res.effBy[t] = Math.max(0, raw[t] - wb[t]); typed += res.effBy[t]; }
+    res.effAll = Math.max(0, typed - wb.all);
+    res.Peff = res.effAll;
+    res.waived = res.P - res.Peff;
     res.mult = S.multOf(res.Peff);
     res.avg = pieces.reduce((a, p) => a + p.eff, 0) / n;
     res.finalAtk = res.atk * (res.avg / 100) * res.mult;
@@ -252,7 +272,10 @@
     // 必觸發的區域沒填滿 → 這個擺放不算數
     res.forcedMissing = S.mustIdx.filter((zi) => res.completeZones.indexOf(zi) < 0);
     if (res.forcedMissing.length) res.value = 0;
-    res.valid = res.mult > 0 && res.forcedMissing.length === 0;
+    // 基礎攻防門檻沒達到 → 這個擺放不算數
+    res.baseOk = res.atk >= S.minA && res.def >= S.minD;
+    if (!res.baseOk) res.value = 0;
+    res.valid = res.mult > 0 && res.forcedMissing.length === 0 && res.baseOk;
     return res;
   }
 
@@ -307,8 +330,8 @@
     const multOf = S.multOf;
     // 免除懲罰。lbEff(過載, 重疊, 乖離)：已知各項原始懲罰「至少」是這些時，最終有效懲罰的下界
     // （各種類最多被免除 WO／WV／WD 點）；剪枝用。evalCurrent 則用目前已填滿的區域「實際」的免除點數。
-    const WD = S.WD, WO = S.WO, WV = S.WV, hasW = WD + WO + WV > 0;
-    const lbEff = (o, v, d) => Math.max(0, o - WO) + Math.max(0, v - WV) + Math.max(0, d - WD);
+    const WD = S.WD, WO = S.WO, WV = S.WV, WA = S.WA, hasW = WD + WO + WV + WA > 0;
+    const lbEff = (o, v, d) => Math.max(0, Math.max(0, o - WO) + Math.max(0, v - WV) + Math.max(0, d - WD) - WA);
     const waiveZ = zones.filter((z) => z.waive > 0);
     const overlapOf = (p) => { let c = 0; for (let w = 0; w < W; w++) { const x = occ[w] & p.mask[w]; if (x) c += pop32(x); } return c; };
     const touches = (p) => { for (let w = 0; w < W; w++) if (occ[w] & p.nb[w]) return true; return false; };
@@ -333,6 +356,10 @@
     const zoneUncovered = (z) => { let c = 0; const b = z.color * W; for (let w = 0; w < W; w++) c += pop32(z.mask[w] & ~cov[b + w]); return c; };
     const zoneDone = (z) => { const b = z.color * W; for (let w = 0; w < W; w++) if (z.mask[w] & ~cov[b + w]) return false; return true; };
     const currentU = () => { let u = 0; for (let i = 0; i < zones.length; i++) { const z = zones[i]; if (z.u > 0 && zoneDone(z)) u += z.u; } return u; };
+    // 基礎攻防門檻：目前已填滿的區域的攻／防加總
+    const minA = S.minA, minD = S.minD, hasBase = minA > 0 || minD > 0;
+    const baseNow = (f) => { let s = 0; for (let i = 0; i < zones.length; i++) { const z = zones[i]; if (z[f] > 0 && zoneDone(z)) s += z[f]; } return s; };
+    const baseMet = () => (minD <= 0 || baseNow('def') >= minD) && (minA <= 0 || baseNow('atk') >= minA);
 
     const par = new Int32Array(maxPieces + 2);
     const compOf = new Int32Array(maxPieces + 2);
@@ -364,11 +391,12 @@
     function evalCurrent() {
       if (n === 0) return 0;
       for (const zi of S.mustIdx) if (!zoneDone(zones[zi])) return 0;
+      if (hasBase && !baseMet()) return 0;
       const U = currentU();
       if (U <= 0) return 0;
-      let wd = 0, wo = 0, wv = 0;
-      if (hasW) for (const z of waiveZ) if (zoneDone(z)) { if (z.wtype === 'over') wo += z.waive; else if (z.wtype === 'overlap') wv += z.waive; else wd += z.waive; }
-      const P = Math.max(0, Math.max(0, n - limit) - wo) + Math.max(0, ov - wv) + Math.max(0, components() - 1 - wd);
+      let wd = S.gw.disc, wo = S.gw.over, wv = S.gw.overlap, wa = S.gw.all;
+      if (hasW) for (const z of waiveZ) if (zoneDone(z)) { if (z.wtype === 'over') wo += z.waive; else if (z.wtype === 'overlap') wv += z.waive; else if (z.wtype === 'all') wa += z.waive; else wd += z.waive; }
+      const P = Math.max(0, Math.max(0, Math.max(0, n - limit) - wo) + Math.max(0, ov - wv) + Math.max(0, components() - 1 - wd) - wa);
       const v = (U * (sumEff / n) / 100) * multOf(P);
       if (v > bestVal + 1e-9 || (v > 0 && Math.abs(v - bestVal) <= 1e-9 && best && n < best.length)) {
         const improved = v > bestVal + 1e-9;
@@ -398,14 +426,16 @@
     // forced：必須選入的區域（正在鋪的那個），回傳 -Infinity 表示放不下。
     const colTmp = [[], [], [], [], []];
     const dpA = new Float64Array(maxPieces + 2), dpB = new Float64Array(maxPieces + 2), tb = new Float64Array(maxPieces + 2);
-    function knap(zi, budget, forced) {
+    // field：用區域的哪個欄位當價值（預設 'u' = 目標價值；基礎攻防門檻的剪枝用 'atk'／'def'）
+    function knap(zi, budget, forced, field) {
       if (budget < 0) return -Infinity;
+      const f = field || 'u';
       for (let c = 0; c < 5; c++) colTmp[c].length = 0;
       for (let k = zi; k < order.length; k++) {
         const zid = order[k], z = zones[zid];
         const unc = zoneUncovered(z);
         if (unc === 0) continue;
-        colTmp[z.color].push(z.u, unc, (zid === forced || z.must) ? 1 : 0);
+        colTmp[z.color].push(z[f], unc, (zid === forced || z.must) ? 1 : 0);
       }
       dpA.fill(0, 0, budget + 1);
       for (let c = 0; c < 5; c++) {
@@ -439,14 +469,22 @@
       }
     }
 
+    // 基礎攻防門檻的剪枝：已填滿的加上「剩餘粒子數內最多還能填到」的（背包上界）仍不夠 → 這個分支不可能達標
+    function baseReachable(zi, forced) {
+      if (minD > 0) { const k = knap(zi, maxPieces - n, forced, 'def'); if (k === -Infinity || baseNow('def') + k < minD) return false; }
+      if (minA > 0) { const k = knap(zi, maxPieces - n, forced, 'atk'); if (k === -Infinity || baseNow('atk') + k < minA) return false; }
+      return true;
+    }
+
     function dfsZone(zi) {
       if (stop) return;
       tick();
-      if (zi === order.length) { if (n > 0) { stats.leaves++; evalCurrent(); extrasSearch(); } return; }
+      if (zi === order.length) { if (n > 0 && (!hasBase || baseMet())) { stats.leaves++; evalCurrent(); extrasSearch(); } return; }
       const z = zones[order[zi]];
       const kn = knap(zi, maxPieces - n, -1);
       // -Infinity：剩下必觸發的區域在粒子數上限內放不下
       if (kn === -Infinity) { stats.pruneZone++; return; }
+      if (hasBase && !baseReachable(zi, -1)) { stats.pruneZone++; return; }
       const ub = ubValue(currentU() + kn, n, sumEff, pndNow());
       if (ub <= bestVal + 1e-9) { stats.pruneZone++; return; }
       if (zoneDone(z)) { dfsZone(zi + 1); return; }
@@ -465,6 +503,7 @@
       if (need > maxPieces - n) return;
       const Ubase = currentU() + knap(zi, maxPieces - n, order[zi]);
       if (!(Ubase > 0) || ubValue(Ubase, n, sumEff, pndNow()) <= bestVal + 1e-9) { stats.pruneTile++; return; }
+      if (hasBase && !baseReachable(zi, order[zi])) { stats.pruneTile++; return; }
       stats.tiles++;
       const lst = coverBy[c][z.color];
       const restK = maxPieces - n - 1;
@@ -555,16 +594,18 @@
       }
     }
 
-    if (order.length && M.length && !S.mustMissing.length) dfsZone(0);
+    if (order.length && M.length && !S.mustMissing.length && !S.baseUnreach) dfsZone(0);
 
     const pieces = best ? describe(best) : [];
     const score = best ? scoreExplicit(S, pieces.map((p) => ({ color: p.color, cells: p.cells, eff: p.eff }))) : null;
     // 有指定必觸發區域，卻找不到任何擺放：缺同色粒子，或（搜尋跑完時）在粒子數與懲罰限制內放不下
     const forced = { zones: S.mustIdx.slice(), missing: S.mustMissing.slice() };
-    const infeasible = S.mustIdx.length > 0 && !best && (S.mustMissing.length > 0 || !stop);
+    // 同理：有基礎攻防門檻卻找不到達標的擺放（門檻比所有區域加總還高，或在粒子數與懲罰限制內達不到）
+    const base = { minAtk: minA, minDef: minD, capAtk: S.capA, capDef: S.capD, unreachable: S.baseUnreach };
+    const infeasible = (S.mustIdx.length > 0 || hasBase) && !best && (S.mustMissing.length > 0 || S.baseUnreach || !stop);
     return {
       // value 取獨立計分的結果（搜尋內部為了讓「必觸發」的 0 價值區域仍會被填，加了極小的 MUST_EPS，不該出現在回報的數字裡）
-      stats, value: score ? score.value : 0, internal: bestVal, pieces, score, nodes, ms: Date.now() - t0, finished: !stop, forced, infeasible,
+      stats, value: score ? score.value : 0, internal: bestVal, pieces, score, nodes, ms: Date.now() - t0, finished: !stop, forced, base, infeasible,
       S: { zones: S.zones.map((z) => ({ color: z.color, atk: z.atk, def: z.def, size: z.size, must: z.must, waive: z.waive, wtype: z.wtype })) },
     };
   }
@@ -584,5 +625,20 @@
     return stacks.filter((s) => useColors[s.color] !== false);
   }
 
-  return { solve, prepare, scoreExplicit, evaluatePlacement, orientations, normalize, rot60, NEIGH, goalWeights, filterColors };
+  // 診斷：第 zi 個區域「單獨」能不能被填滿（只留這一個區域、必須填滿，其餘條件照舊）。
+  // 回傳 { fillable: true／false／null（時間到、不確定）, colorOk, n（參考的粒子數）, ... }。
+  // 用在「無解」時告訴使用者是哪些區域的粒子形狀／數量／顏色拼不出來。
+  function diagnoseZone(prob, zi, timeLimitMs) {
+    const z = prob.zones[zi];
+    const one = Object.assign({}, prob, {
+      zones: [Object.assign({}, z, { must: true, waive: 0 })],
+      settings: Object.assign({}, prob.settings, { minBaseAtk: 0, minBaseDef: 0 }),
+    });
+    const r = solve(one, { timeLimitMs: timeLimitMs || 2000 });
+    const colorOk = (prob.stacks || []).some((s) => s.color === z.color && s.cells && s.cells.length && expandEffs(s.effs).length > 0);
+    const fillable = r.pieces.length > 0 ? true : (r.infeasible ? false : null);
+    return { index: zi, name: z.name || '', color: z.color, size: z.cells.length, atk: z.atk || 0, def: z.def || 0, fillable, colorOk, n: r.pieces.length, finished: r.finished };
+  }
+
+  return { solve, prepare, scoreExplicit, evaluatePlacement, diagnoseZone, orientations, normalize, rot60, NEIGH, goalWeights, filterColors };
 });

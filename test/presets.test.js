@@ -57,6 +57,12 @@ check('網頁不使用 eval（在限制較多的環境也能執行）', () => as
 check('卡牌紀錄：求解完成會記錄、重設不清紀錄（介面行為在瀏覽器實測過，這裡只擋被誤刪）', () => {
   for (const s of ['id="tab-cards"', 'function logCard', 'if (has) logCard(run)', 'keepCards', 'btnCardsCsv']) assert.ok(html.includes(s), '缺少 ' + s);
 });
+check('擺放說明：每顆有步驟卡片＋小地圖，並有放完後的檢查數字（介面行為在瀏覽器實測過）', () => {
+  for (const s of ['function renderGuide', 'function miniMap', 'function pieceCover', "h('div', 'verify')"]) assert.ok(html.includes(s), '缺少 ' + s);
+});
+check('任務條件：介面有基礎防禦／攻擊門檻輸入，並傳給求解器', () => {
+  for (const s of ['id="sMinD"', 'id="sMinA"', 'id="sMaxP"', 'id="sGwN"', 'globalWaive: gwN > 0', 'function diagBox', 'minBaseDef: Math.max(0, +st.minBaseDef || 0)', 'minBaseAtk: Math.max(0, +st.minBaseAtk || 0)']) assert.ok(html.includes(s), '缺少 ' + s);
+});
 
 console.log('\n' + pass + ' 通過, ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

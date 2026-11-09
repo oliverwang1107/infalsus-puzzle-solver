@@ -523,5 +523,258 @@ console.log('\n免除懲罰（分種類）');
   check(`${oc} 題允許重疊的題目：內部計分與獨立計分一致`, () => assert.strictEqual(om, 0));
 }
 
+/* ---------- 7b. 免除「整體」懲罰（wtype: 'all'）：各種類先各自扣，再從剩下的總和裡扣 ---------- */
+console.log('\n免除整體懲罰');
+{
+  const two = (waive, wtype, settings) => ({
+    cells: [[0, 0], [5, 0]],
+    zones: [{ color: 0, cells: [[0, 0]], atk: 500, def: 0, waive, wtype }, { color: 0, cells: [[5, 0]], atk: 500, def: 0 }],
+    stacks: [{ color: 0, cells: [[0, 0]], effs: [{ v: 100, n: 3 }] }],
+    settings: Object.assign({ limit: 2, penaltyCap: 3, rotation: false }, settings || {}),
+  });
+  check('整體免除 1 點抵銷乖離 1（不分種類）→ 倍率 100% → 1000', () => {
+    const r = Solver.solve(two(1, 'all'), { timeLimitMs: 5000 });
+    near(r.value, 1000, 0.01); assert.strictEqual(r.score.P, 1); assert.strictEqual(r.score.Peff, 0); assert.strictEqual(r.score.waived, 1); assert.strictEqual(r.score.waiveBy.all, 1);
+  });
+  check('整體免除跨種類：過載 1＋乖離 1（P=2）→ 免 1 剩 1（8/9）、免 2 剩 0（1.0）、免 5 也只到 0', () => {
+    const p = (w) => two(w, 'all', { limit: 1 });
+    // 2 顆（上限 1）互不相連：過載 1、乖離 1
+    const two2 = [{ color: 0, eff: 100, cells: [[0, 0]] }, { color: 0, eff: 100, cells: [[5, 0]] }];
+    const base = Solver.evaluatePlacement(p(0), two2); assert.strictEqual(base.P, 2); near(base.mult, 5 / 9, 1e-9);
+    assert.strictEqual(Solver.evaluatePlacement(p(1), two2).Peff, 1);
+    assert.strictEqual(Solver.evaluatePlacement(p(2), two2).Peff, 0);
+    assert.strictEqual(Solver.evaluatePlacement(p(5), two2).Peff, 0); assert.strictEqual(Solver.evaluatePlacement(p(5), two2).waived, 2);
+  });
+  check('「整體」和某一種的免除加在一起：乖離 1 被「乖離」免除抵銷、過載 1 被「整體」免除抵銷 → 0', () => {
+    const p = two(1, 'all', { limit: 1 });
+    p.zones[1].waive = 1; p.zones[1].wtype = 'disc';
+    const two2 = [{ color: 0, eff: 100, cells: [[0, 0]] }, { color: 0, eff: 100, cells: [[5, 0]] }];
+    const sc = Solver.evaluatePlacement(p, two2);
+    assert.strictEqual(sc.P, 2); assert.strictEqual(sc.effBy.disc, 0); assert.strictEqual(sc.effBy.over, 1); assert.strictEqual(sc.Peff, 0); assert.strictEqual(sc.waived, 2);
+  });
+  check('整體免除讓可承受的粒子數變多：粒子上限 1、懲罰上限 1，相鄰兩區（乖離 0，過載 1 → 被免除）', () => {
+    const adj = (waive) => ({
+      cells: [[0, 0], [1, 0]],
+      zones: [{ color: 0, cells: [[0, 0]], atk: 500, def: 0, waive, wtype: 'all' }, { color: 0, cells: [[1, 0]], atk: 500, def: 0 }],
+      stacks: [{ color: 0, cells: [[0, 0]], effs: [{ v: 100, n: 2 }] }],
+      settings: { limit: 1, penaltyCap: 1, rotation: false },
+    });
+    near(Solver.solve(adj(0), { timeLimitMs: 5000 }).value, 500);
+    const r = Solver.solve(adj(1), { timeLimitMs: 5000 });
+    near(r.value, 1000); assert.strictEqual(r.pieces.length, 2); assert.strictEqual(r.score.Peff, 0);
+  });
+
+  let mm = 0, cs = 0, used = 0, changed = 0;
+  for (let t = 0; t < 300; t++) {
+    const prob = randomProblem();
+    if (!prob.zones.length) continue;
+    prob.settings.limit = ri(1, 3);
+    if (rnd() < 0.3) prob.settings.penaltyCap = ri(1, 4);
+    prob.zones.forEach((z) => {
+      if (rnd() < 0.6) { z.waive = ri(1, 3); z.wtype = ['all', 'all', 'disc', 'over'][ri(0, 3)]; }
+      if (z.waive && rnd() < 0.3) { z.atk = 0; z.def = 0; }
+      if (rnd() < 0.1) z.must = true;
+    });
+    const S = Solver.prepare(prob);
+    if (S.PL.length > 70 || S.maxPieces > 8) continue;
+    cs++;
+    const bf = bruteForce(prob);
+    const r = Solver.solve(prob, { timeLimitMs: 20000 });
+    if (Math.abs(bf - r.value) > 1e-6) { mm++; if (mm <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'solver=', r.value.toFixed(3), JSON.stringify(prob.settings), 'waive=', JSON.stringify(prob.zones.map((z) => [z.waive || 0, z.wtype]))); }
+    else if (r.score && Math.abs(r.score.value - r.internal) > 1e-4) { mm++; console.log('   內部計分與獨立計分不一致', r.score.value, r.internal); }
+    if (r.score && r.score.waiveBy.all > 0 && r.score.waived > 0) used++;
+    const free = bruteForce(Object.assign({}, prob, { zones: prob.zones.map((z) => Object.assign({}, z, { waive: 0 })) }));
+    if (Math.abs(bf - free) > 1e-6) changed++;
+  }
+  console.log('   統計:', cs, '題，最佳解實際用到整體免除', used, '題、免除改變最佳值', changed, '題');
+  check(`${cs} 題隨機整體免除題與暴力解完全一致`, () => { assert.strictEqual(mm, 0); assert.ok(used > 0 && changed > 0, '測資沒有涵蓋整體免除'); });
+
+  // 固定免除（settings.globalWaive）：角色技能／卡牌效果，不用填滿區域，一直生效
+  check('固定免除：整體 1 點抵銷乖離 1，不用填任何區域；種類不對（重疊）抵銷不了乖離', () => {
+    const r = Solver.solve(two(0, 'all', { globalWaive: { all: 1 } }), { timeLimitMs: 5000 });
+    near(r.value, 1000, 0.01); assert.strictEqual(r.score.Peff, 0); assert.strictEqual(r.score.waiveBy.all, 1);
+    const w = Solver.solve(two(0, 'all', { globalWaive: { overlap: 1 } }), { timeLimitMs: 5000 });
+    near(w.value, 1000 * 8 / 9, 0.01); assert.strictEqual(w.score.Peff, 1);
+  });
+  check('固定免除「重疊」1 點：一次重疊不算懲罰（獨立計分）；第二次重疊才算', () => {
+    const p = {
+      cells: [[0, 0], [1, 0], [2, 0]],
+      zones: [{ color: 0, cells: [[0, 0], [1, 0], [2, 0]], atk: 600, def: 0 }],
+      stacks: [{ color: 0, cells: [[0, 0], [1, 0]], effs: [100] }, { color: 0, cells: [[1, 0], [2, 0]], effs: [100] }],
+      settings: { limit: 2, rotation: false, allowOverlap: true, globalWaive: { overlap: 1 } },
+    };
+    const pcs = [{ color: 0, eff: 100, cells: [[0, 0], [1, 0]] }, { color: 0, eff: 100, cells: [[1, 0], [2, 0]] }];
+    const sc = Solver.evaluatePlacement(p, pcs);
+    assert.strictEqual(sc.overlap, 1); assert.strictEqual(sc.P, 1); assert.strictEqual(sc.Peff, 0); near(sc.finalAtk, 600, 0.01);
+    p.settings.globalWaive = {};
+    near(Solver.evaluatePlacement(p, pcs).finalAtk, 600 * 8 / 9, 0.01);
+  });
+  check('固定免除「過載」讓可放的粒子變多：粒子上限 1、懲罰上限 1，免除過載 1 點後放得下 2 顆', () => {
+    const adj = (gw) => ({
+      cells: [[0, 0], [1, 0]],
+      zones: [{ color: 0, cells: [[0, 0]], atk: 500, def: 0 }, { color: 0, cells: [[1, 0]], atk: 500, def: 0 }],
+      stacks: [{ color: 0, cells: [[0, 0]], effs: [{ v: 100, n: 2 }] }],
+      settings: { limit: 1, penaltyCap: 1, rotation: false, globalWaive: gw },
+    });
+    assert.strictEqual(Solver.solve(adj({}), { timeLimitMs: 5000 }).pieces.length, 1);
+    const r = Solver.solve(adj({ over: 1 }), { timeLimitMs: 5000 });
+    near(r.value, 1000); assert.strictEqual(r.pieces.length, 2);
+  });
+  {
+    let gm = 0, gc = 0, gused = 0;
+    for (let t = 0; t < 260; t++) {
+      const prob = randomProblem();
+      if (!prob.zones.length) continue;
+      prob.settings.limit = ri(1, 3);
+      if (rnd() < 0.3) prob.settings.penaltyCap = ri(1, 4);
+      const gw = {}; gw[['all', 'disc', 'over'][ri(0, 2)]] = ri(1, 2); prob.settings.globalWaive = gw;
+      if (rnd() < 0.4) prob.settings.maxPenalty = ri(0, 1);
+      prob.zones.forEach((z) => { if (rnd() < 0.3) { z.waive = ri(1, 2); z.wtype = ['all', 'disc', 'over'][ri(0, 2)]; } });
+      const S = Solver.prepare(prob);
+      if (S.PL.length > 70 || S.maxPieces > 8) continue;
+      gc++;
+      const bf = bruteForce(prob);
+      const r = Solver.solve(prob, { timeLimitMs: 20000 });
+      if (Math.abs(bf - r.value) > 1e-6) { gm++; if (gm <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'solver=', r.value.toFixed(3), JSON.stringify(prob.settings)); }
+      else if (r.score && Math.abs(r.score.value - r.internal) > 1e-4) { gm++; console.log('   內部計分與獨立計分不一致', r.score.value, r.internal); }
+      if (r.score && r.score.waived > 0) gused++;
+    }
+    console.log('   統計:', gc, '題，最佳解實際用到免除', gused, '題');
+    check(`${gc} 題隨機固定免除題與暴力解完全一致`, () => { assert.strictEqual(gm, 0); assert.ok(gused > 0, '測資沒有涵蓋固定免除'); });
+  }
+}
+
+/* ---------- 8. 基礎攻防門檻（任務條件）：填滿的區域攻／防加總至少要達到某值 ---------- */
+console.log('\n基礎攻防門檻');
+{
+  // 兩個互不相鄰的紅色單格區：Z1 攻 1000／防 0，Z2 攻 0／防 100；預設只放得下 1 顆
+  const two = (st) => ({
+    cells: [[0, 0], [5, 0]],
+    zones: [{ color: 0, cells: [[0, 0]], atk: 1000, def: 0 }, { color: 0, cells: [[5, 0]], atk: 0, def: 100 }],
+    stacks: [{ color: 0, cells: [[0, 0]], effs: [{ v: 100, n: 3 }] }],
+    settings: Object.assign({ limit: 1, penaltyCap: 1, rotation: false }, st || {}),
+  });
+  check('沒有門檻選 Z1（1000）；基礎防禦 ≥ 100 → 一定要填 Z2', () => {
+    const a = Solver.solve(two(), { timeLimitMs: 5000 });
+    assert.deepStrictEqual(a.score.completeZones, [0]);
+    const b = Solver.solve(two({ minBaseDef: 100 }), { timeLimitMs: 5000 });
+    assert.deepStrictEqual(b.score.completeZones, [1]); assert.strictEqual(b.score.def, 100); assert.strictEqual(b.infeasible, false);
+    assert.strictEqual(b.score.baseOk, true); assert.strictEqual(b.base.minDef, 100);
+  });
+  check('門檻比所有區域加總還高 → 立刻無解，並回報理論上限', () => {
+    const r = Solver.solve(two({ minBaseDef: 101 }), { timeLimitMs: 5000 });
+    assert.strictEqual(r.infeasible, true); assert.strictEqual(r.pieces.length, 0); assert.strictEqual(r.nodes, 0);
+    assert.strictEqual(r.base.unreachable, true); assert.strictEqual(r.base.capDef, 100); assert.strictEqual(r.base.capAtk, 1000);
+  });
+  check('每項門檻單獨都達得到，但粒子數上限放不下兩區 → 搜尋跑完後無解', () => {
+    const r = Solver.solve(two({ minBaseDef: 100, minBaseAtk: 1000 }), { timeLimitMs: 5000 });
+    assert.strictEqual(r.infeasible, true); assert.strictEqual(r.base.unreachable, false); assert.strictEqual(r.finished, true); assert.strictEqual(r.pieces.length, 0);
+  });
+  check('放寬粒子數上限後，攻防門檻同時達標（乖離 1 → 倍率 8/9）', () => {
+    const r = Solver.solve(two({ minBaseDef: 100, minBaseAtk: 1000, limit: 2, penaltyCap: 3 }), { timeLimitMs: 5000 });
+    assert.strictEqual(r.infeasible, false); assert.deepStrictEqual(r.score.completeZones.sort(), [0, 1]); near(r.score.finalAtk, 1000 * 8 / 9); near(r.score.finalDef, 100 * 8 / 9);
+  });
+  check('門檻看的是「基礎」值，不受平均效能與倍率影響：效能 50、乖離 1 也算達標', () => {
+    const p = two({ minBaseDef: 100, minBaseAtk: 1000, limit: 2, penaltyCap: 3 }); p.stacks[0].effs = [{ v: 50, n: 3 }];
+    const r = Solver.solve(p, { timeLimitMs: 5000 });
+    assert.strictEqual(r.infeasible, false); assert.strictEqual(r.score.atk, 1000); assert.strictEqual(r.score.def, 100); assert.ok(r.score.finalAtk < 1000);
+  });
+  check('目標權重讓防禦價值為 0（自訂 攻 1／防 0）時，仍會為了基礎防禦門檻去填 Z2', () => {
+    const r = Solver.solve(two({ minBaseDef: 100, wAtk: 1, wDef: 0, limit: 2, penaltyCap: 3 }), { timeLimitMs: 5000 });
+    assert.strictEqual(r.infeasible, false); assert.ok(r.score.def >= 100);
+  });
+  check('獨立計分：基礎值沒達標 → value 為 0、valid 為 false、baseOk 為 false', () => {
+    const p = two({ minBaseDef: 100 });
+    const bad = Solver.evaluatePlacement(p, [{ color: 0, eff: 100, cells: [[0, 0]] }]);
+    assert.strictEqual(bad.baseOk, false); assert.strictEqual(bad.value, 0); assert.strictEqual(bad.valid, false);
+    const ok = Solver.evaluatePlacement(p, [{ color: 0, eff: 100, cells: [[5, 0]] }]);
+    assert.strictEqual(ok.baseOk, true); assert.strictEqual(ok.valid, true); near(ok.value, 100);
+    assert.strictEqual(Solver.evaluatePlacement(two(), [{ color: 0, eff: 100, cells: [[0, 0]] }]).baseOk, true); // 沒設門檻 → 一律達標
+  });
+
+  check('診斷：哪些區域「單獨」就填不滿（沒有同色粒子／形狀拼不出來／超過粒子數上限）', () => {
+    const p = {
+      cells: [[0, 0], [1, 0], [2, 0], [5, 0], [6, 0], [9, 0]],
+      zones: [
+        { color: 0, cells: [[0, 0], [1, 0]], atk: 100, def: 0, name: 'A' },          // 紅 2 格：有 2 格長條，可以
+        { color: 0, cells: [[2, 0], [5, 0]], atk: 100, def: 0, name: 'B' },          // 紅，但兩格不相鄰，要兩顆 1 格 → 可以（2 顆）
+        { color: 1, cells: [[6, 0]], atk: 100, def: 0, name: 'C' },                  // 黃：沒有黃色粒子
+        { color: 0, cells: [[0, 0], [1, 0], [2, 0]], atk: 100, def: 0, name: 'D' },  // 紅 3 格：2 格長條＋1 格 1 顆 → 可以
+      ],
+      stacks: [{ color: 0, cells: [[0, 0], [1, 0]], effs: [100] }, { color: 0, cells: [[0, 0]], effs: [{ v: 100, n: 3 }] }],
+      settings: { limit: 3, rotation: false },
+    };
+    const d = p.zones.map((_, i) => Solver.diagnoseZone(p, i, 3000));
+    assert.deepStrictEqual(d.map((x) => x.fillable), [true, true, false, true]);
+    assert.deepStrictEqual(d.map((x) => x.colorOk), [true, true, false, true]);
+    // 粒子數上限 1：只有 A（一顆 2 格）填得滿，B、D 要 2 顆以上 → 填不滿
+    p.settings = { limit: 1, penaltyCap: 1, rotation: false };
+    assert.deepStrictEqual(p.zones.map((_, i) => Solver.diagnoseZone(p, i, 3000).fillable), [true, false, false, false]);
+  });
+
+  let mm = 0, cs = 0, nInf = 0, nChanged = 0, nBoth = 0;
+  for (let t = 0; t < 320; t++) {
+    const prob = randomProblem();
+    if (!prob.zones.length) continue;
+    prob.settings.limit = ri(2, 4);
+    const sum = (f) => prob.zones.reduce((a, z) => a + (rnd() < 0.6 ? z[f] : 0), 0);
+    const mode = ri(0, 2); // 0 只限防禦、1 只限攻擊、2 兩者都限
+    if (mode !== 1) prob.settings.minBaseDef = sum('def') + (rnd() < 0.15 ? 50 : 0);
+    if (mode !== 0) prob.settings.minBaseAtk = sum('atk') + (rnd() < 0.15 ? 50 : 0);
+    const S = Solver.prepare(prob);
+    if (S.PL.length > 120) continue;
+    cs++; if (mode === 2) nBoth++;
+    const bf = bruteForce(prob);
+    const r = Solver.solve(prob, { timeLimitMs: 20000 });
+    const freeProb = Object.assign({}, prob, { settings: Object.assign({}, prob.settings, { minBaseDef: 0, minBaseAtk: 0 }) });
+    if (Math.abs(bf - bruteForce(freeProb)) > 1e-6) nChanged++;
+    if (Math.abs(bf - r.value) > 1e-6) { mm++; if (mm <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'solver=', r.value.toFixed(3), JSON.stringify(prob.settings)); }
+    else if (bf === 0 && !r.infeasible && r.score && r.score.value > 0) { mm++; console.log('   無解卻給了擺放'); }
+    else if (bf > 0 && (r.infeasible || !r.score.baseOk)) { mm++; console.log('   有解卻標示無解／基礎值沒達標'); }
+    if (bf === 0) nInf++;
+  }
+  console.log('   統計:', cs, '題（兩項都限', nBoth, '）、無解', nInf, '題、門檻改變最佳值', nChanged, '題');
+  check(`${cs} 題隨機基礎攻防門檻題與暴力解完全一致（含無解的判定）`, () => { assert.strictEqual(mm, 0); assert.ok(nInf > 0 && nChanged > 0 && nBoth > 0, '測資沒有涵蓋無解／改變最佳值／兩項同時限制的情形'); });
+
+  // 「總懲罰最多 N 點」（遊戲任務常見的「總懲罰數為 0」＝ 0）：有效懲罰超過 N 就當作無法製作
+  check('總懲罰最多 0：兩區互不相連（乖離 1）無法同時達標；最多 1 就可以；沒設定＝不限制', () => {
+    const p = (mp) => two({ minBaseDef: 100, minBaseAtk: 1000, limit: 2, penaltyCap: 3, maxPenalty: mp });
+    assert.strictEqual(Solver.solve(p(0), { timeLimitMs: 5000 }).infeasible, true);
+    const one = Solver.solve(p(1), { timeLimitMs: 5000 });
+    assert.strictEqual(one.infeasible, false); assert.strictEqual(one.score.Peff, 1);
+    for (const none of [undefined, '', null, -1]) assert.strictEqual(Solver.solve(p(none), { timeLimitMs: 5000 }).infeasible, false);
+  });
+  check('總懲罰最多 0＋免除：整體免除 1 點生效（區域填滿）後，乖離 1 也算有效懲罰 0 → 可以', () => {
+    const p = two({ minBaseDef: 100, minBaseAtk: 1000, limit: 2, penaltyCap: 3, maxPenalty: 0 });
+    p.zones[0].waive = 1; p.zones[0].wtype = 'all';
+    const r = Solver.solve(p, { timeLimitMs: 5000 });
+    assert.strictEqual(r.infeasible, false); assert.strictEqual(r.score.disc, 1); assert.strictEqual(r.score.Peff, 0);
+  });
+  {
+    let mm2 = 0, cs2 = 0, nInf2 = 0, nChg2 = 0;
+    for (let t = 0; t < 220; t++) {
+      const prob = randomProblem();
+      if (!prob.zones.length) continue;
+      prob.settings.limit = ri(1, 4);
+      prob.settings.maxPenalty = ri(0, 2);
+      if (rnd() < 0.5) prob.settings.minBaseDef = prob.zones.reduce((a, z) => a + (rnd() < 0.5 ? z.def : 0), 0);
+      prob.zones.forEach((z) => { if (rnd() < 0.4) { z.waive = ri(1, 2); z.wtype = ['all', 'all', 'disc', 'over'][ri(0, 3)]; } });
+      const S = Solver.prepare(prob);
+      if (S.PL.length > 90 || S.maxPieces > 8) continue;
+      cs2++;
+      const bf = bruteForce(prob);
+      const r = Solver.solve(prob, { timeLimitMs: 20000 });
+      const free = bruteForce(Object.assign({}, prob, { settings: Object.assign({}, prob.settings, { maxPenalty: undefined }) }));
+      if (Math.abs(bf - free) > 1e-6) nChg2++;
+      if (Math.abs(bf - r.value) > 1e-6) { mm2++; if (mm2 <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'solver=', r.value.toFixed(3), JSON.stringify(prob.settings)); }
+      else if (r.score && Math.abs(r.score.value - r.internal) > 1e-4) { mm2++; console.log('   內部計分與獨立計分不一致', r.score.value, r.internal); }
+      else if (r.score && r.score.Peff > prob.settings.maxPenalty) { mm2++; console.log('   有效懲罰超過上限'); }
+      if (bf === 0) nInf2++;
+    }
+    console.log('   統計:', cs2, '題，無解', nInf2, '題、懲罰上限改變最佳值', nChg2, '題');
+    check(`${cs2} 題隨機「總懲罰最多 N」題與暴力解完全一致`, () => { assert.strictEqual(mm2, 0); assert.ok(nChg2 > 0, '測資沒有涵蓋懲罰上限改變最佳值的情形'); });
+  }
+}
+
 console.log(`\n${pass} 通過, ${fail} 失敗`);
 process.exit(fail ? 1 : 0);

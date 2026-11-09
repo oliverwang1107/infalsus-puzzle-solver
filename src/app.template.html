@@ -131,6 +131,26 @@ svg{display:block}
 .runrow .nm{font-weight:700}
 .runrow .st{grid-column:1/-1;font-size:11px;color:var(--muted)}
 .runrow b.best{color:var(--accent)}
+.diag{margin-top:10px}
+.diag .dlist{margin:4px 0 8px;padding-left:0;list-style:none;font-size:13px;line-height:1.7}
+.guide2{margin-top:10px}
+.guide2 .prep{border:1px dashed var(--line);border-radius:9px;padding:6px 10px;margin-bottom:8px;font-size:13px}
+.guide2 .prep ul{margin:4px 0 0;padding-left:0;list-style:none}
+.guide2 .prep li{display:flex;align-items:center;gap:6px;padding:1px 0}
+.step{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;background:#10161d;cursor:pointer}
+.step:hover,.step.pin{border-color:var(--accent)}
+.step .shd{display:flex;align-items:center;gap:10px}
+.step .shd b{font-size:15px}
+.step .how{font-size:13px;margin:6px 0 2px}
+.step .how .muted{font-size:12px;margin-top:2px}
+svg.mini{width:100%;max-width:340px;height:auto;display:block;margin-top:4px}
+.guide2 .verify{border:1px solid var(--good);border-radius:9px;padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.6}
+.taskbox{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:10px;background:#10161d}
+.taskbox .trow{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 4px}
+.taskbox label{display:flex;gap:6px;align-items:center;font-size:13px}
+.taskbox input[type=number]{width:84px}
+.taskbox .sub{font-size:12px;color:var(--muted)}
+.taskbox .sub.warn{color:var(--warn)}
 .cardrow{border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:6px;background:#10161d}
 .cardrow .ctop{display:grid;grid-template-columns:1fr auto auto auto;gap:4px 10px;align-items:center}
 .cardrow .cname{min-width:0;font-weight:700}
@@ -272,6 +292,20 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
     </nav>
     <div id="sideBody">
       <div class="tabpage" id="tab-zones">
+        <div class="taskbox">
+          <b>🎯 任務條件</b>
+          <div class="trow">
+            <label>基礎防禦至少<input type="number" id="sMinD" min="0" inputmode="numeric" placeholder="0"></label>
+            <label>基礎攻擊至少<input type="number" id="sMinA" min="0" inputmode="numeric" placeholder="0"></label>
+            <label title="遊戲任務常見的「總懲罰數為 0」＝填 0；留空＝不限制。免除懲罰生效之後的有效懲罰才算">總懲罰最多<input type="number" id="sMaxP" min="0" inputmode="numeric" placeholder="不限"></label>
+          </div>
+          <div class="trow">
+            <label title="角色技能、卡牌效果之類「一直生效」的免除，不用填滿任何區域。遊戲面板的懲罰旁邊有空的免除格，就是這個。填 0 或留空＝沒有">🛡 固定免除
+              <select id="sGwT"><option value="all">整體</option><option value="disc">乖離</option><option value="over">過載</option><option value="overlap">重疊</option></select>
+              <input type="number" id="sGwN" min="0" max="9" inputmode="numeric" placeholder="0">點</label>
+          </div>
+          <div class="sub" id="baseHint"></div>
+        </div>
         <p class="hint">在遊戲裡把滑鼠移到色彩區域上會顯示「攻擊力 +x／防禦力 +y」，填在這裡。Enter 跳到下一格；區域編號由左到右。</p>
         <div id="zoneList"></div>
         <details style="margin-top:10px">
@@ -400,7 +434,7 @@ function defaultState() {
     board: {}, zv: [], stacks: [], recipes: {}, tool: '1', group: 0, presetSet: 'latest', view: { x: 260, y: 220, z: 1 },
     cards: [], curRecipe: '', curRecipeSig: '',
     ui: { mode: 'view', tab: 'zones', showPieces: true, guideDone: false },
-    settings: { limit: 6, rotation: false, overlap: false, cap: 3, table: '', goal: 'balanced', wAtk: 1, wDef: 1, timeSec: 30, useColors: [true, true, true, true, true] },
+    settings: { limit: 6, rotation: false, overlap: false, cap: 3, table: '', goal: 'balanced', wAtk: 1, wDef: 1, timeSec: 30, useColors: [true, true, true, true, true], minBaseDef: 0, minBaseAtk: 0, maxPenalty: '', gwType: 'all', gwN: 0 },
   };
 }
 function normalizeState(s) {
@@ -464,7 +498,8 @@ function detectZones() {
     const v = bi >= 0 ? old[bi] : { atk: 0, def: 0 };
     if (bi >= 0) used.add(bi);
     z.atk = v.atk || 0; z.def = v.def || 0; z.must = !!v.must; z.note = v.note || ''; z.waive = Math.max(0, v.waive | 0);
-    z.wtype = v.wtype === 'over' || v.wtype === 'overlap' ? v.wtype : 'disc';
+    // 預設「整體」（從總懲罰扣）。舊存檔沒指定時一律是 'disc'，只有真的填了免除點數才保留它
+    z.wtype = v.wtype === 'over' || v.wtype === 'overlap' || v.wtype === 'all' || (v.wtype === 'disc' && z.waive > 0) ? v.wtype : 'all';
     out.push({ keys: z.keys.slice(), atk: z.atk, def: z.def, must: z.must, note: z.note, waive: z.waive, wtype: z.wtype });
   }
   state.zv = out;
@@ -548,15 +583,28 @@ function drawPieces() {
   g.innerHTML = '';
   const run = activeRun();
   if (!run || !state.ui.showPieces || isEdit()) return;
+  // 邊 k 面向的鄰格（平頂六角格，頂點 k→k+1）：只畫「不和同一顆粒子相鄰」的邊，粒子的外框就一目了然
+  const EDGE = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
+  const labelCells = new Set(zonesNow.map((z) => z.keys[0])); // 區域標籤佔住的格子：編號盡量不要壓在上面
   run.r.pieces.forEach((p, i) => {
-    const stroke = PIECE_STROKE[i % PIECE_STROKE.length], hl = pieceHL === i;
-    p.qr.forEach(([q, r]) => {
-      const [c, row] = axialToOff(q, r); const [cx, cy] = center(c, row, BR);
-      svgEl('polygon', { points: hexPts(cx, cy, BR - 3), fill: COLORS[p.color], 'fill-opacity': 0.95, stroke: hl ? '#fff' : stroke, 'stroke-width': hl ? 4 : 2.5 }, g);
-    });
-    const [c, row] = axialToOff(p.qr[0][0], p.qr[0][1]); const [cx, cy] = center(c, row, BR);
-    const t = svgEl('text', { x: cx, y: cy + 6, 'text-anchor': 'middle', 'font-size': 16, 'font-weight': 800, fill: '#fff', stroke: '#000', 'stroke-width': 3.5, 'paint-order': 'stroke' }, g);
+    const stroke = PIECE_STROKE[i % PIECE_STROKE.length], hl = pieceHL === i, dim = pieceHL >= 0 && !hl;
+    const own = new Set(p.qr.map((c) => c[0] + ',' + c[1]));
+    const cells = p.qr.map(([q, r]) => { const [c, row] = axialToOff(q, r); return { q, r, key: c + ',' + row, p: center(c, row, BR) }; });
+    cells.forEach((a) => svgEl('polygon', { points: hexPts(a.p[0], a.p[1], BR - 3), fill: COLORS[p.color], 'fill-opacity': dim ? 0.3 : 0.95, stroke: '#0007', 'stroke-width': 1 }, g));
+    cells.forEach((a) => EDGE.forEach((d, k) => {
+      if (own.has((a.q + d[0]) + ',' + (a.r + d[1]))) return;
+      const a1 = Math.PI / 3 * k, a2 = Math.PI / 3 * (k + 1), R2 = BR - 2.5;
+      svgEl('line', { x1: a.p[0] + R2 * Math.cos(a1), y1: a.p[1] + R2 * Math.sin(a1), x2: a.p[0] + R2 * Math.cos(a2), y2: a.p[1] + R2 * Math.sin(a2), stroke: hl ? '#fff' : stroke, 'stroke-width': hl ? 4.5 : 3, 'stroke-linecap': 'round', opacity: dim ? 0.45 : 1 }, g);
+    }));
+    // 編號與效能標在最靠近粒子中心、又沒被區域標籤佔用的那一格
+    const mx = cells.reduce((s, a) => s + a.p[0], 0) / cells.length, my = cells.reduce((s, a) => s + a.p[1], 0) / cells.length;
+    const pool = cells.filter((a) => !labelCells.has(a.key)); const cand = pool.length ? pool : cells;
+    const at = cand.slice().sort((a, b) => Math.hypot(a.p[0] - mx, a.p[1] - my) - Math.hypot(b.p[0] - mx, b.p[1] - my))[0];
+    svgEl('circle', { cx: at.p[0], cy: at.p[1] - 5, r: 9, fill: stroke, stroke: '#000', 'stroke-width': 1.2, opacity: dim ? 0.5 : 1 }, g);
+    const t = svgEl('text', { x: at.p[0], y: at.p[1] - 0.5, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 800, fill: '#111' }, g);
     t.textContent = i + 1;
+    const e = svgEl('text', { x: at.p[0], y: at.p[1] + 13, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#fff', stroke: '#000', 'stroke-width': 2.4, 'paint-order': 'stroke' }, g);
+    e.textContent = p.eff;
   });
 }
 function drawLabels() {
@@ -570,7 +618,7 @@ function drawLabels() {
     t.textContent = (z.must ? '🔒' : '') + z.name + (cell.g ? '·' + cell.g : '') + (done && done.has(zi) ? ' ✓' : '');
     const has = z.atk > 0 || z.def > 0;
     const t2 = svgEl('text', { x: cx, y: cy + 11, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 600, fill: has ? '#e8eef5' : '#ffd166', stroke: '#000', 'stroke-width': 2.2, 'paint-order': 'stroke' }, g);
-    t2.textContent = (has ? z.atk + '/' + z.def : z.waive ? '' : '填數值') + (z.waive ? ' 🛡' + WTYPE_SHORT[z.wtype || 'disc'] + z.waive : '');
+    t2.textContent = (has ? z.atk + '/' + z.def : z.waive ? '' : '填數值') + (z.waive ? ' 🛡' + WTYPE_SHORT[z.wtype || 'all'] + z.waive : '');
   });
 }
 function fitView() {
@@ -728,9 +776,9 @@ function selectZone(i, focus) {
     const row = rows[i]; if (row) { row.scrollIntoView({ block: 'nearest' }); const inp = row.querySelector('input'); if (inp) { inp.focus(); inp.select(); } }
   }
 }
-const WTYPE_OPTS = [['disc', '乖離'], ['over', '過載'], ['overlap', '重疊']];
-const WTYPE_SHORT = { disc: '乖', over: '載', overlap: '疊' };
-const WTYPE_NAME = { disc: '乖離', over: '過載', overlap: '重疊' };
+const WTYPE_OPTS = [['all', '整體'], ['disc', '乖離'], ['over', '過載'], ['overlap', '重疊']];
+const WTYPE_SHORT = { all: '總', disc: '乖', over: '載', overlap: '疊' };
+const WTYPE_NAME = { all: '整體', disc: '乖離', over: '過載', overlap: '重疊' };
 function renderZoneList() {
   const box = $('#zoneList'); box.innerHTML = '';
   if (!zonesNow.length) { box.innerHTML = '<p class="hint">板子上還沒有彩色區域。上方選一個配方按「載入」，或用「📷 截圖匯入」。</p>'; return; }
@@ -740,7 +788,7 @@ function renderZoneList() {
     row.innerHTML = '<span class="zname"><span class="dot" style="background:' + COLORS[z.color] + '"></span><b>' + z.name + '</b></span><span class="muted">' + z.size + ' 格</span>' +
       '<label>攻<input type="number" min="0" inputmode="numeric" placeholder="0" value="' + (z.atk || '') + '"></label><label>防<input type="number" min="0" inputmode="numeric" placeholder="0" value="' + (z.def || '') + '"></label>' +
       '<div class="zextra"><label class="zmust' + (z.must ? ' on' : '') + '" title="勾選後，求解結果一定會把這個區域填滿（拿到它的特殊效果）；放不下就會告訴你無解"><input type="checkbox" class="zm"' + (z.must ? ' checked' : '') + '>🔒 一定要觸發</label>' +
-      '<label class="zwaive' + (z.waive ? ' on' : '') + '" title="特殊效果：這個區域填滿後，免除某「一種」懲罰幾點（該種懲罰減去它，最低到 0）。沒有就留空。免除「重疊」要在設定分頁開啟「允許重疊」才有用">🛡 免除<select class="zwt">' +
+      '<label class="zwaive' + (z.waive ? ' on' : '') + '" title="特殊效果：這個區域填滿後免除幾點懲罰。「整體」＝從總懲罰扣（不分種類，最低到 0）；也可以改成只免乖離／過載／重疊其中一種。沒有就留空。免除「重疊」要在設定分頁開啟「允許重疊」才有用">🛡 免除<select class="zwt">' +
         WTYPE_OPTS.map(([v, t]) => '<option value="' + v + '"' + (z.wtype === v ? ' selected' : '') + '>' + t + '</option>').join('') +
       '</select>懲罰<input type="number" class="zw" min="0" max="9" inputmode="numeric" placeholder="0" value="' + (z.waive || '') + '">點</label>' +
       '<input type="text" class="znote" maxlength="60" placeholder="其他特殊效果（備註，不影響計算）" value="' + (z.note || '').replace(/"/g, '&quot;') + '"></div>' +
@@ -987,13 +1035,27 @@ function parseTable(t) {
 }
 function bindSettings() {
   const st = state.settings;
-  const map = [['#sLimit', 'limit', 'num'], ['#sRot', 'rotation', 'bool'], ['#sOv', 'overlap', 'bool'], ['#sCap', 'cap', 'num'], ['#sTable', 'table', 'str'], ['#sGoal', 'goal', 'str'], ['#sWA', 'wAtk', 'num'], ['#sWD', 'wDef', 'num'], ['#sTime', 'timeSec', 'num']];
+  const map = [['#sLimit', 'limit', 'num'], ['#sRot', 'rotation', 'bool'], ['#sOv', 'overlap', 'bool'], ['#sCap', 'cap', 'num'], ['#sTable', 'table', 'str'], ['#sGoal', 'goal', 'str'], ['#sWA', 'wAtk', 'num'], ['#sWD', 'wDef', 'num'], ['#sTime', 'timeSec', 'num'], ['#sMinD', 'minBaseDef', 'num'], ['#sMinA', 'minBaseAtk', 'num'], ['#sMaxP', 'maxPenalty', 'opt'], ['#sGwT', 'gwType', 'str'], ['#sGwN', 'gwN', 'num']];
   for (const [sel, key, type] of map) {
     const el = $(sel);
-    if (type === 'bool') el.checked = !!st[key]; else el.value = st[key];
-    el.oninput = el.onchange = () => { st[key] = type === 'bool' ? el.checked : type === 'num' ? (+el.value) : el.value; save(); tablePreview(); goalUi(); if (key === 'rotation' && editing >= 0) drawEditor(); };
+    if (type === 'bool') el.checked = !!st[key]; else el.value = (key === 'minBaseDef' || key === 'minBaseAtk' || key === 'gwN') && !st[key] ? '' : st[key];
+    // 'opt'：空白＝不限制（0 是有意義的值：總懲罰最多 0）
+    el.oninput = el.onchange = () => { st[key] = type === 'bool' ? el.checked : type === 'opt' ? (el.value === '' ? '' : Math.max(0, Math.floor(+el.value) || 0)) : type === 'num' ? (+el.value) : el.value; save(); tablePreview(); goalUi(); updateBaseHint(); if (key === 'rotation' && editing >= 0) drawEditor(); };
   }
-  tablePreview(); goalUi();
+  tablePreview(); goalUi(); updateBaseHint();
+}
+// 任務條件下方的說明：能填的區域全部加起來的基礎攻防（沒有可用同色粒子的區域不算），和門檻比較
+function updateBaseHint() {
+  const el = $('#baseHint'); if (!el) return;
+  const st = state.settings, usable = usableColors();
+  let capA = 0, capD = 0, allA = 0, allD = 0;
+  zonesNow.forEach((z) => { allA += z.atk || 0; allD += z.def || 0; if (usable.has(z.color)) { capA += z.atk || 0; capD += z.def || 0; } });
+  const minD = Math.max(0, +st.minBaseDef || 0), minA = Math.max(0, +st.minBaseAtk || 0);
+  const bad = minD > capD || minA > capA;
+  el.classList.toggle('warn', bad);
+  el.textContent = '「基礎」＝填滿的區域的攻／防加總（遊戲左邊的「基礎攻擊力／基礎防禦力」），和平均效能、懲罰倍率無關；0 或留空＝不限制，求解只找達標的擺放，再照上方目標選最好的。' +
+    '　能填的區域全部加起來：防禦 ' + capD + '、攻擊 ' + capA + (capD !== allD || capA !== allA ? '（有些區域沒有可用的同色粒子）' : '') + '。' +
+    (bad ? '　⚠ 門檻比這個還高，一定無解。' : '');
 }
 function goalUi() {
   const g = state.settings.goal;
@@ -1010,13 +1072,16 @@ function tablePreview() {
 /* ------------------------------------------------------------ 求解 */
 function buildProblem(goal) {
   const cells = Object.keys(state.board).map((k) => { const [c, row] = keyToOff(k); return offToAxial(c, row); });
-  const zones = zonesNow.map((z) => ({ color: z.color, cells: z.cells, atk: z.atk, def: z.def, name: z.name, must: !!z.must, waive: z.waive | 0, wtype: z.wtype || 'disc' }));
+  const zones = zonesNow.map((z) => ({ color: z.color, cells: z.cells, atk: z.atk, def: z.def, name: z.name, must: !!z.must, waive: z.waive | 0, wtype: z.wtype || 'all' }));
   const st = state.settings;
   const stacks = Solver.filterColors(state.stacks.map((s) => ({ color: s.color, cells: s.shape, effs: parseEffs(s.effText), name: CNAME[s.color] + s.shape.length + '格' })), st.useColors);
   const gw = Solver.goalWeights(goal || st.goal, +st.wAtk, +st.wDef);
+  const gwN = Math.max(0, Math.min(9, Math.floor(+st.gwN || 0)));
   return {
     cells, zones, stacks,
-    settings: { limit: Math.max(1, st.limit | 0), rotation: !!st.rotation, allowOverlap: !!st.overlap, penaltyCap: Math.max(1, st.cap | 0), penaltyTable: parseTable(st.table) || undefined, wAtk: gw.wAtk, wDef: gw.wDef },
+    // 有固定免除「整體／重疊」時，重疊（至少免費的那一次）是可以接受的 → 自動允許重疊（超過免除的部分照樣扣懲罰）
+    settings: { limit: Math.max(1, st.limit | 0), rotation: !!st.rotation, allowOverlap: !!st.overlap || (gwN > 0 && (st.gwType === 'all' || st.gwType === 'overlap')),
+      globalWaive: gwN > 0 ? { [st.gwType || 'all']: gwN } : {}, penaltyCap: Math.max(1, st.cap | 0), penaltyTable: parseTable(st.table) || undefined, wAtk: gw.wAtk, wDef: gw.wDef, minBaseDef: Math.max(0, +st.minBaseDef || 0), minBaseAtk: Math.max(0, +st.minBaseAtk || 0), maxPenalty: st.maxPenalty === '' || st.maxPenalty == null ? undefined : Math.max(0, Math.floor(+st.maxPenalty) || 0) },
   };
 }
 // 回傳 { msg, tab }（缺什麼、該去哪個分頁補），沒問題回傳 null
@@ -1120,7 +1185,7 @@ $('#btnClearRuns').onclick = () => { runs = []; curRun = -1; renderRuns(); sched
 /* ------------------------------------------------------------ 結果 */
 const STATUS = {
   running: ['warn', '搜尋中…目前最佳'], proved: ['ok', '已搜尋完畢：最優解'], timeout: ['warn', '時間到：目前最佳（不保證最優）'],
-  stopped: ['warn', '已停止：目前最佳'], none: ['warn', '找不到可行擺放'], infeasible: ['bad', '無解：放不下「一定要觸發」的區域'],
+  stopped: ['warn', '已停止：目前最佳'], none: ['warn', '找不到可行擺放'], infeasible: ['bad', '無解：達不到任務條件（必觸發區域／基礎攻防門檻）'],
 };
 function pill(status) { const s = STATUS[status] || STATUS.none; return '<span class="pill ' + s[0] + '">' + s[1] + '</span>'; }
 function renderRuns() {
@@ -1150,6 +1215,51 @@ function updateBadge() {
   b.innerHTML = run.label + '　攻擊 <b>' + Math.round(s.finalAtk) + '</b>　防禦 <b>' + Math.round(s.finalDef) + '</b>';
   b.hidden = false;
 }
+// 無解／找不到時的診斷：每個區域「單獨」能不能填滿，哪些區域是被粒子的顏色／形狀／數量／粒子數上限卡住
+function runDiagnose(run) {
+  if (run.diag || run.diagRunning) return;
+  run.diagRunning = true;
+  const res = []; let i = 0;
+  const step = () => {
+    if (i >= run.prob.zones.length) { run.diag = res; run.diagRunning = false; if (runs[curRun] === run) renderRunDetail(); return; }
+    try { res.push(Solver.diagnoseZone(run.prob, i, 2000)); } catch (e) { res.push({ index: i, name: run.prob.zones[i].name, color: run.prob.zones[i].color, size: run.prob.zones[i].cells.length, fillable: null, colorOk: true }); }
+    i++; setTimeout(step, 0);
+  };
+  setTimeout(step, 0);
+}
+function diagBox(run) {
+  const box = h('div', 'diag');
+  if (!run.diag) { box.appendChild(h('p', 'hint', '正在檢查每個區域能不能單獨填滿…')); runDiagnose(run); return box; }
+  const bs = run.prob.settings, d = run.diag;
+  box.appendChild(h('div', 'sechead', '🔍 各區域能不能「單獨」填滿（只看這一個區域，不考慮其他區域搶粒子）'));
+  const ul = h('ul', 'dlist');
+  d.forEach((x) => {
+    const z = run.prob.zones[x.index], vals = (z.atk || z.def) ? '（攻 ' + z.atk + '／防 ' + z.def + '）' : '';
+    const li = h('li');
+    const why = x.fillable === false ? (!x.colorOk ? '沒有（或沒勾選）' + CNAME[x.color] + '色粒子' : '同色粒子的形狀／數量拼不出來（粒子不能旋轉），或需要的粒子數超過上限') : x.fillable === null ? '判定超時，不確定' : '約需 ' + x.n + ' 顆';
+    li.innerHTML = '<span class="dot" style="background:' + COLORS[x.color] + '"></span> <b>' + esc2(x.name) + '</b>（' + CNAME[x.color] + ' ' + x.size + ' 格）' + vals + '　' + (x.fillable === true ? '✅ ' : x.fillable === false ? '❌ ' : '❓ ') + why;
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+  const okD = d.filter((x) => x.fillable !== false).reduce((s, x) => s + (run.prob.zones[x.index].def || 0), 0);
+  const okA = d.filter((x) => x.fillable !== false).reduce((s, x) => s + (run.prob.zones[x.index].atk || 0), 0);
+  const tips = [];
+  if (bs.minBaseDef > 0 && okD < bs.minBaseDef) tips.push('能填滿的區域防禦加總只有 ' + okD + '，低於門檻 ' + bs.minBaseDef + '：被卡住的區域（❌）是關鍵');
+  if (bs.minBaseAtk > 0 && okA < bs.minBaseAtk) tips.push('能填滿的區域攻擊加總只有 ' + okA + '，低於門檻 ' + bs.minBaseAtk + '：被卡住的區域（❌）是關鍵');
+  if (!tips.length && d.every((x) => x.fillable !== false)) tips.push('每個區域單獨都填得滿，是「合在一起」放不下：粒子要同時滿足粒子數上限、懲罰、以及彼此不重疊。試試降低門檻、增加粒子數上限，或幫某區域填上「免除懲罰」');
+  if (tips.length) box.appendChild(h('div', 'msg', tips.join('；') + '。'));
+  return box;
+}
+// 結果裡「🛡免除」那段說明：各種類各免了幾點、整體免了幾點（可免 > 實際免掉時標出來）
+function waiveText(sc) {
+  if (!sc.waive) return '';
+  const parts = [];
+  ['disc', 'over', 'overlap'].forEach((t) => {
+    if (sc.waiveBy[t] > 0) { const got = sc[t] - sc.effBy[t]; parts.push(WTYPE_NAME[t] + ' −' + got + (got < sc.waiveBy[t] ? '（可免 ' + sc.waiveBy[t] + '）' : '')); }
+  });
+  if (sc.waiveBy.all > 0) { const got = sc.effBy.disc + sc.effBy.over + sc.effBy.overlap - sc.effAll; parts.push('整體 −' + got + (got < sc.waiveBy.all ? '（可免 ' + sc.waiveBy.all + '）' : '')); }
+  return '・🛡免除 ' + parts.join('、') + '・有效懲罰 ' + sc.Peff;
+}
 function renderRunDetail() {
   const box = $('#result'); box.innerHTML = '';
   updateBadge();
@@ -1157,9 +1267,19 @@ function renderRunDetail() {
   const r = run.r;
   if (!r || !r.pieces || !r.pieces.length || !r.score) {
     const musts = run.prob.zones.filter((z) => z.must).map((z) => z.name);
+    const bs = run.prob.settings, bi = r && r.base;
+    const baseTxt = (bs.minBaseDef > 0 ? '基礎防禦 ≥ ' + bs.minBaseDef : '') + (bs.minBaseDef > 0 && bs.minBaseAtk > 0 ? '、' : '') + (bs.minBaseAtk > 0 ? '基礎攻擊 ≥ ' + bs.minBaseAtk : '');
+    const infMsg = () => {
+      if (bi && bi.unreachable) return '任務條件（' + baseTxt + '）比所有「能填的區域」全部加起來還高：能填的區域最多只有 防禦 ' + bi.capDef + '、攻擊 ' + bi.capAtk + '。請確認各區域數值有填對、各顏色粒子有加入並勾選，或降低門檻。';
+      const parts = [];
+      if (musts.length) parts.push('同時填滿「一定要觸發」的 ' + musts.join('、'));
+      if (baseTxt) parts.push('達到 ' + baseTxt);
+      return '沒有任何擺放能' + parts.join('並') + '。可能原因：粒子數上限（含可承受的懲罰）放不下需要填滿的區域、該色粒子形狀／數量不夠、或懲罰太重。請降低門檻、取消其中幾個「一定要觸發」，或放寬「設定」分頁的粒子數／懲罰。';
+    };
     box.innerHTML = '<div class="msg">' + (run.status === 'running' ? '搜尋中…找到可行解會立刻顯示。'
-      : run.status === 'infeasible' ? '沒有任何擺放能同時填滿「一定要觸發」的 ' + musts.join('、') + '。可能原因：粒子數上限（含可承受的懲罰）放不下、該色粒子形狀／數量不夠、或懲罰太重。請取消其中幾個「一定要觸發」，或放寬「設定」分頁的粒子數／懲罰。'
+      : run.status === 'infeasible' ? infMsg()
       : run.status === 'none' ? '找不到任何有效的擺放：沒有任何區域能被同色粒子填滿（請檢查粒子顏色、形狀、數量與粒子數上限）。' : '目前還沒找到可行解。') + '</div>';
+    if (run.status === 'infeasible' || run.status === 'none') box.appendChild(diagBox(run));
     return;
   }
   const sc = r.score, prob = run.prob;
@@ -1170,26 +1290,104 @@ function renderRunDetail() {
   if (run.sig !== boardSig()) html.push('<div class="msg">板子在求解後被改過，這份擺放不再對應目前的板子，所以沒有畫在板子上。</div>');
   html.push('<table class="kv">' +
     '<tr><td>填滿的區域</td><td>' + (zNames.length ? zNames.join('、') : '無') + '</td></tr>' +
-    '<tr><td>基礎 攻 / 防</td><td>' + sc.atk + ' / ' + sc.def + '</td></tr>' +
+    '<tr><td>基礎 攻 / 防</td><td>' + sc.atk + ' / ' + sc.def + (prob.settings.minBaseAtk > 0 || prob.settings.minBaseDef > 0
+      ? '　任務條件：' + [prob.settings.minBaseDef > 0 ? '防禦 ≥ ' + prob.settings.minBaseDef + (sc.def >= prob.settings.minBaseDef ? ' ✓' : ' ✗') : '', prob.settings.minBaseAtk > 0 ? '攻擊 ≥ ' + prob.settings.minBaseAtk + (sc.atk >= prob.settings.minBaseAtk ? ' ✓' : ' ✗') : ''].filter(Boolean).join('、') : '') + '</td></tr>' +
     '<tr><td>平均粒子效能</td><td>' + sc.avg.toFixed(1) + '　→ ×' + (sc.avg / 100).toFixed(2) + '</td></tr>' +
-    '<tr><td>懲罰</td><td>乖離 ' + sc.disc + '・過載 ' + sc.over + '・重疊 ' + sc.overlap + (sc.waive ? '・🛡免除 ' + ['disc', 'over', 'overlap'].filter((t) => sc.waiveBy[t] > 0).map((t) => WTYPE_NAME[t] + ' −' + (sc[t] - sc.effBy[t]) + (sc[t] - sc.effBy[t] < sc.waiveBy[t] ? '（可免 ' + sc.waiveBy[t] + '）' : '')).join('、') : '') + '　→ 倍率 ' + (sc.mult * 100).toFixed(1) + '%</td></tr>' +
+    '<tr><td>懲罰</td><td>乖離 ' + sc.disc + '・過載 ' + sc.over + '・重疊 ' + sc.overlap + waiveText(sc) + '　→ 倍率 ' + (sc.mult * 100).toFixed(1) + '%</td></tr>' +
     '<tr><td>使用粒子</td><td>' + sc.n + ' / ' + prob.settings.limit + '</td></tr></table>');
   box.innerHTML = html.join('');
-  const list = h('div');
-  const head = h('div', 'sechead', '擺放步驟（滑鼠移上去，板子上會亮起對應的粒子）'); head.style.fontSize = '12px'; head.style.color = 'var(--muted)'; head.style.fontWeight = '400';
-  list.appendChild(head);
-  r.pieces.forEach((p, i) => {
-    const row = h('div', 'piece');
-    const badge = h('div', 'badge', String(i + 1)); badge.style.background = PIECE_STROKE[i % PIECE_STROKE.length];
-    const cover = [];
-    prob.zones.forEach((z) => { if (z.color === p.color) { const zs = new Set(z.cells.map((c) => c[0] + ',' + c[1])); if (p.qr.some((c) => zs.has(c[0] + ',' + c[1]))) cover.push(z.name); } });
-    const info = h('div'); info.innerHTML = CNAME[p.color] + '色・' + p.size + ' 格・效能 <b>' + p.eff + '</b>' + (cover.length ? '<div class="muted" style="font-size:12px">蓋在：' + cover.join('、') + '</div>' : '<div class="muted" style="font-size:12px">額外粒子（拉高平均效能／連接粒子群）</div>');
-    row.append(badge, shapeSvg(p.qr, COLORS[p.color], 8), info);
-    row.onmouseenter = () => { pieceHL = i; scheduleDraw(); };
-    row.onmouseleave = () => { pieceHL = -1; scheduleDraw(); };
-    list.appendChild(row);
+  box.appendChild(renderGuide(run));
+}
+
+/* ------------------------------------------------------------ 擺放說明：照著做就能放出同樣的結果 */
+let pin = { run: 0, i: -1 };
+// 這顆粒子蓋在各（同色）區域的幾格：[{ name, n, total }]
+function pieceCover(prob, p) {
+  const own = new Set(p.qr.map((c) => c[0] + ',' + c[1])), out = [];
+  prob.zones.forEach((z) => {
+    if (z.color !== p.color) return;
+    const n = z.cells.filter((c) => own.has(c[0] + ',' + c[1])).length;
+    if (n) out.push({ name: z.name, n, total: z.cells.length });
   });
-  box.appendChild(list);
+  return out;
+}
+// 整張板子的小地圖：這一顆實心亮起、其他顆淡淡標出，一眼看出放在哪裡
+function miniMap(run, hi) {
+  const prob = run.prob, R = 6, pieces = run.r.pieces;
+  const svg = svgEl('svg', { class: 'mini' });
+  const info = prob.cells.map(([q, r]) => { const [c, row] = axialToOff(q, r); return { k: q + ',' + r, p: center(c, row, R) }; });
+  const zoneColor = new Map(); prob.zones.forEach((z) => z.cells.forEach((c) => zoneColor.set(c[0] + ',' + c[1], z.color)));
+  const owner = new Map(); pieces.forEach((p, i) => p.qr.forEach((c) => owner.set(c[0] + ',' + c[1], i)));
+  const xs = info.map((a) => a.p[0]), ys = info.map((a) => a.p[1]);
+  const x0 = Math.min(...xs) - R, y0 = Math.min(...ys) - R * SQ / 2;
+  svg.setAttribute('viewBox', [x0, y0, Math.max(...xs) + R - x0, Math.max(...ys) + R * SQ / 2 - y0].join(' '));
+  info.forEach((a) => {
+    const o = owner.get(a.k), zc = zoneColor.get(a.k);
+    let fill = '#2a333d', op = 1, stroke = '#0b1015', sw = 0.6;
+    if (zc !== undefined) { fill = COLORS[zc]; op = 0.3; }
+    if (o !== undefined && o !== hi) { fill = COLORS[pieces[o].color]; op = 0.5; }
+    if (o === hi) { fill = COLORS[pieces[o].color]; op = 1; stroke = '#fff'; sw = 1.4; }
+    svgEl('polygon', { points: hexPts(a.p[0], a.p[1], R - 0.6), fill, 'fill-opacity': op, stroke, 'stroke-width': sw }, svg);
+  });
+  const mine = info.filter((a) => owner.get(a.k) === hi);
+  const mx = mine.reduce((s, a) => s + a.p[0], 0) / mine.length, my = mine.reduce((s, a) => s + a.p[1], 0) / mine.length;
+  const near = mine.slice().sort((a, b) => Math.hypot(a.p[0] - mx, a.p[1] - my) - Math.hypot(b.p[0] - mx, b.p[1] - my))[0];
+  svgEl('circle', { cx: near.p[0], cy: near.p[1], r: 5, fill: PIECE_STROKE[hi % PIECE_STROKE.length], stroke: '#000', 'stroke-width': 0.8 }, svg);
+  const t = svgEl('text', { x: near.p[0], y: near.p[1] + 3, 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 800, fill: '#111' }, svg);
+  t.textContent = hi + 1;
+  return svg;
+}
+function guideText(run) {
+  const sc = run.r.score, prob = run.prob, ps = run.r.pieces, L = [];
+  L.push((state.curRecipe && state.curRecipeSig === run.sig ? state.curRecipe + '　' : '') + '目標：' + run.label + '　最終 攻擊 ' + Math.round(sc.finalAtk) + ' / 防禦 ' + Math.round(sc.finalDef));
+  ps.forEach((p, i) => {
+    const cover = pieceCover(prob, p);
+    L.push((i + 1) + '. ' + CNAME[p.color] + p.size + '格　效能 ' + p.eff + ' → ' + (cover.length ? '蓋住 ' + cover.map((c) => c.name + '（' + c.n + '/' + c.total + '格）').join('、') : '額外粒子（看板子上的位置）'));
+  });
+  L.push('放完後面板應顯示：已使用粒子數 ' + sc.n + '/' + prob.settings.limit + '、平均粒子效能 ' + sc.avg.toFixed(1) + '、乖離 ' + sc.disc + '、過載 ' + sc.over + '、重疊 ' + sc.overlap + '、攻擊力 ' + Math.round(sc.finalAtk) + '、防禦力 ' + Math.round(sc.finalDef));
+  return L.join('\n');
+}
+function renderGuide(run) {
+  const wrap = h('div', 'guide2'), sc = run.r.score, prob = run.prob, ps = run.r.pieces;
+  if (pin.run !== run.id) pin = { run: run.id, i: -1 };
+  pieceHL = pin.i;
+  const head = h('div', 'sechead'); head.append('🧩 怎麼擺（共 ' + ps.length + ' 顆）', h('span', 'spacer'));
+  const cp = h('button', 'ghost', '📋 複製'); cp.title = '把擺放清單複製成文字';
+  cp.onclick = () => {
+    const txt = guideText(run);
+    const ok = () => toast('已複製擺放清單', 'good'), bad = () => toast('無法複製（瀏覽器不允許）', 'bad');
+    try { navigator.clipboard.writeText(txt).then(ok, bad); } catch (e) { bad(); }
+  };
+  head.appendChild(cp); wrap.appendChild(head);
+  // 先備料：同形狀的粒子歸成一堆，列出要取哪幾顆（效能由高到低）
+  const groups = new Map();
+  ps.forEach((p, i) => { const k = p.stack; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); });
+  const prep = h('div', 'prep'); prep.appendChild(h('div', 'muted', '先從「粒子」庫存取出這些（點選時挑該堆「最高」的那顆，同堆依序取）：'));
+  const lst = h('ul');
+  groups.forEach((ids) => { const p0 = ps[ids[0]]; const li = h('li'); li.innerHTML = '<span class="dot" style="background:' + COLORS[p0.color] + '"></span>' + CNAME[p0.color] + p0.size + ' 格 ×' + ids.length + '：效能 <b>' + ids.map((i) => ps[i].eff).join('、') + '</b>'; lst.appendChild(li); });
+  prep.appendChild(lst); wrap.appendChild(prep);
+  ps.forEach((p, i) => {
+    const card = h('div', 'step' + (pin.i === i ? ' pin' : ''));
+    const hd = h('div', 'shd');
+    const badge = h('div', 'badge', String(i + 1)); badge.style.background = PIECE_STROKE[i % PIECE_STROKE.length];
+    const tt = h('div'); tt.innerHTML = '<b>' + CNAME[p.color] + '色 ' + p.size + ' 格</b>　效能 <b>' + p.eff + '</b>';
+    hd.append(badge, shapeSvg(p.qr, COLORS[p.color], 11), tt);
+    const cover = pieceCover(prob, p), same = groups.get(p.stack);
+    const how = h('div', 'how');
+    how.innerHTML = (cover.length ? '蓋住 ' + cover.map((c) => '<b>' + esc2(c.name) + '</b>（' + c.n + '/' + c.total + ' 格）').join('、') : '<b>額外粒子</b>：不用蓋區域，拿來拉高平均效能／把分開的粒子連起來') +
+      '<div class="muted">' + (prob.settings.rotation ? '照上圖的方向放（需要的話先旋轉成這個方向）。' : '不要旋轉，形狀照上圖的方向。') +
+      (same.length > 1 ? '同形狀共 ' + same.length + ' 顆，這是第 ' + (same.indexOf(i) + 1) + ' 顆（效能 ' + p.eff + '）。' : '') + '位置看下面的小地圖（亮的那顆）。</div>';
+    card.append(hd, how, miniMap(run, i));
+    card.onmouseenter = () => { pieceHL = i; scheduleDraw(); };
+    card.onmouseleave = () => { pieceHL = pin.i; scheduleDraw(); };
+    card.onclick = () => { pin.i = pin.i === i ? -1 : i; pieceHL = pin.i; wrap.querySelectorAll('.step').forEach((s, j) => s.classList.toggle('pin', j === pin.i)); scheduleDraw(); };
+    wrap.appendChild(card);
+  });
+  const v = h('div', 'verify');
+  v.innerHTML = '<b>放完後，遊戲左邊面板應該顯示：</b><br>已使用粒子數 <b>' + sc.n + ' / ' + prob.settings.limit + '</b>・平均粒子效能 <b>' + sc.avg.toFixed(1) + '</b>・粒子過載 ' + sc.over + '／超界 0／重疊 ' + sc.overlap + '／乖離 ' + sc.disc +
+    '・粒子效能倍率 ×' + (sc.avg / 100).toFixed(2) + '・懲罰倍率 ' + (sc.mult * 100).toFixed(0) + '%<br>卡牌預覽：攻擊力 <b>' + Math.round(sc.finalAtk) + '</b>、防禦力 <b>' + Math.round(sc.finalDef) + '</b>（和這裡不一樣就是哪一步放錯了，或粒子效能與庫存不符）';
+  wrap.appendChild(v);
+  return wrap;
 }
 
 /* ------------------------------------------------------------ 卡牌紀錄（每次求解的攻防自動記下來，存在瀏覽器裡） */
@@ -1200,13 +1398,14 @@ function logCard(run) {
   const recipe = state.curRecipe && state.curRecipeSig === run.sig ? state.curRecipe : '';
   const pieces = run.r.pieces.map((p) => ({ color: p.color, size: p.size, eff: p.eff, qr: p.qr.map((c) => [c[0], c[1]]) }));
   const atk = Math.round(sc.finalAtk), def = Math.round(sc.finalDef);
-  const sig = [recipe, run.goal, atk, def, JSON.stringify(pieces)].join('|');
+  const minDef = run.prob.settings.minBaseDef || 0, minAtk = run.prob.settings.minBaseAtk || 0;
+  const sig = [recipe, run.goal, atk, def, minDef, minAtk, JSON.stringify(pieces)].join('|');
   const hit = state.cards.find((c) => c.sig === sig);
   if (hit) { hit.times = (hit.times || 1) + 1; hit.t = Date.now(); save(); renderCards(); return; }
   state.cards.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), times: 1, sig,
     recipe, goal: run.goal, goalLabel: run.label, status: run.status, atk, def,
-    baseAtk: sc.atk, baseDef: sc.def, avg: Math.round(sc.avg * 10) / 10, mult: Math.round(sc.mult * 1000) / 1000, n: sc.n, limit: run.prob.settings.limit,
+    baseAtk: sc.atk, baseDef: sc.def, minBaseDef: minDef, minBaseAtk: minAtk, avg: Math.round(sc.avg * 10) / 10, mult: Math.round(sc.mult * 1000) / 1000, n: sc.n, limit: run.prob.settings.limit,
     pen: { disc: sc.disc, over: sc.over, overlap: sc.overlap },
     zones: sc.completeZones.map((i) => ({ name: run.prob.zones[i].name, atk: run.prob.zones[i].atk, def: run.prob.zones[i].def })),
     pieces, note: '',
@@ -1238,7 +1437,7 @@ function renderCards() {
       (c.status === 'proved' ? '' : '・非最優（' + (STATUS[c.status] || STATUS.none)[1] + '）') + (c.times > 1 ? '・重複 ' + c.times + ' 次' : ''));
     const det = h('details'); det.appendChild(h('summary', 'muted', '擺放與區域'));
     det.appendChild(h('div', 'cdet', '填滿：' + (c.zones.length ? c.zones.map((z) => z.name + '(' + z.atk + '/' + z.def + ')').join('、') : '無') +
-      '　基礎 ' + c.baseAtk + ' / ' + c.baseDef + '　懲罰 乖離' + c.pen.disc + '・過載' + c.pen.over + '・重疊' + c.pen.overlap));
+      '　基礎 ' + c.baseAtk + ' / ' + c.baseDef + (c.minBaseDef || c.minBaseAtk ? '（任務條件：' + [c.minBaseDef ? '防禦 ≥ ' + c.minBaseDef : '', c.minBaseAtk ? '攻擊 ≥ ' + c.minBaseAtk : ''].filter(Boolean).join('、') + '）' : '') + '　懲罰 乖離' + c.pen.disc + '・過載' + c.pen.over + '・重疊' + c.pen.overlap));
     det.appendChild(h('div', 'cdet', '粒子：' + piecesText(c.pieces)));
     const note = h('input', 'cnote'); note.type = 'text'; note.value = c.note || ''; note.placeholder = '備註（例如：已在遊戲裡製作）';
     note.onchange = () => { c.note = note.value; save(); };
@@ -1248,8 +1447,8 @@ function renderCards() {
 }
 function cardsCsv() {
   const q = (v) => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const head = ['時間', '配方／卡名', '目標', '攻擊', '防禦', '基礎攻', '基礎防', '平均效能', '倍率', '粒子數', '粒子上限', '乖離', '過載', '重疊', '填滿區域', '狀態', '重複次數', '粒子', '備註'];
-  const rows = state.cards.map((c) => [fmtTime(c.t), c.recipe, c.goalLabel || c.goal, c.atk, c.def, c.baseAtk, c.baseDef, c.avg, c.mult, c.n, c.limit, c.pen.disc, c.pen.over, c.pen.overlap,
+  const head = ['時間', '配方／卡名', '目標', '攻擊', '防禦', '基礎攻', '基礎防', '基礎防禦門檻', '基礎攻擊門檻', '平均效能', '倍率', '粒子數', '粒子上限', '乖離', '過載', '重疊', '填滿區域', '狀態', '重複次數', '粒子', '備註'];
+  const rows = state.cards.map((c) => [fmtTime(c.t), c.recipe, c.goalLabel || c.goal, c.atk, c.def, c.baseAtk, c.baseDef, c.minBaseDef || '', c.minBaseAtk || '', c.avg, c.mult, c.n, c.limit, c.pen.disc, c.pen.over, c.pen.overlap,
     c.zones.map((z) => z.name).join(' '), c.status === 'proved' ? '最優' : '非最優', c.times || 1, piecesText(c.pieces), c.note]);
   return '﻿' + [head].concat(rows).map((r) => r.map(q).join(',')).join('\r\n');
 }
@@ -1420,6 +1619,7 @@ function updateReady() {
   $('#bdStacks').textContent = nst ? nst : '';
   const miss = []; if (!nz) miss.push('板子'); else if (!filled) miss.push('區域數值'); if (!nst || !usedColors) miss.push('粒子');
   $('#btnRun').title = miss.length ? '還缺：' + miss.join('、') + '（Ctrl+Enter）' : '開始求解（Ctrl+Enter）';
+  updateBaseHint();
 }
 function updateGuide() { $('#guide').hidden = !!state.ui.guideDone; }
 $('#btnGuideOk').onclick = () => { state.ui.guideDone = true; save(); updateGuide(); };
