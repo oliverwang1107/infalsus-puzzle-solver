@@ -131,6 +131,13 @@ svg{display:block}
 .runrow .nm{font-weight:700}
 .runrow .st{grid-column:1/-1;font-size:11px;color:var(--muted)}
 .runrow b.best{color:var(--accent)}
+.cardrow{border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:6px;background:#10161d}
+.cardrow .ctop{display:grid;grid-template-columns:1fr auto auto auto;gap:4px 10px;align-items:center}
+.cardrow .cname{min-width:0;font-weight:700}
+.cardrow .cst{font-size:11px;color:var(--muted);margin:3px 0}
+.cardrow .cdet{font-size:12px;color:var(--muted);margin:3px 0}
+.cardrow .cnote{width:100%;margin-top:4px;font-size:12px}
+.cardrow summary{cursor:pointer;font-size:12px}
 .big{font-size:16px;margin:2px 0 8px}
 .big b{font-size:26px;color:var(--accent)}
 table.kv{border-collapse:collapse;width:100%;margin:6px 0 10px}
@@ -260,6 +267,7 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
       <button data-tab="zones">區域<span class="bd" id="bdZones"></span></button>
       <button data-tab="stacks">粒子<span class="bd" id="bdStacks"></span></button>
       <button data-tab="result">結果<span class="bd" id="bdResult"></span></button>
+      <button data-tab="cards">紀錄<span class="bd" id="bdCards"></span></button>
       <button data-tab="settings">設定</button>
     </nav>
     <div id="sideBody">
@@ -290,6 +298,13 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
         <div class="sechead">求解記錄<span class="spacer"></span><button id="btnClearRuns" class="ghost" title="清除所有求解記錄">清除</button></div>
         <div id="runList"></div>
         <div id="result"></div>
+      </div>
+
+      <div class="tabpage" id="tab-cards" hidden>
+        <p class="hint">每次求解完成（「三種目標比較」的每一筆也算）的攻擊／防禦會自動記在這裡，關掉網頁也還在（存在這個瀏覽器裡，「匯出全部資料」會一起帶走）。完全相同的擺放只會累計次數，不會重複記。</p>
+        <div class="grp" style="margin-bottom:8px"><button id="btnCardsCsv" title="用 Excel／Google 試算表開啟">匯出 CSV</button><span class="spacer"></span><button id="btnCardsClear" class="ghost danger">清除全部</button></div>
+        <div id="cardSummary"></div>
+        <div id="cardList"></div>
       </div>
 
       <div class="tabpage" id="tab-settings" hidden>
@@ -1204,6 +1219,7 @@ function toast(msg, kind, ms) {
 function defaultState() {
   return {
     board: {}, zv: [], stacks: [], recipes: {}, tool: '1', group: 0, presetSet: 'latest', view: { x: 260, y: 220, z: 1 },
+    cards: [], curRecipe: '', curRecipeSig: '',
     ui: { mode: 'view', tab: 'zones', showPieces: true, guideDone: false },
     settings: { limit: 6, rotation: false, overlap: false, cap: 3, table: '', goal: 'balanced', wAtk: 1, wDef: 1, timeSec: 30, useColors: [true, true, true, true, true] },
   };
@@ -1214,6 +1230,7 @@ function normalizeState(s) {
   out.settings = Object.assign(defaultState().settings, (s && s.settings) || {});
   out.ui = Object.assign(defaultState().ui, (s && s.ui) || {});
   if (!Array.isArray(out.settings.useColors) || out.settings.useColors.length !== 5) out.settings.useColors = [true, true, true, true, true];
+  if (!Array.isArray(out.cards)) out.cards = [];
   return out;
 }
 // 第一次打開（沒有任何存檔）：預設載入最新粒子庫存和第一個預設配方，一開始就有板子可看
@@ -1222,13 +1239,23 @@ function firstRun() {
   const inv = BUILTIN.inventories && BUILTIN.inventories[0];
   if (inv) { st.stacks = inv.stacks.map((p) => ({ color: p.color, shape: p.shape.map((c) => c.slice()), effText: p.effText })); st.presetSet = inv.id; }
   const r = BUILTIN.recipes && BUILTIN.recipes[0];
-  if (r) { st.board = JSON.parse(JSON.stringify(r.board)); st.zv = JSON.parse(JSON.stringify(r.zv || [])); if (r.limit) st.settings.limit = r.limit; }
+  if (r) {
+    st.board = JSON.parse(JSON.stringify(r.board)); st.zv = JSON.parse(JSON.stringify(r.zv || [])); if (r.limit) st.settings.limit = r.limit;
+    st.curRecipe = r.name || ''; st.curRecipeSig = boardSigOf(st.board);
+  }
   return st;
 }
 let FIRST = false;
 let state = (function () { try { const t = localStorage.getItem(STORE); if (t) return normalizeState(JSON.parse(t)); } catch (e) {} FIRST = true; return firstRun(); })();
 let saveTimer = 0;
-function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }, 150); }
+let saveWarned = false;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(STORE, JSON.stringify(state)); }
+    catch (e) { if (!saveWarned) { saveWarned = true; try { toast('無法儲存到瀏覽器（空間滿了或被封鎖）：請用「匯出全部資料」備份，並匯出 CSV 後清除舊的卡牌紀錄。', 'bad', 9000); } catch (e2) {} } }
+  }, 150);
+}
 
 /* ------------------------------------------------------------ 區域偵測 */
 function detectZones() {
@@ -1264,7 +1291,8 @@ function detectZones() {
   state.zv = out;
   return zones;
 }
-const boardSig = () => Object.keys(state.board).sort().map((k) => k + ':' + state.board[k].t + ':' + state.board[k].g).join('|');
+function boardSigOf(b) { return Object.keys(b).sort().map((k) => k + ':' + b[k].t + ':' + b[k].g).join('|'); }
+const boardSig = () => boardSigOf(state.board);
 
 /* ------------------------------------------------------------ 板子（無邊界畫布） */
 const boardSvg = $('#board');
@@ -1893,6 +1921,7 @@ async function runGoals(goals) {
       const has = run.r && run.r.pieces && run.r.pieces.length;
       run.status = has ? status : (r.infeasible ? 'infeasible' : status === 'proved' ? 'none' : status);
       run.ms = r.ms; run.nodes = r.nodes;
+      if (has) logCard(run);
       renderRuns(); scheduleDraw();
     }
   } finally {
@@ -1984,6 +2013,70 @@ function renderRunDetail() {
   box.appendChild(list);
 }
 
+/* ------------------------------------------------------------ 卡牌紀錄（每次求解的攻防自動記下來，存在瀏覽器裡） */
+const fmtTime = (t) => { const d = new Date(t), p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+const piecesText = (ps) => (ps || []).map((p) => CNAME[p.color] + p.size + '格@' + p.eff).join(' / ');
+function logCard(run) {
+  const sc = run.r && run.r.score; if (!sc || !run.r.pieces || !run.r.pieces.length) return;
+  const recipe = state.curRecipe && state.curRecipeSig === run.sig ? state.curRecipe : '';
+  const pieces = run.r.pieces.map((p) => ({ color: p.color, size: p.size, eff: p.eff, qr: p.qr.map((c) => [c[0], c[1]]) }));
+  const atk = Math.round(sc.finalAtk), def = Math.round(sc.finalDef);
+  const sig = [recipe, run.goal, atk, def, JSON.stringify(pieces)].join('|');
+  const hit = state.cards.find((c) => c.sig === sig);
+  if (hit) { hit.times = (hit.times || 1) + 1; hit.t = Date.now(); save(); renderCards(); return; }
+  state.cards.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), times: 1, sig,
+    recipe, goal: run.goal, goalLabel: run.label, status: run.status, atk, def,
+    baseAtk: sc.atk, baseDef: sc.def, avg: Math.round(sc.avg * 10) / 10, mult: Math.round(sc.mult * 1000) / 1000, n: sc.n, limit: run.prob.settings.limit,
+    pen: { disc: sc.disc, over: sc.over, overlap: sc.overlap },
+    zones: sc.completeZones.map((i) => ({ name: run.prob.zones[i].name, atk: run.prob.zones[i].atk, def: run.prob.zones[i].def })),
+    pieces, note: '',
+  });
+  save(); renderCards();
+}
+function renderCards() {
+  const list = $('#cardList'), sum = $('#cardSummary'), cards = state.cards;
+  $('#bdCards').textContent = cards.length ? cards.length : '';
+  list.innerHTML = ''; sum.innerHTML = '';
+  if (!cards.length) { list.appendChild(h('p', 'hint', '還沒有紀錄。按「▶ 求解」之後，每一次算出來的攻擊／防禦都會自動記在這裡。')); return; }
+  const by = new Map();
+  cards.forEach((c) => { const k = c.recipe || '（未命名）'; const o = by.get(k) || { n: 0, a: 0, d: 0 }; o.n++; o.a = Math.max(o.a, c.atk); o.d = Math.max(o.d, c.def); by.set(k, o); });
+  const tb = h('table', 'kv');
+  const hr = h('tr'); ['配方／卡名', '筆數', '最高攻', '最高防'].forEach((t) => hr.appendChild(h('td', '', t))); tb.appendChild(hr);
+  by.forEach((o, k) => { const tr = h('tr'); [k, o.n, o.a, o.d].forEach((v) => tr.appendChild(h('td', '', String(v)))); tb.appendChild(tr); });
+  sum.appendChild(tb);
+  cards.forEach((c) => {
+    const row = h('div', 'cardrow');
+    const top = h('div', 'ctop');
+    const nm = h('input', 'cname'); nm.type = 'text'; nm.value = c.recipe || ''; nm.placeholder = '配方／卡名（可自己填）'; nm.title = '修改後，上方的小計會跟著歸到這個名稱';
+    nm.onchange = () => { c.recipe = nm.value.trim(); save(); renderCards(); };
+    const a = h('span'); a.append('攻 ', h('b', '', String(c.atk)));
+    const d = h('span'); d.append('防 ', h('b', '', String(c.def)));
+    const x = h('button', 'ghost', '×'); x.title = '刪除這一筆';
+    x.onclick = () => { if (confirm('刪除這一筆紀錄（' + (c.recipe || '未命名') + '　攻 ' + c.atk + ' 防 ' + c.def + '）？')) { state.cards = state.cards.filter((q) => q.id !== c.id); save(); renderCards(); } };
+    top.append(nm, a, d, x);
+    const st = h('div', 'cst', fmtTime(c.t) + '・' + (c.goalLabel || c.goal) + '・' + c.n + ' / ' + c.limit + ' 顆・平均 ' + c.avg + '・倍率 ' + (c.mult * 100).toFixed(1) + '%' +
+      (c.status === 'proved' ? '' : '・非最優（' + (STATUS[c.status] || STATUS.none)[1] + '）') + (c.times > 1 ? '・重複 ' + c.times + ' 次' : ''));
+    const det = h('details'); det.appendChild(h('summary', 'muted', '擺放與區域'));
+    det.appendChild(h('div', 'cdet', '填滿：' + (c.zones.length ? c.zones.map((z) => z.name + '(' + z.atk + '/' + z.def + ')').join('、') : '無') +
+      '　基礎 ' + c.baseAtk + ' / ' + c.baseDef + '　懲罰 乖離' + c.pen.disc + '・過載' + c.pen.over + '・重疊' + c.pen.overlap));
+    det.appendChild(h('div', 'cdet', '粒子：' + piecesText(c.pieces)));
+    const note = h('input', 'cnote'); note.type = 'text'; note.value = c.note || ''; note.placeholder = '備註（例如：已在遊戲裡製作）';
+    note.onchange = () => { c.note = note.value; save(); };
+    row.append(top, st, det, note);
+    list.appendChild(row);
+  });
+}
+function cardsCsv() {
+  const q = (v) => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const head = ['時間', '配方／卡名', '目標', '攻擊', '防禦', '基礎攻', '基礎防', '平均效能', '倍率', '粒子數', '粒子上限', '乖離', '過載', '重疊', '填滿區域', '狀態', '重複次數', '粒子', '備註'];
+  const rows = state.cards.map((c) => [fmtTime(c.t), c.recipe, c.goalLabel || c.goal, c.atk, c.def, c.baseAtk, c.baseDef, c.avg, c.mult, c.n, c.limit, c.pen.disc, c.pen.over, c.pen.overlap,
+    c.zones.map((z) => z.name).join(' '), c.status === 'proved' ? '最優' : '非最優', c.times || 1, piecesText(c.pieces), c.note]);
+  return '﻿' + [head].concat(rows).map((r) => r.map(q).join(',')).join('\r\n');
+}
+$('#btnCardsCsv').onclick = () => { if (!state.cards.length) { toast('還沒有紀錄可以匯出', 'bad'); return; } download('infalsus-cards.csv', cardsCsv(), 'text/csv;charset=utf-8'); };
+$('#btnCardsClear').onclick = () => { if (state.cards.length && confirm('清除全部 ' + state.cards.length + ' 筆卡牌紀錄？（無法復原；建議先匯出 CSV）')) { state.cards = []; save(); renderCards(); } };
+
 /* ------------------------------------------------------------ 配方、匯入匯出、示範 */
 function renderRecipes() {
   const sel = $('#recipeSel'); const keep = sel.value; sel.innerHTML = '';
@@ -2004,6 +2097,7 @@ function loadRecipeByValue(v) {
   if (Object.keys(state.board).length && !confirm('載入配方會取代目前的板子，確定嗎？（可以用「編輯板子」裡的復原回來）')) return false;
   pushHist();
   state.board = JSON.parse(JSON.stringify(r.board)); state.zv = JSON.parse(JSON.stringify(r.zv || []));
+  state.curRecipe = r.name || v.slice(v.indexOf(':') + 1); state.curRecipeSig = boardSig();
   if (r.limit) { state.settings.limit = r.limit; $('#sLimit').value = r.limit; }
   selZone = -1; save(); drawBoard(); refreshZones(); fitView();
   return true;
@@ -2012,6 +2106,7 @@ $('#btnRecipeLoad').onclick = () => { if (loadRecipeByValue($('#recipeSel').valu
 $('#btnRecipeSave').onclick = () => {
   const name = $('#recipeName').value.trim(); if (!name) { toast('請先輸入配方名稱', 'bad'); return; }
   state.recipes[name] = { board: JSON.parse(JSON.stringify(state.board)), zv: JSON.parse(JSON.stringify(state.zv)), limit: state.settings.limit };
+  state.curRecipe = name; state.curRecipeSig = boardSig();
   save(); renderRecipes(); $('#recipeSel').value = 'my:' + name; toast('已儲存配方「' + name + '」（含各區域的攻防值）', 'good');
 };
 $('#btnRecipeDel').onclick = () => {
@@ -2019,8 +2114,8 @@ $('#btnRecipeDel').onclick = () => {
   const n = v.slice(3); if (confirm('刪除配方「' + n + '」？')) { delete state.recipes[n]; save(); renderRecipes(); }
 };
 $('#btnClearBoard').onclick = () => { if (confirm('清空整個板子？（可以復原）')) { pushHist(); state.board = {}; state.zv = []; save(); drawBoard(); refreshZones(); } };
-$('#btnReset').onclick = () => { if (confirm('把所有資料還原成初始狀態（預設粒子庫存、預設配方的板子；自己存的配方會被清除）？')) { state = firstRun(); hist.length = 0; runs = []; curRun = -1; save(); initAll(true); if ((BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0'; } };
-function download(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; a.click(); }
+$('#btnReset').onclick = () => { if (confirm('把所有資料還原成初始狀態（預設粒子庫存、預設配方的板子；自己存的配方會被清除，卡牌紀錄會保留）？')) { const keepCards = state.cards; state = firstRun(); state.cards = keepCards; hist.length = 0; runs = []; curRun = -1; save(); initAll(true); if ((BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0'; } };
+function download(name, text, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime || 'application/json' })); a.download = name; a.click(); }
 $('#btnExport').onclick = () => download('infalsus-data.json', JSON.stringify(state, null, 1));
 $('#btnExportParticles').onclick = () => download('infalsus-particles.json', JSON.stringify({ stacks: state.stacks }, null, 1));
 $('#fileImport').onchange = (e) => {
@@ -2034,6 +2129,10 @@ $('#fileImport').onchange = (e) => {
       if (o.recipes) merged.recipes = Object.assign({}, state.recipes, o.recipes);
       if (o.settings) merged.settings = Object.assign({}, state.settings, o.settings);
       if (o.ui) merged.ui = Object.assign({}, state.ui, o.ui);
+      if (Array.isArray(o.cards)) { // 卡牌紀錄用 id 合併，不會蓋掉現有的
+        const have = new Set(state.cards.map((c) => c.id));
+        merged.cards = state.cards.concat(o.cards.filter((c) => c && c.id && !have.has(c.id) && Array.isArray(c.pieces) && Array.isArray(c.zones) && c.pen)).sort((p, q) => q.t - p.t);
+      }
       state = normalizeState(merged); save(); initAll(!!o.board); toast('已匯入', 'good');
     } catch (err) { toast('匯入失敗：' + err.message, 'bad'); }
   };
@@ -2167,14 +2266,14 @@ window.addEventListener('keyup', (e) => { if (e.code === 'Space') { spaceDown = 
 function initAll(fit) {
   view = state.view || (state.view = { x: 260, y: 220, z: 1 });
   buildTools(); drawBoard(); refreshZones(); renderInventory(); bindSettings(); renderRecipes(); closeEditor();
-  showTab(state.ui.tab || 'zones'); setMode(state.ui.mode || 'view'); renderRuns(); updateGuide(); updateReady(); updateUndoBtn();
+  showTab(state.ui.tab || 'zones'); setMode(state.ui.mode || 'view'); renderRuns(); renderCards(); updateGuide(); updateReady(); updateUndoBtn();
   $('#showPieces').checked = !!state.ui.showPieces;
   if (fit) { requestAnimationFrame(fitView); setTimeout(fitView, 120); }
 }
 initAll(FIRST);
 if (FIRST && (BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0';
 window.__app = {
-  get state() { return state; }, get runs() { return runs; }, buildProblem, refreshZones, runGoals, Solver,
+  get state() { return state; }, get runs() { return runs; }, get cards() { return state.cards; }, cardsCsv, buildProblem, refreshZones, runGoals, Solver,
   startSolve() { return runGoals([state.settings.goal]); },
   load(obj) { state = normalizeState(obj); save(); initAll(false); },
 };

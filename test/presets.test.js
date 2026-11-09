@@ -54,6 +54,9 @@ check('預設配方的每個區域格子都在板子上', () => {
   for (const r of B.recipes) for (const z of r.zv) for (const k of z.keys) assert.ok(r.board[k], r.name + ' 區域格 ' + k + ' 不在板子上');
 });
 check('網頁不使用 eval（在限制較多的環境也能執行）', () => assert.ok(!/\beval\s*\(/.test(html), '網頁裡還有 eval('));
+check('卡牌紀錄：求解完成會記錄、重設不清紀錄（介面行為在瀏覽器實測過，這裡只擋被誤刪）', () => {
+  for (const s of ['id="tab-cards"', 'function logCard', 'if (has) logCard(run)', 'keepCards', 'btnCardsCsv']) assert.ok(html.includes(s), '缺少 ' + s);
+});
 
 console.log('\n' + pass + ' 通過, ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);
