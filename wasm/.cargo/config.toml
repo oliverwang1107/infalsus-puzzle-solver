@@ -1,0 +1,5 @@
+# 新版 Rust（1.93 起）編 wasm32-unknown-unknown 不再自動允許「未定義的符號」，
+# 而 lib.rs 裡的 now_ms／should_stop／on_progress／on_improve 是由 JS 端（src/solver_wasm.js）提供的匯入函式，
+# 所以要明講「未定義的符號當成 WASM 匯入」。較舊的 Rust 也接受這個參數。
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--import-undefined"]
