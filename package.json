@@ -1,12 +1,18 @@
 {
   "name": "infalsus-puzzle-solver",
   "version": "0.1.0",
-  "description": "In Falsus 製作卡牌六角格拼圖的最佳擺放求解器（離線網頁工具）",
+  "description": "In Falsus 製作卡牌六角格拼圖的最佳擺放求解器（離線網頁工具；求解核心 JS＋WASM，可部署到 Cloudflare Worker，也有 Rust 桌面版）",
   "private": true,
   "scripts": {
+    "build:wasm": "node wasm/build.js",
+    "build:native": "cargo build --release --bin solver_native --manifest-path wasm/Cargo.toml",
+    "local": "node build.js && node scripts/local-server.js",
+    "build:desktop": "node build.js && cargo build --release --manifest-path desktop/Cargo.toml && node scripts/copy-desktop.js",
     "build": "node build.js",
-    "test": "node build.js && node test/solver.test.js && node test/importer.test.js && node test/presets.test.js",
-    "perf": "node test/perf.js"
+    "test": "node build.js && node test/solver.test.js && node test/wasm.test.js && node test/solver.test.js --wasm && node test/native.test.js && node test/importer.test.js && node test/presets.test.js",
+    "bench": "node test/bench.js",
+    "dev": "node build.js && npx --yes wrangler@4 dev",
+    "deploy": "node build.js && npx --yes wrangler@4 deploy"
   },
   "engines": {
     "node": ">=18"

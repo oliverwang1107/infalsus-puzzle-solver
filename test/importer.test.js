@@ -82,5 +82,20 @@ check('7 個區域：綠 1、綠 10、綠 1、綠 4、綠 1、黃 10、黃 1（�
   assert.deepStrictEqual(r3.zones.map((z) => z.color + ':' + z.size), ['3:1', '3:10', '3:1', '3:4', '3:1', '2:10', '2:1']);
 });
 
+console.log('\n截圖偵測：永遠陪在你身旁（大板子、五色、有離島；舊的晶格評分曾鎖在錯位半格的格線上）');
+const yy = fx('board_yong_yuan_pei');
+const r4 = Imp.detectBoard(yy);
+check('格距 ≈ 69.3（六角形半徑 40 px）', () => assert.ok(Math.abs(r4.lattice.d - 69.3) < 1.2, 'd=' + r4.lattice.d));
+check('共 110 格：灰 29、紅 24、黃 32、綠 7、藍 7、紫 11', () => {
+  assert.strictEqual(Object.keys(r4.cells).length, 110);
+  assert.deepStrictEqual([r4.counts.gray, r4.counts[1], r4.counts[2], r4.counts[3], r4.counts[4], r4.counts[5]], [29, 24, 32, 7, 7, 11]);
+});
+check('14 個區域，大小與遊戲計數標籤（紅 0/4×6、黃 0/7×4＋離島 0/4、綠 0/7、藍 0/7、紫 0/11）一致', () => {
+  const z = r4.zones.map((q) => q.color + ':' + q.size).sort();
+  assert.deepStrictEqual(z, ['1:4', '1:4', '1:4', '1:4', '1:4', '1:4', '2:4', '2:7', '2:7', '2:7', '2:7', '3:7', '4:7', '5:11']);
+});
+check('縮放成 80% 解析度也一樣', () => assert.deepStrictEqual(canon(Imp.detectBoard(resize(yy, 0.8)).cells), canon(r4.cells)));
+check('縮放成 120% 解析度也一樣', () => assert.deepStrictEqual(canon(Imp.detectBoard(resize(yy, 1.2)).cells), canon(r4.cells)));
+
 console.log('\n' + pass + ' 通過, ' + fail + ' 失敗');
 process.exit(fail ? 1 : 0);

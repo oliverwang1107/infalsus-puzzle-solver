@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwZTM0NDIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNTE0MWMiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgcng9IjU4IiBmaWxsPSJ1cmwoI2cpIi8+PHBvbHlnb24gcG9pbnRzPSIxNjMuMCwxMjguMCAxNDUuNSwxNTguMyAxMTAuNSwxNTguMyA5My4wLDEyOC4wIDExMC41LDk3LjcgMTQ1LjUsOTcuNyIgZmlsbD0iIzdkZjllNCIvPjxwb2x5Z29uIHBvaW50cz0iMjIzLjAsMTYyLjYgMjA1LjUsMTkzLjAgMTcwLjUsMTkzLjAgMTUzLjAsMTYyLjYgMTcwLjUsMTMyLjMgMjA1LjUsMTMyLjMiIGZpbGw9IiMzYjljZmYiLz48cG9seWdvbiBwb2ludHM9IjE2My4wLDE5Ny4zIDE0NS41LDIyNy42IDExMC41LDIyNy42IDkzLjAsMTk3LjMgMTEwLjUsMTY3LjAgMTQ1LjUsMTY3LjAiIGZpbGw9IiMyYmI2ZjAiLz48cG9seWdvbiBwb2ludHM9IjEwMy4wLDE2Mi42IDg1LjUsMTkzLjAgNTAuNSwxOTMuMCAzMy4wLDE2Mi42IDUwLjUsMTMyLjMgODUuNSwxMzIuMyIgZmlsbD0iIzFjY2ZkMCIvPjxwb2x5Z29uIHBvaW50cz0iMTAzLjAsOTMuNCA4NS41LDEyMy43IDUwLjUsMTIzLjcgMzMuMCw5My40IDUwLjUsNjMuMCA4NS41LDYzLjAiIGZpbGw9IiMxNGQ2YTQiLz48cG9seWdvbiBwb2ludHM9IjE2My4wLDU4LjcgMTQ1LjUsODkuMCAxMTAuNSw4OS4wIDkzLjAsNTguNyAxMTAuNSwyOC40IDE0NS41LDI4LjQiIGZpbGw9IiMyZmQ5N2EiLz48cG9seWdvbiBwb2ludHM9IjIyMy4wLDkzLjQgMjA1LjUsMTIzLjcgMTcwLjUsMTIzLjcgMTUzLjAsOTMuNCAxNzAuNSw2My4wIDIwNS41LDYzLjAiIGZpbGw9IiM1YWE3ZmYiLz48L3N2Zz4=">
+<meta name="theme-color" content="#081317">
 <title>In Falsus 製卡最佳化</title>
 <style>
 /* 工作台版面：頂端常駐列 + 狀態列 + 左側大板子 + 右側分頁（區域／粒子／結果／設定） */
 :root{
-  --bg:#0d1116; --panel:#141a21; --panel2:#1b2330; --raise:#222c3a; --line:#29323f;
-  --text:#e8eef5; --muted:#8996a6; --accent:#ff6aa8; --accent-ink:#240a16;
+  --bg:#081317; --panel:#0e1d24; --panel2:#142a34; --raise:#1b3744; --line:#234250;
+  --text:#e6f4f4; --muted:#86a8b0; --accent:#2dd4bf; --accent-ink:#04201d;
   --good:#3fb97c; --warn:#e8b923; --bad:#ef5b61;
   --c0:#e5484d; --c1:#e8b923; --c2:#2fb37a; --c3:#22b8e0; --c4:#a066f5;
 }
@@ -16,14 +18,14 @@
 html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Microsoft JhengHei","PingFang TC",system-ui,sans-serif}
 button,select,input,textarea{font:inherit;color:inherit}
 button,.btn{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 11px;cursor:pointer;white-space:nowrap}
-button:hover,.btn:hover{border-color:#44566d;background:var(--raise)}
+button:hover,.btn:hover{border-color:#3d6a7c;background:var(--raise)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 button:disabled{opacity:.45;cursor:default}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 16px}
 button.primary:hover{filter:brightness(1.08)}
 button.danger:hover{border-color:var(--bad);color:var(--bad)}
 button.ghost{background:transparent}
-input[type=text],input[type=number],select,textarea{background:#0f151b;border:1px solid var(--line);border-radius:7px;padding:4px 8px}
+input[type=text],input[type=number],select,textarea{background:#081a20;border:1px solid var(--line);border-radius:7px;padding:4px 8px}
 input[type=number]{width:72px}
 .muted{color:var(--muted)}
 .hint{color:var(--muted);font-size:12px;margin:6px 0}
@@ -46,7 +48,7 @@ svg{display:block}
 #menu button,#menu .btn{text-align:left}
 
 /* 狀態列 */
-#statusbar{display:flex;gap:8px;align-items:center;padding:6px 14px;background:#10161d;border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+#statusbar{display:flex;gap:8px;align-items:center;padding:6px 14px;background:#0b1a21;border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
 .chip{border-radius:99px;padding:2px 11px;font-size:12px;border:1px solid var(--line);background:transparent}
 .chip.ok{border-color:#2a6a4c;color:#7fe3ae}
 .chip.warn{border-color:#7a6217;color:var(--warn)}
@@ -59,6 +61,11 @@ svg{display:block}
 
 /* 工作區 */
 #workspace{display:grid;grid-template-columns:minmax(0,1fr) 440px;min-height:0}
+#workspace.wide{grid-template-columns:minmax(0,1fr) 680px}
+#workspace.wide svg.mini{max-width:600px}
+#workspace.wide .step{padding:10px 14px}
+#workspace.wide .step .shd b{font-size:16px}
+#workspace.wide .step .how{font-size:14px}
 #boardPane{display:flex;flex-direction:column;min-width:0;min-height:0;padding:10px 12px;gap:8px}
 .board-head{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -70,11 +77,11 @@ svg{display:block}
 .tool{display:inline-flex;align-items:center;gap:6px;padding:3px 9px}
 .tool.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .board-wrap{position:relative;flex:1;min-height:0;display:flex}
-#board{flex:1;width:100%;min-height:340px;touch-action:none;background:#0a0e12;border-radius:10px;border:1px solid var(--line);user-select:none}
-#boardHint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:#0a0e12cc;border-radius:6px;padding:2px 8px;pointer-events:none}
-#resultBadge{position:absolute;right:10px;top:10px;background:#141a21ee;border:1px solid var(--accent);border-radius:10px;padding:6px 12px;font-size:13px;pointer-events:none}
+#board{flex:1;width:100%;min-height:340px;touch-action:none;background:#06141a;border-radius:10px;border:1px solid var(--line);user-select:none}
+#boardHint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:#06141acc;border-radius:6px;padding:2px 8px;pointer-events:none}
+#resultBadge{position:absolute;right:10px;top:10px;background:#0e1d24ee;border:1px solid var(--accent);border-radius:10px;padding:6px 12px;font-size:13px;pointer-events:none}
 #resultBadge b{font-size:20px;color:var(--accent)}
-#guide{position:absolute;left:12px;right:12px;top:12px;max-width:440px;background:#141a21f2;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px #0009}
+#guide{position:absolute;left:12px;right:12px;top:12px;max-width:440px;background:#0e1d24f2;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px #0009}
 #guide ol{margin:6px 0 10px;padding-left:20px}
 #guide li{margin:3px 0}
 
@@ -97,15 +104,19 @@ svg{display:block}
 .zrow input{width:100%;min-width:0}
 .zwarn{grid-column:1/-1;font-size:12px;color:var(--warn)}
 .zextra{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.zextra .zwaive{white-space:nowrap}
-.zextra .zwaive input{width:44px;padding:2px 4px;font-size:12px}
-.zextra .zwaive.on{color:var(--good)}
-.zextra .zwaive select{width:auto;padding:2px 2px;margin:0 3px;font-size:12px}
 .zextra .zmust{display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;color:var(--muted);font-size:12px;padding:2px 8px;border:1px solid var(--line);border-radius:99px}
 .zextra .zmust input{width:auto}
 .zextra .zmust.on{color:#1b1200;background:var(--warn);border-color:var(--warn);font-weight:700}
 .zextra .znote{flex:1;min-width:0;padding:2px 6px;font-size:12px}
 .zrow.must{border-left:3px solid var(--warn)}
+.zextra .ztrait{white-space:nowrap}
+.zextra .ztrait input{width:44px;padding:2px 4px;font-size:12px}
+.zextra .ztrait.on{color:var(--good)}
+.zrow.sub{opacity:.85;border-left:3px dashed var(--accent)}
+.zrow .zsubtxt{grid-column:3/-1;font-size:12px;color:var(--muted)}
+.zmerge{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.zmerge .zmsel{width:auto;padding:2px 4px;font-size:12px}
+.zmerge .zunm{padding:1px 8px;font-size:12px;border-radius:99px}
 #zoneQuick{width:100%;height:84px;resize:vertical;font-size:13px}
 
 /* 粒子庫存 */
@@ -116,8 +127,8 @@ svg{display:block}
 .chead .muted{font-size:12px}
 .chead button{padding:1px 8px;font-size:12px}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:6px}
-.tile{display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#10161d;border:1px solid var(--line);border-radius:9px;min-width:0}
-.tile.on{border-color:var(--accent);background:#1a1420}
+.tile{display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#0b1a21;border:1px solid var(--line);border-radius:9px;min-width:0}
+.tile.on{border-color:var(--accent);background:#0f2a2c}
 .thead{display:flex;align-items:center;gap:7px;cursor:pointer;min-height:34px}
 .thead .tt{font-size:12px;line-height:1.25}
 .tile input[type=text]{width:100%;padding:2px 6px;font-size:12px}
@@ -126,18 +137,25 @@ svg{display:block}
 .tile .off{font-size:11px;color:var(--muted)}
 
 /* 結果 */
-.runrow{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;background:#10161d}
-.runrow.sel{border-color:var(--accent);background:#1a1420}
+.runrow{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;background:#0b1a21}
+.runrow.sel{border-color:var(--accent);background:#0f2a2c}
 .runrow .nm{font-weight:700}
 .runrow .st{grid-column:1/-1;font-size:11px;color:var(--muted)}
 .runrow b.best{color:var(--accent)}
+.maprow{border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:6px;background:#0b1a21}
+.maprow.cur{border-color:var(--accent)}
+.maprow .mtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.maprow .mtop b{flex:1;min-width:100px}
+.maprow .mbtns{display:flex;gap:4px;flex-wrap:wrap}
+.maprow .minfo{font-size:11px;color:var(--muted);margin:3px 0}
+.maprow .cnote{width:100%;margin-top:4px;font-size:12px}
 .diag{margin-top:10px}
 .diag .dlist{margin:4px 0 8px;padding-left:0;list-style:none;font-size:13px;line-height:1.7}
 .guide2{margin-top:10px}
 .guide2 .prep{border:1px dashed var(--line);border-radius:9px;padding:6px 10px;margin-bottom:8px;font-size:13px}
 .guide2 .prep ul{margin:4px 0 0;padding-left:0;list-style:none}
 .guide2 .prep li{display:flex;align-items:center;gap:6px;padding:1px 0}
-.step{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;background:#10161d;cursor:pointer}
+.step{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;background:#0b1a21;cursor:pointer}
 .step:hover,.step.pin{border-color:var(--accent)}
 .step .shd{display:flex;align-items:center;gap:10px}
 .step .shd b{font-size:15px}
@@ -145,13 +163,16 @@ svg{display:block}
 .step .how .muted{font-size:12px;margin-top:2px}
 svg.mini{width:100%;max-width:340px;height:auto;display:block;margin-top:4px}
 .guide2 .verify{border:1px solid var(--good);border-radius:9px;padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.6}
-.taskbox{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:10px;background:#10161d}
+.taskbox{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:10px;background:#0b1a21}
 .taskbox .trow{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 4px}
 .taskbox label{display:flex;gap:6px;align-items:center;font-size:13px}
 .taskbox input[type=number]{width:84px}
 .taskbox .sub{font-size:12px;color:var(--muted)}
+.taskbox .gwrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
+.taskbox .gwrow label{gap:4px}
+.taskbox input.gwi{width:48px}
 .taskbox .sub.warn{color:var(--warn)}
-.cardrow{border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:6px;background:#10161d}
+.cardrow{border:1px solid var(--line);border-radius:9px;padding:7px 9px;margin-bottom:6px;background:#0b1a21}
 .cardrow .ctop{display:grid;grid-template-columns:1fr auto auto auto;gap:4px 10px;align-items:center}
 .cardrow .cname{min-width:0;font-weight:700}
 .cardrow .cst{font-size:11px;color:var(--muted);margin:3px 0}
@@ -183,7 +204,7 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
 .shot-wrap{background:#000;border-radius:8px;overflow:auto;max-height:58vh;margin:8px 0;border:1px solid var(--line)}
 #shotCanvas{display:block;max-width:100%;height:auto}
 .presets{display:flex;flex-wrap:wrap;gap:4px;max-width:330px;max-height:210px;overflow:auto}
-.presets button{padding:2px;background:#0b0f13}
+.presets button{padding:2px;background:#06131a}
 .tabs2{display:flex;gap:4px;margin-bottom:6px}
 .tabs2 button.on{border-color:var(--accent)}
 .sw{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
@@ -214,8 +235,8 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
 <header id="topbar">
   <div class="brand">In Falsus 製卡最佳化<small>板子 + 粒子庫存 → 最佳擺放</small></div>
   <div class="grp">
-    <select id="recipeSel" title="選配方"></select>
-    <button id="btnRecipeLoad" title="載入所選配方（板子＋粒子數上限）">載入</button>
+    <select id="recipeSel" title="選地圖（內建或自己存的）"></select>
+    <button id="btnRecipeLoad" title="載入所選地圖（板子、各區域數值、任務條件）">載入</button>
     <button id="btnImportShot" title="選一張遊戲「製作卡牌」畫面的截圖自動辨識板子（也可以直接 Ctrl+V 貼上，或把圖片拖到板子上）">📷 截圖匯入</button>
     <input type="file" id="shotFile" accept="image/*" hidden>
   </div>
@@ -232,14 +253,13 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
   <button id="btnMenu" aria-haspopup="true" aria-expanded="false">⋯ 更多</button>
   <div id="menu" hidden>
     <div class="sec">
-      <b>配方存檔</b>
-      <div class="row"><input type="text" id="recipeName" placeholder="配方名稱，例如：終焉盡頭"><button id="btnRecipeSave">儲存目前板子</button></div>
-      <button id="btnRecipeDel" class="danger">刪除上方所選的「我的存檔」</button>
+      <b>匯出</b>
+      <button id="btnExport" title="板子、粒子庫存、地圖、紀錄、設定全部存成一個檔案（備份、換電腦用）">全部資料</button>
+      <button id="btnExportParticles">只有粒子庫存</button>
+      <button id="btnMapsExport" title="所有存起來的地圖（含各區域數值、任務條件）；單張地圖在「地圖」分頁每列的「匯出」">只有地圖</button>
+      <button id="btnMapCsv" title="目前各區域的數值表，用 Excel 開啟">目前區域數值（CSV）</button>
     </div>
-    <button id="btnDemo">載入示範板子</button>
-    <button id="btnExport">匯出全部資料</button>
-    <button id="btnExportParticles">只匯出粒子庫存</button>
-    <label class="btn">匯入資料（板子／粒子庫存／全部）<input type="file" id="fileImport" accept=".json,application/json" hidden></label>
+    <label class="btn" title="可以是「全部資料」、「粒子庫存」或「地圖」檔：只會更新檔案裡有的部分">📂 匯入檔案…<input type="file" id="fileImport" accept=".json,application/json" hidden></label>
     <button id="btnReset" class="danger">還原成初始狀態</button>
   </div>
 </header>
@@ -272,7 +292,7 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
       <div id="guide" hidden>
         <b>快速開始</b>
         <ol>
-          <li>上方選一個<b>配方</b>按「載入」，或用 <b>📷 截圖匯入</b>、把截圖拖到板子上。</li>
+          <li>上方選一個<b>地圖</b>按「載入」，或用 <b>📷 截圖匯入</b>、把截圖拖到板子上。</li>
           <li>右側「區域」分頁填各區域的<b>攻擊／防禦</b>（點板子上的區域也能跳過去）。</li>
           <li>檢查「粒子」分頁，按上方 <b>▶ 求解</b>，擺放結果會直接畫在這張板子上。</li>
         </ol>
@@ -287,6 +307,7 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
       <button data-tab="zones">區域<span class="bd" id="bdZones"></span></button>
       <button data-tab="stacks">粒子<span class="bd" id="bdStacks"></span></button>
       <button data-tab="result">結果<span class="bd" id="bdResult"></span></button>
+      <button data-tab="maps">地圖<span class="bd" id="bdMaps"></span></button>
       <button data-tab="cards">紀錄<span class="bd" id="bdCards"></span></button>
       <button data-tab="settings">設定</button>
     </nav>
@@ -295,14 +316,19 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
         <div class="taskbox">
           <b>🎯 任務條件</b>
           <div class="trow">
-            <label>基礎防禦至少<input type="number" id="sMinD" min="0" inputmode="numeric" placeholder="0"></label>
             <label>基礎攻擊至少<input type="number" id="sMinA" min="0" inputmode="numeric" placeholder="0"></label>
+            <label>基礎防禦至少<input type="number" id="sMinD" min="0" inputmode="numeric" placeholder="0"></label>
+            <label title="填滿的區域的「特性槽」加總至少要多少（遊戲任務「特性槽為 3 以上」）。每個區域給幾點，在下面區域裡填「✦ 特性槽＋」。0 或留空＝不限制">特性槽至少<input type="number" id="sMinSlot" min="0" inputmode="numeric" placeholder="0"></label>
+            <label title="填滿的區域的「卡牌範圍（左）」加總至少要多少（遊戲任務「卡牌範圍（左）為 3 以上」；範圍最多 4）。每個區域給幾點，在下面區域裡填「範圍 左＋」。0 或留空＝不限制">範圍左至少<input type="number" id="sMinRL" min="0" max="4" inputmode="numeric" placeholder="0"></label>
+            <label title="填滿的區域的「卡牌範圍（右）」加總至少要多少（範圍最多 4）。0 或留空＝不限制">範圍右至少<input type="number" id="sMinRR" min="0" max="4" inputmode="numeric" placeholder="0"></label>
             <label title="遊戲任務常見的「總懲罰數為 0」＝填 0；留空＝不限制。免除懲罰生效之後的有效懲罰才算">總懲罰最多<input type="number" id="sMaxP" min="0" inputmode="numeric" placeholder="不限"></label>
           </div>
           <div class="trow">
-            <label title="角色技能、卡牌效果之類「一直生效」的免除，不用填滿任何區域。遊戲面板的懲罰旁邊有空的免除格，就是這個。填 0 或留空＝沒有">🛡 固定免除
-              <select id="sGwT"><option value="all">整體</option><option value="disc">乖離</option><option value="over">過載</option><option value="overlap">重疊</option></select>
-              <input type="number" id="sGwN" min="0" max="9" inputmode="numeric" placeholder="0">點</label>
+            <span class="gwrow" title="角色技能、卡牌效果之類「一直生效」的免除，不用填滿任何區域。可以同時有好幾種，各填各的點數；留空或 0＝沒有">🛡 固定免除（可多種）
+              <label>超界<input type="number" class="gwi" data-t="out" min="0" max="9" inputmode="numeric" placeholder="0"></label>
+              <label>重疊<input type="number" class="gwi" data-t="overlap" min="0" max="9" inputmode="numeric" placeholder="0"></label>
+              <label>乖離<input type="number" class="gwi" data-t="disc" min="0" max="9" inputmode="numeric" placeholder="0"></label>
+            </span>
           </div>
           <div class="sub" id="baseHint"></div>
         </div>
@@ -319,10 +345,12 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
       <div class="tabpage" id="tab-stacks" hidden>
         <div class="grp" style="margin-bottom:4px">
           <select id="presetSet" title="預設粒子庫存"></select>
+          <button id="btnPresetUse" class="primary" title="庫存換成剛好這一組（例如在 30 種和 40 種之間切換）；自己畫的粒子會保留">只用這一組</button>
           <button id="btnPresetAll" title="把這一組的粒子全部加入；已有的會改成這一組的效能與數量">全部加入</button>
           <button id="btnPresetNone" title="移除庫存裡和這一組形狀相同的粒子">全部移除</button>
         </div>
         <p class="hint" id="presetNote"></p>
+        <p class="hint" id="fixEffHint"></p>
         <p class="hint">點圖塊上方的形狀加入／移除；加入後可直接改效能（寫「效能x數量」，例如 <code>133x3, 120x10</code>）。顏色旁的開關決定<b>這次求解要不要用該色</b>。</p>
         <div id="invGrid"></div>
         <div class="grp" style="margin-top:10px"><button id="btnAddStack">＋ 自訂粒子（自己畫形狀）</button></div>
@@ -332,6 +360,12 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
         <div class="sechead">求解記錄<span class="spacer"></span><button id="btnClearRuns" class="ghost" title="清除所有求解記錄">清除</button></div>
         <div id="runList"></div>
         <div id="result"></div>
+      </div>
+
+      <div class="tabpage" id="tab-maps" hidden>
+        <p class="hint">把<b>目前的板子＋各區域數值</b>（攻防、必觸發、特性、合併、備註）＋<b>任務條件／固定免除／粒子上限等設定</b>一起存起來。<b>載入</b>用畫面最上方的地圖選單＋「載入」；全部地圖的<b>匯出／匯入</b>在右上「⋯ 更多」。資料存在這個瀏覽器裡，換電腦或換瀏覽器前記得匯出。</p>
+        <div class="grp" style="margin-bottom:8px"><input type="text" id="mapName" placeholder="地圖名稱，例如：混濁的大海" style="flex:1;min-width:140px"><button id="btnMapSave" class="primary">💾 儲存目前</button></div>
+        <div id="mapList"></div>
       </div>
 
       <div class="tabpage" id="tab-cards" hidden>
@@ -352,6 +386,17 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
           <div class="sub" id="goalHint"></div>
           <label for="sWA">自訂權重：攻擊力</label><input type="number" id="sWA" min="0" step="0.1">
           <label for="sWD">自訂權重：防禦力</label><input type="number" id="sWD" min="0" step="0.1">
+          <label for="sOut">允許超界擺放</label><input type="checkbox" id="sOut">
+          <div class="sub">粒子可以部分放到板子外面（每顆有任何一格在板外的粒子 +1「粒子超界」懲罰；完全在板外是「虛偽錯誤」，不會用）。有「超界」免除時會自動開啟；開啟後搜尋會慢很多。</div>
+          <div id="nativeBox" hidden>
+            <label for="sNative">使用原生多執行緒（本機）</label><input type="checkbox" id="sNative">
+            <label for="sThreads">執行緒數（空白＝全部核心）</label><input type="number" id="sThreads" min="1" max="256" placeholder="全部">
+            <div class="sub" id="nativeInfo"></div>
+          </div>
+          <label for="sFixEff">粒子效能固定 100</label><input type="checkbox" id="sFixEff">
+          <div class="sub">求解時把每顆粒子的效能都當 100（平均效能 100、倍率 ×1），只看形狀、顏色、數量，攻防數字好估算。庫存裡填的實際效能不會被改，取消勾選就會照實際效能去算（會慢一些，也會偏好高效能的粒子）。「粒子」分頁照樣可以匯入、編輯庫存。</div>
+          <label for="sWasm">使用 WASM 加速</label><input type="checkbox" id="sWasm">
+          <div class="sub">求解的核心用 WebAssembly 跑，同樣的題目通常快 3～4 倍，結果和 JS 版完全一樣；不支援時會自動改用 JS。</div>
           <label for="sTime">搜尋時間上限（秒）</label><input type="number" id="sTime" min="1" max="3600">
           <div class="sub">「三種目標比較」會把這個時間平分給三次計算。</div>
         </div>
@@ -384,6 +429,8 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
 <div id="toast" hidden></div>
 
 <script id="solver-src">/*__SOLVER__*/</script>
+<script id="wasm-glue-src">/*__SOLVER_WASM__*/</script>
+<script id="wasm-b64" type="text/plain">/*__WASM_B64__*/</script>
 <script id="importer-src">/*__IMPORTER__*/</script>
 <script id="presets-json" type="application/json">/*__PRESETS__*/</script>
 <script>
@@ -391,6 +438,8 @@ table.kv td:first-child{color:var(--muted);width:104px;white-space:nowrap}
 'use strict';
 const Solver = window.InfalsusSolver;
 const SOLVER_SRC = document.getElementById('solver-src').textContent;
+const WASM_GLUE_SRC = document.getElementById('wasm-glue-src').textContent;
+const WASM_B64 = document.getElementById('wasm-b64').textContent.trim();
 const Importer = window.InfalsusImporter;
 // 內建的預設粒子庫存與預設配方（建置時由 data/ 內嵌）
 const BUILTIN = (function () { try { return JSON.parse(document.getElementById('presets-json').textContent); } catch (e) { return { inventories: [], recipes: [] }; } })();
@@ -432,9 +481,9 @@ function toast(msg, kind, ms) {
 function defaultState() {
   return {
     board: {}, zv: [], stacks: [], recipes: {}, tool: '1', group: 0, presetSet: 'latest', view: { x: 260, y: 220, z: 1 },
-    cards: [], curRecipe: '', curRecipeSig: '',
+    cards: [], snaps: {}, curRecipe: '', curRecipeSig: '',
     ui: { mode: 'view', tab: 'zones', showPieces: true, guideDone: false },
-    settings: { limit: 6, rotation: false, overlap: false, cap: 3, table: '', goal: 'balanced', wAtk: 1, wDef: 1, timeSec: 30, useColors: [true, true, true, true, true], minBaseDef: 0, minBaseAtk: 0, maxPenalty: '', gwType: 'all', gwN: 0 },
+    settings: { limit: 6, rotation: false, overlap: false, cap: 3, table: '', goal: 'balanced', wAtk: 1, wDef: 1, timeSec: 30, useColors: [true, true, true, true, true], fixEff: true, minBaseDef: 0, minBaseAtk: 0, minSlots: 0, minRangeL: 0, minRangeR: 0, maxPenalty: '', gw: { all: 0, disc: 0, over: 0, overlap: 0, out: 0 }, outside: false, useWasm: true, useNative: true, threads: 0 },
   };
 }
 function normalizeState(s) {
@@ -444,13 +493,18 @@ function normalizeState(s) {
   out.ui = Object.assign(defaultState().ui, (s && s.ui) || {});
   if (!Array.isArray(out.settings.useColors) || out.settings.useColors.length !== 5) out.settings.useColors = [true, true, true, true, true];
   if (!Array.isArray(out.cards)) out.cards = [];
+  if (!out.snaps || typeof out.snaps !== 'object') out.snaps = {};
+  const g0 = out.settings.gw && typeof out.settings.gw === 'object' ? out.settings.gw : {};
+  out.settings.gw = Object.assign({ all: 0, disc: 0, over: 0, overlap: 0, out: 0 }, g0);
+  if (out.settings.gwN > 0 && !Object.values(g0).some((v) => v > 0)) out.settings.gw[out.settings.gwType || 'all'] = out.settings.gwN; // 舊版只有一種固定免除
+  delete out.settings.gwN; delete out.settings.gwType;
   return out;
 }
 // 第一次打開（沒有任何存檔）：預設載入最新粒子庫存和第一個預設配方，一開始就有板子可看
 function firstRun() {
   const st = defaultState();
   const inv = BUILTIN.inventories && BUILTIN.inventories[0];
-  if (inv) { st.stacks = inv.stacks.map((p) => ({ color: p.color, shape: p.shape.map((c) => c.slice()), effText: p.effText })); st.presetSet = inv.id; }
+  if (inv) { st.stacks = inv.stacks.filter((p) => !p.extra).map((p) => ({ color: p.color, shape: p.shape.map((c) => c.slice()), effText: p.effText })); st.presetSet = inv.id; }
   const r = BUILTIN.recipes && BUILTIN.recipes[0];
   if (r) {
     st.board = JSON.parse(JSON.stringify(r.board)); st.zv = JSON.parse(JSON.stringify(r.zv || [])); if (r.limit) st.settings.limit = r.limit;
@@ -500,10 +554,35 @@ function detectZones() {
     z.atk = v.atk || 0; z.def = v.def || 0; z.must = !!v.must; z.note = v.note || ''; z.waive = Math.max(0, v.waive | 0);
     // 預設「整體」（從總懲罰扣）。舊存檔沒指定時一律是 'disc'，只有真的填了免除點數才保留它
     z.wtype = v.wtype === 'over' || v.wtype === 'overlap' || v.wtype === 'all' || (v.wtype === 'disc' && z.waive > 0) ? v.wtype : 'all';
-    out.push({ keys: z.keys.slice(), atk: z.atk, def: z.def, must: z.must, note: z.note, waive: z.waive, wtype: z.wtype });
+    z.mg = typeof v.mg === 'string' ? v.mg : '';
+    z.slot = Math.max(0, v.slot | 0); z.rl = Math.max(0, v.rl | 0); z.rr = Math.max(0, v.rr | 0);
+    out.push({ keys: z.keys.slice(), atk: z.atk, def: z.def, must: z.must, note: z.note, waive: z.waive, wtype: z.wtype, mg: z.mg, slot: z.slot, rl: z.rl, rr: z.rr });
   }
   state.zv = out;
+  linkMerges(zones);
   return zones;
+}
+// 合併區域：zv[i].mg 相同（而且同色）的區域，求解時當成「同一個區域」（格子相加、共用最前面那個的攻防／免除／必觸發）。
+// 只有 1 個成員的群組視為沒合併。lead＝群組裡編號最小的；members 只有 lead 才有。
+function linkMerges(zones) {
+  const by = new Map();
+  zones.forEach((z, i) => { z.lead = i; z.members = [i]; if (z.mg) { const k = z.color + '|' + z.mg; if (!by.has(k)) by.set(k, []); by.get(k).push(i); } });
+  for (const arr of by.values()) if (arr.length > 1) { arr.forEach((i) => { zones[i].lead = arr[0]; }); zones[arr[0]].members = arr.slice(); }
+}
+const effZones = () => zonesNow.filter((z, i) => z.lead === i); // 合併後實際算的區域
+const groupKeys = (z) => { const L = zonesNow[z.lead]; return [].concat(...L.members.map((j) => zonesNow[j].keys)); };
+function setMerge(i, target) { // target：要併入的區域編號；-1＝把 i 從群組拆出來
+  const z = zonesNow[i], zv = state.zv;
+  if (target < 0) { zv[i].mg = z.mg = ''; }
+  else {
+    const t = zonesNow[target];
+    if (!t.mg) { let n = 1; const used = new Set(zv.map((x) => x.mg)); while (used.has('m' + n)) n++; zv[target].mg = t.mg = 'm' + n; }
+    zv[i].mg = z.mg = t.mg;
+  }
+  linkMerges(zonesNow);
+  // 併入後如果最前面那個區域還沒填數值、而成員裡有人填了，就把數值帶過去（不覆蓋已經填的）
+  const L = zonesNow[z.lead], empty = (q) => !(q.atk > 0 || q.def > 0 || q.must || q.waive > 0 || q.slot > 0 || q.rl > 0 || q.rr > 0);
+  if (empty(L)) { const src = L.members.map((j) => zonesNow[j]).find((q) => !empty(q)); if (src && src !== L) { for (const f of ['atk', 'def', 'must', 'waive', 'wtype', 'note', 'slot', 'rl', 'rr']) { L[f] = src[f]; state.zv[z.lead][f] = src[f]; } } }
 }
 function boardSigOf(b) { return Object.keys(b).sort().map((k) => k + ':' + b[k].t + ':' + b[k].g).join('|'); }
 const boardSig = () => boardSigOf(state.board);
@@ -514,7 +593,7 @@ let zonesNow = [], hlKeys = [], selZone = -1, pieceHL = -1;
 let view = state.view || (state.view = { x: 260, y: 220, z: 1 });
 const Z_MIN = 0.3, Z_MAX = 3.2;
 const isEdit = () => state.ui.mode === 'edit';
-function cellFill(cell) { if (!cell) return '#10161c'; if (cell.t === 0) return '#56626e'; return COLORS[cell.t - 1]; }
+function cellFill(cell) { if (!cell) return '#0b1c23'; if (cell.t === 0) return '#5a6f79'; return COLORS[cell.t - 1]; }
 const hexPath = (cx, cy, R) => {
   let d = '';
   for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k; d += (k ? 'L' : 'M') + (cx + R * Math.cos(a)).toFixed(1) + ' ' + (cy + R * Math.sin(a)).toFixed(1); }
@@ -553,14 +632,14 @@ function drawBoard() {
     const rMax = Math.ceil((y0 + vh - SQ * BR / 2) / (SQ * BR) - half) + 1;
     for (let row = rMin; row <= rMax; row++) { const [cx, cy] = center(c, row, BR); d += hexPath(cx, cy, BR - 1); }
   }
-  svgEl('path', { d, fill: 'none', stroke: '#1b2530', 'stroke-width': 1 }, boardSvg);
+  svgEl('path', { d, fill: 'none', stroke: '#17323d', 'stroke-width': 1 }, boardSvg);
   const g = svgEl('g', { id: 'cells' }, boardSvg);
   for (const k in state.board) {
     const [c, row] = keyToOff(k);
     if (c < cMin || c > cMax) continue;
     const [cx, cy] = center(c, row, BR);
     if (cy < y0 - BR || cy > y0 + vh + BR) continue;
-    cellPoly.set(k, svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: cellFill(state.board[k]), stroke: '#1d2733', 'stroke-width': 1 }, g));
+    cellPoly.set(k, svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: cellFill(state.board[k]), stroke: '#1d3a47', 'stroke-width': 1 }, g));
   }
   svgEl('g', { id: 'hl', 'pointer-events': 'none' }, boardSvg);
   svgEl('g', { id: 'pieces', 'pointer-events': 'none' }, boardSvg);
@@ -610,15 +689,22 @@ function drawPieces() {
 function drawLabels() {
   const g = $('#labels'); if (!g) return;
   g.innerHTML = '';
-  const run = activeRun(); const done = run && run.r.score ? new Set(run.r.score.completeZones) : null;
+  // 結果的 completeZones 是合併後的區域編號 → 換回原本的區域編號（每個合併區域有 src）
+  const run = activeRun(), done = new Set();
+  if (run && run.r.score && run.prob) run.r.score.completeZones.forEach((i) => { const pz = run.prob.zones[i]; ((pz && pz.src) || [i]).forEach((j) => done.add(j)); });
   zonesNow.forEach((z, zi) => {
     const cell = state.board[z.keys[0]]; if (!cell) return;
     const [c, row] = keyToOff(z.keys[0]); const [cx, cy] = center(c, row, BR);
     const t = svgEl('text', { x: cx, y: cy - 1, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: '#fff', stroke: '#000', 'stroke-width': 2.5, 'paint-order': 'stroke' }, g);
-    t.textContent = (z.must ? '🔒' : '') + z.name + (cell.g ? '·' + cell.g : '') + (done && done.has(zi) ? ' ✓' : '');
-    const has = z.atk > 0 || z.def > 0;
-    const t2 = svgEl('text', { x: cx, y: cy + 11, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 600, fill: has ? '#e8eef5' : '#ffd166', stroke: '#000', 'stroke-width': 2.2, 'paint-order': 'stroke' }, g);
-    t2.textContent = (has ? z.atk + '/' + z.def : z.waive ? '' : '填數值') + (z.waive ? ' 🛡' + WTYPE_SHORT[z.wtype || 'all'] + z.waive : '');
+    const sub = z.lead !== zi, L = zonesNow[z.lead];
+    t.textContent = (!sub && z.must ? '🔒' : '') + (z.members.length > 1 || sub ? '🔗' : '') + z.name + (cell.g ? '·' + cell.g : '') + (done.has(zi) ? ' ✓' : '');
+    const has = L.atk > 0 || L.def > 0;
+    const t2 = svgEl('text', { x: cx, y: cy + 11, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 600, fill: sub ? '#9fd3ff' : has ? '#e8eef5' : '#ffd166', stroke: '#000', 'stroke-width': 2.2, 'paint-order': 'stroke' }, g);
+    t2.textContent = sub ? '併入 ' + L.name : (has ? z.atk + '/' + z.def : (traitText(z) ? '' : '填數值'));
+    if (!sub && traitText(z)) { // 特性（特性槽／範圍）：金色小字
+      const t3 = svgEl('text', { x: cx, y: cy - 12, 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 800, fill: '#ffd166', stroke: '#000', 'stroke-width': 2, 'paint-order': 'stroke' }, g);
+      t3.textContent = '✦' + traitText(z);
+    }
   });
 }
 function fitView() {
@@ -666,7 +752,7 @@ function paint(k) {
   else if (old) old.setAttribute('fill', cellFill(state.board[k]));
   else {
     const [c, row] = keyToOff(k); const [cx, cy] = center(c, row, BR);
-    cellPoly.set(k, svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: cellFill(state.board[k]), stroke: '#1d2733', 'stroke-width': 1 }, $('#cells')));
+    cellPoly.set(k, svgEl('polygon', { points: hexPts(cx, cy, BR - 1), fill: cellFill(state.board[k]), stroke: '#1d3a47', 'stroke-width': 1 }, $('#cells')));
   }
   scheduleZones();
 }
@@ -727,7 +813,7 @@ $('#btnFit').onclick = fitView;
 
 function buildTools() {
   const box = $('#tools'); box.innerHTML = '';
-  const defs = [['0', '#56626e', '空白區'], ['1', COLORS[0], '紅'], ['2', COLORS[1], '黃'], ['3', COLORS[2], '綠'], ['4', COLORS[3], '藍'], ['5', COLORS[4], '紫'], ['erase', '#10161c', '橡皮擦'], ['pan', null, '✋ 移動']];
+  const defs = [['0', '#5a6f79', '空白區'], ['1', COLORS[0], '紅'], ['2', COLORS[1], '黃'], ['3', COLORS[2], '綠'], ['4', COLORS[3], '藍'], ['5', COLORS[4], '紫'], ['erase', '#0b1c23', '橡皮擦'], ['pan', null, '✋ 移動']];
   defs.forEach(([v, col, name]) => {
     const b = h('button', 'tool' + (state.tool === v ? ' on' : ''));
     b.innerHTML = (col ? '<span class="dot" style="background:' + col + ';border:1px solid #fff3"></span>' : '') + name;
@@ -764,11 +850,11 @@ function usableColors() {
 function refreshZones() {
   zonesNow = detectZones();
   if (selZone >= zonesNow.length) selZone = -1;
-  hlKeys = selZone >= 0 ? zonesNow[selZone].keys : [];
+  hlKeys = selZone >= 0 ? groupKeys(zonesNow[selZone]) : [];
   drawHighlight(); drawLabels(); renderZoneList(); updateReady();
 }
 function selectZone(i, focus) {
-  selZone = i; hlKeys = i >= 0 ? zonesNow[i].keys : []; drawHighlight();
+  selZone = i; hlKeys = i >= 0 ? groupKeys(zonesNow[i]) : []; drawHighlight();
   const rows = [...$('#zoneList').children];
   rows.forEach((r, j) => r.classList.toggle('sel', j === i));
   if (i >= 0 && focus) {
@@ -776,42 +862,72 @@ function selectZone(i, focus) {
     const row = rows[i]; if (row) { row.scrollIntoView({ block: 'nearest' }); const inp = row.querySelector('input'); if (inp) { inp.focus(); inp.select(); } }
   }
 }
-const WTYPE_OPTS = [['all', '整體'], ['disc', '乖離'], ['over', '過載'], ['overlap', '重疊']];
-const WTYPE_SHORT = { all: '總', disc: '乖', over: '載', overlap: '疊' };
-const WTYPE_NAME = { all: '整體', disc: '乖離', over: '過載', overlap: '重疊' };
+const WTYPE_OPTS = [['all', '整體'], ['disc', '乖離'], ['over', '過載'], ['overlap', '重疊'], ['out', '超界']];
+const WTYPE_SHORT = { all: '總', disc: '乖', over: '載', overlap: '疊', out: '界' };
+const WTYPE_NAME = { all: '整體', disc: '乖離', over: '過載', overlap: '重疊', out: '超界' };
 function renderZoneList() {
   const box = $('#zoneList'); box.innerHTML = '';
-  if (!zonesNow.length) { box.innerHTML = '<p class="hint">板子上還沒有彩色區域。上方選一個配方按「載入」，或用「📷 截圖匯入」。</p>'; return; }
+  if (!zonesNow.length) { box.innerHTML = '<p class="hint">板子上還沒有彩色區域。上方選一個地圖按「載入」，或用「📷 截圖匯入」。</p>'; return; }
   const usable = usableColors();
+  const afterMerge = () => { save(); renderZoneList(); drawHighlight(); drawLabels(); updateReady(); updateBaseHint(); };
+  // 合併控制：加入其他同色區域／拆開（合併後攻防等數值用最前面那個區域的）
+  const mergeCtl = (i, z) => {
+    const L = zonesNow[z.lead], d = h('div', 'zmerge');
+    const cand = zonesNow.map((q, j) => j).filter((j) => j !== i && zonesNow[j].color === z.color && zonesNow[j].lead !== z.lead);
+    if (z.lead === i && L.members.length > 1) {
+      d.appendChild(h('span', 'zmtxt', '🔗 已合併：' + L.members.map((j) => zonesNow[j].name).join(' + ') + '（算同一個區域）　拆開：'));
+      L.members.slice(1).forEach((j) => { const b = h('button', 'zunm', '✕ ' + zonesNow[j].name); b.title = '把 ' + zonesNow[j].name + ' 從合併拆出來'; b.onclick = (e) => { e.stopPropagation(); setMerge(j, -1); afterMerge(); }; d.appendChild(b); });
+    } else if (z.lead !== i) {
+      const b = h('button', 'zunm', '✕ 拆開'); b.onclick = (e) => { e.stopPropagation(); setMerge(i, -1); afterMerge(); }; d.appendChild(b);
+    }
+    if (cand.length) {
+      const sel = h('select', 'zmsel'); sel.title = '把另一個同色區域併進來：兩塊會算成同一個區域，要一起填滿才算，共用一組攻防（用「' + zonesNow[z.lead].name + '」的數值）';
+      sel.appendChild(Object.assign(h('option', '', z.lead === i && L.members.length > 1 ? '＋再合併一個…' : '🔗 與其他同色區域合併…'), { value: '' }));
+      cand.forEach((j) => sel.appendChild(Object.assign(h('option', '', '併入 ' + zonesNow[j].name + '（' + zonesNow[j].size + ' 格）'), { value: j })));
+      sel.onclick = (e) => e.stopPropagation(); sel.onfocus = () => selectZone(i);
+      sel.onchange = () => { if (sel.value === '') return; setMerge(i, +sel.value); afterMerge(); };
+      d.appendChild(sel);
+    }
+    return d;
+  };
   zonesNow.forEach((z, i) => {
-    const row = h('div', 'zrow' + (i === selZone ? ' sel' : '') + (z.must ? ' must' : ''));
-    row.innerHTML = '<span class="zname"><span class="dot" style="background:' + COLORS[z.color] + '"></span><b>' + z.name + '</b></span><span class="muted">' + z.size + ' 格</span>' +
+    const row = h('div', 'zrow' + (i === selZone ? ' sel' : '') + (z.must ? ' must' : '') + (z.lead !== i ? ' sub' : ''));
+    if (z.lead !== i) { // 已併入別的區域：數值在最前面那個區域設定，這裡只顯示狀態
+      const L = zonesNow[z.lead];
+      row.innerHTML = '<span class="zname"><span class="dot" style="background:' + COLORS[z.color] + '"></span><b>' + z.name + '</b></span><span class="muted">' + z.size + ' 格</span>' +
+        '<span class="zsubtxt">🔗 已併入 <b>' + L.name + '</b>，和它算同一個區域（攻防、免除、一定要觸發都在 ' + L.name + ' 設定）</span>';
+      const ex = h('div', 'zextra'); ex.appendChild(mergeCtl(i, z)); row.appendChild(ex);
+      row.onclick = (e) => { if (!e.target.closest('input,label,select,button')) selectZone(i, false); };
+      row.onmouseenter = () => { hlKeys = groupKeys(z); drawHighlight(); };
+      row.onmouseleave = () => { hlKeys = selZone >= 0 ? groupKeys(zonesNow[selZone]) : []; drawHighlight(); };
+      box.appendChild(row); return;
+    }
+    const tot = z.members.reduce((s, j) => s + zonesNow[j].size, 0);
+    row.innerHTML = '<span class="zname"><span class="dot" style="background:' + COLORS[z.color] + '"></span><b>' + z.name + (z.members.length > 1 ? '🔗' : '') + '</b></span><span class="muted">' + tot + ' 格</span>' +
       '<label>攻<input type="number" min="0" inputmode="numeric" placeholder="0" value="' + (z.atk || '') + '"></label><label>防<input type="number" min="0" inputmode="numeric" placeholder="0" value="' + (z.def || '') + '"></label>' +
       '<div class="zextra"><label class="zmust' + (z.must ? ' on' : '') + '" title="勾選後，求解結果一定會把這個區域填滿（拿到它的特殊效果）；放不下就會告訴你無解"><input type="checkbox" class="zm"' + (z.must ? ' checked' : '') + '>🔒 一定要觸發</label>' +
-      '<label class="zwaive' + (z.waive ? ' on' : '') + '" title="特殊效果：這個區域填滿後免除幾點懲罰。「整體」＝從總懲罰扣（不分種類，最低到 0）；也可以改成只免乖離／過載／重疊其中一種。沒有就留空。免除「重疊」要在設定分頁開啟「允許重疊」才有用">🛡 免除<select class="zwt">' +
-        WTYPE_OPTS.map(([v, t]) => '<option value="' + v + '"' + (z.wtype === v ? ' selected' : '') + '>' + t + '</option>').join('') +
-      '</select>懲罰<input type="number" class="zw" min="0" max="9" inputmode="numeric" placeholder="0" value="' + (z.waive || '') + '">點</label>' +
+      '<label class="ztrait' + (traitText(z) ? ' on' : '') + '" title="特殊效果：這個區域填滿後，卡牌的「特性槽」和「卡牌範圍（左／右）」增加幾點（遊戲裡把滑鼠移到區域上會看到）。任務條件「特性槽／範圍至少多少」會用這些數值去算，要在上方「任務條件」填門檻。沒有就留空">✦ 特性槽＋<input type="number" class="zt" data-k="slot" min="0" max="9" inputmode="numeric" placeholder="0" value="' + (z.slot || '') + '">　範圍 左＋<input type="number" class="zt" data-k="rl" min="0" max="9" inputmode="numeric" placeholder="0" value="' + (z.rl || '') + '">右＋<input type="number" class="zt" data-k="rr" min="0" max="9" inputmode="numeric" placeholder="0" value="' + (z.rr || '') + '"></label>' +
       '<input type="text" class="znote" maxlength="60" placeholder="其他特殊效果（備註，不影響計算）" value="' + (z.note || '').replace(/"/g, '&quot;') + '"></div>' +
       (usable.has(z.color) ? '' : '<span class="zwarn">⚠ 目前沒有（或沒勾選）' + CNAME[z.color] + '色粒子，這個區域不可能填滿' + (z.must ? '，而你設了「一定要觸發」→ 求解會無解' : '') + '</span>');
-    const ins = row.querySelectorAll('input[type=number]:not(.zw)');
+    row.querySelector('.zextra').appendChild(mergeCtl(i, z));
+    const ins = row.querySelectorAll('input[type=number]:not(.zt)');
     const setVals = () => { state.zv[i].atk = +ins[0].value || 0; state.zv[i].def = +ins[1].value || 0; z.atk = state.zv[i].atk; z.def = state.zv[i].def; save(); drawLabels(); updateReady(); };
     ins.forEach((inp) => {
       inp.oninput = setVals;
       inp.onfocus = () => selectZone(i);
-      inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); const all = [...box.querySelectorAll('input[type=number]:not(.zw)')]; const n = all[all.indexOf(inp) + 1]; if (n) { n.focus(); n.select(); } } };
+      inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); const all = [...box.querySelectorAll('input[type=number]:not(.zt)')]; const n = all[all.indexOf(inp) + 1]; if (n) { n.focus(); n.select(); } } };
     });
-    const zw = row.querySelector('.zw'), zwt = row.querySelector('.zwt');
-    zwt.onchange = () => { z.wtype = zwt.value; state.zv[i].wtype = zwt.value; save(); drawLabels(); };
-    zwt.onfocus = () => selectZone(i);
-    zw.oninput = () => { const w = Math.max(0, Math.min(9, zw.value | 0)); z.waive = w; state.zv[i].waive = w; zw.parentNode.classList.toggle('on', w > 0); save(); drawLabels(); };
-    zw.onfocus = () => selectZone(i);
+    row.querySelectorAll('.zt').forEach((inp) => {
+      inp.oninput = () => { const v = Math.max(0, Math.min(9, inp.value | 0)); z[inp.dataset.k] = v; state.zv[i][inp.dataset.k] = v; inp.closest('.ztrait').classList.toggle('on', !!traitText(z)); save(); drawLabels(); updateBaseHint(); };
+      inp.onfocus = () => selectZone(i);
+    });
     const zm = row.querySelector('.zm'), zn = row.querySelector('.znote');
     zm.onchange = () => { z.must = zm.checked; state.zv[i].must = z.must; save(); row.classList.toggle('must', z.must); zm.parentNode.classList.toggle('on', z.must); drawLabels(); updateReady(); if (!usable.has(z.color)) renderZoneList(); };
     zn.oninput = () => { z.note = zn.value; state.zv[i].note = zn.value; save(); };
     zn.onfocus = () => selectZone(i);
-    row.onclick = (e) => { if (!e.target.closest('input,label')) selectZone(i, true); };
-    row.onmouseenter = () => { hlKeys = z.keys; drawHighlight(); };
-    row.onmouseleave = () => { hlKeys = selZone >= 0 ? zonesNow[selZone].keys : []; drawHighlight(); };
+    row.onclick = (e) => { if (!e.target.closest('input,label,select,button')) selectZone(i, true); };
+    row.onmouseenter = () => { hlKeys = groupKeys(z); drawHighlight(); };
+    row.onmouseleave = () => { hlKeys = selZone >= 0 ? groupKeys(zonesNow[selZone]) : []; drawHighlight(); };
     box.appendChild(row);
   });
 }
@@ -830,6 +946,23 @@ $('#btnZoneQuick').onclick = () => {
   toast('已套用到 ' + n + ' 個區域' + (lines.length > zonesNow.length ? '（多出的 ' + (lines.length - zonesNow.length) + ' 行被忽略）' : ''), 'good');
 };
 $('#btnZoneZero').onclick = () => { zonesNow.forEach((z, i) => { z.atk = z.def = 0; state.zv[i].atk = state.zv[i].def = 0; }); save(); renderZoneList(); drawLabels(); updateReady(); };
+
+/* ------------------------------------------------------------ 區域特性：特性槽、卡牌範圍（左／右）
+   zv[i].slot／rl／rr：這個區域填滿時，卡牌的「特性槽」＋slot、「卡牌範圍（左）」＋rl、「（右）」＋rr。
+   任務條件（設定 minSlots／minRangeL／minRangeR）要求填滿的區域加總至少多少。範圍最多 4 格（遊戲的範圍條只有 4 格）。轉色等其他特性還沒做。 */
+const { RANGE_MAX, TRAIT_KEYS, traitTotals, traitMet } = Solver;
+// 任務條件裡的特性門檻：{ slot, rl, rr }（0＝不限制）
+function traitNeed(st) { st = st || state.settings; return { slot: Math.max(0, +st.minSlots || 0), rl: Math.max(0, +st.minRangeL || 0), rr: Math.max(0, +st.minRangeR || 0) }; }
+const hasNeed = (n) => n.slot > 0 || n.rl > 0 || n.rr > 0;
+const needText = (n) => [n.slot > 0 ? '特性槽 ≥ ' + n.slot : '', n.rl > 0 ? '範圍左 ≥ ' + n.rl : '', n.rr > 0 ? '範圍右 ≥ ' + n.rr : ''].filter(Boolean).join('、');
+function traitRows(run) {
+  const prob = run.prob, need = traitNeed(prob.settings), sc = run.r.score;
+  if (!hasNeed(need) && !prob.zones.some((z) => traitText(z))) return '';
+  const t = traitTotals(prob, sc.completeZones), mk = (v, n) => (n > 0 ? (v >= n ? ' ✓' : ' ✗') : '');
+  const names = sc.completeZones.filter((i) => traitText(prob.zones[i])).map((i) => esc2(prob.zones[i].name) + '（' + traitText(prob.zones[i]) + '）');
+  return '<tr><td>特性（填滿的區域加總）</td><td>特性槽 <b>' + t.slot + '</b>' + (need.slot > 0 ? '（條件 ≥ ' + need.slot + mk(t.slot, need.slot) + '）' : '') + '　範圍 左 <b>' + t.rl + '</b>' + (need.rl > 0 ? '（≥ ' + need.rl + mk(t.rl, need.rl) + '）' : '') + ' 右 <b>' + t.rr + '</b>' + (need.rr > 0 ? '（≥ ' + need.rr + mk(t.rr, need.rr) + '）' : '') + (names.length ? '<br>來自：' + names.join('、') : '') + '</td></tr>';
+}
+const traitText = (z) => { const o = []; if (z.slot) o.push('槽+' + z.slot); if (z.rl) o.push('左+' + z.rl); if (z.rr) o.push('右+' + z.rr); return o.join(' '); };
 
 /* ------------------------------------------------------------ 形狀工具 */
 function parseEffs(t) {
@@ -904,6 +1037,13 @@ function renderInventory() {
   sel.onchange = () => { state.presetSet = sel.value; save(); renderInventory(); };
   $('#presetNote').textContent = inv ? (inv.note || '') : '';
   $('#btnPresetAll').onclick = () => { if (inv) inv.stacks.forEach(presetAdd); invChanged(); };
+  // 只用這一組：先移除其他內建組裡、這一組沒有的形狀（自己畫的粒子不動），再把這一組全部加入
+  $('#btnPresetUse').onclick = () => {
+    if (!inv) return;
+    const k = (p) => p.color + '|' + JSON.stringify(p.shape), keep = new Set(inv.stacks.map(k));
+    (BUILTIN.inventories || []).forEach((q) => q.stacks.forEach((p) => { if (!keep.has(k(p))) presetRemove(p); }));
+    inv.stacks.forEach(presetAdd); invChanged(); toast('粒子庫存換成「' + inv.name + '」（' + inv.stacks.length + ' 種）', 'good');
+  };
   $('#btnPresetNone').onclick = () => { if (inv) inv.stacks.forEach(presetRemove); invChanged(); };
   const box = $('#invGrid'); box.innerHTML = '';
   let any = false;
@@ -947,7 +1087,7 @@ function libTile(p) {
   const i = findStack(p.color, p.shape), on = i >= 0;
   const t = h('div', 'tile' + (on ? ' on' : ''));
   const head = h('div', 'thead'); head.title = on ? '點一下移除這種粒子' : '點一下加入這種粒子';
-  const tt = h('div', 'tt'); tt.innerHTML = '<b>' + esc2(p.id) + '</b><br>' + p.shape.length + ' 格';
+  const tt = h('div', 'tt'); tt.innerHTML = '<b>' + esc2(p.id) + (p.extra ? ' <span class="muted">新</span>' : '') + '</b><br>' + p.shape.length + ' 格';
   head.append(shapeSvg(p.shape, COLORS[p.color], 7), tt);
   head.onclick = () => { if (on) presetRemove(p); else presetAdd(p); invChanged(); };
   t.appendChild(head);
@@ -956,7 +1096,7 @@ function libTile(p) {
     const meta = h('div', 'meta'); const sum = h('span', '', effSummary(s.effText)); const ed = h('button', 'ghost', '✎'); ed.title = '編輯形狀'; ed.onclick = () => openEditor(i);
     meta.append(sum, ed);
     t.append(effInput(s, sum), meta);
-  } else t.appendChild(h('div', 'off', '效能 ' + p.efficacy + ' ×' + p.count));
+  } else t.appendChild(h('div', 'off', p.extra ? effSummary(p.effText) : '效能 ' + p.efficacy + ' ×' + p.count));
   return t;
 }
 function customTile(i) {
@@ -993,10 +1133,10 @@ function drawEditor() {
   const wrap = h('div', 'grp'); wrap.style.alignItems = 'flex-start'; wrap.style.gap = '14px'; box.appendChild(wrap);
   const R = 14, EC = 10, ER = 9;
   const svg = svgEl('svg', { viewBox: '0 0 ' + (2 * R + 1.5 * R * (EC - 1)) + ' ' + (SQ * R * (ER + 0.5)), width: 230 });
-  svg.style.background = '#0b0f13'; svg.style.borderRadius = '6px';
+  svg.style.background = '#06131a'; svg.style.borderRadius = '6px';
   for (let c = 0; c < EC; c++) for (let row = 0; row < ER; row++) {
     const [cx, cy] = center(c, row, R); const k = c + ',' + row;
-    const p = svgEl('polygon', { points: hexPts(cx, cy, R - 1), fill: edCells.has(k) ? COLORS[s.color] : '#151c24', stroke: '#26313d', 'stroke-width': 1, style: 'cursor:pointer' }, svg);
+    const p = svgEl('polygon', { points: hexPts(cx, cy, R - 1), fill: edCells.has(k) ? COLORS[s.color] : '#0f222a', stroke: '#234250', 'stroke-width': 1, style: 'cursor:pointer' }, svg);
     p.onclick = () => { if (edCells.has(k)) edCells.delete(k); else edCells.add(k); drawEditor(); };
   }
   wrap.appendChild(svg);
@@ -1035,13 +1175,17 @@ function parseTable(t) {
 }
 function bindSettings() {
   const st = state.settings;
-  const map = [['#sLimit', 'limit', 'num'], ['#sRot', 'rotation', 'bool'], ['#sOv', 'overlap', 'bool'], ['#sCap', 'cap', 'num'], ['#sTable', 'table', 'str'], ['#sGoal', 'goal', 'str'], ['#sWA', 'wAtk', 'num'], ['#sWD', 'wDef', 'num'], ['#sTime', 'timeSec', 'num'], ['#sMinD', 'minBaseDef', 'num'], ['#sMinA', 'minBaseAtk', 'num'], ['#sMaxP', 'maxPenalty', 'opt'], ['#sGwT', 'gwType', 'str'], ['#sGwN', 'gwN', 'num']];
+  const map = [['#sLimit', 'limit', 'num'], ['#sRot', 'rotation', 'bool'], ['#sOv', 'overlap', 'bool'], ['#sCap', 'cap', 'num'], ['#sTable', 'table', 'str'], ['#sGoal', 'goal', 'str'], ['#sWA', 'wAtk', 'num'], ['#sWD', 'wDef', 'num'], ['#sTime', 'timeSec', 'num'], ['#sMinD', 'minBaseDef', 'num'], ['#sMinA', 'minBaseAtk', 'num'], ['#sMinSlot', 'minSlots', 'num'], ['#sMinRL', 'minRangeL', 'num'], ['#sMinRR', 'minRangeR', 'num'], ['#sMaxP', 'maxPenalty', 'opt'], ['#sFixEff', 'fixEff', 'bool'], ['#sWasm', 'useWasm', 'bool'], ['#sOut', 'outside', 'bool'], ['#sNative', 'useNative', 'bool'], ['#sThreads', 'threads', 'opt0']];
   for (const [sel, key, type] of map) {
     const el = $(sel);
-    if (type === 'bool') el.checked = !!st[key]; else el.value = (key === 'minBaseDef' || key === 'minBaseAtk' || key === 'gwN') && !st[key] ? '' : st[key];
+    if (type === 'bool') el.checked = !!st[key]; else el.value = (key === 'minBaseDef' || key === 'minBaseAtk' || key === 'minSlots' || key === 'minRangeL' || key === 'minRangeR' || key === 'threads') && !st[key] ? '' : st[key];
     // 'opt'：空白＝不限制（0 是有意義的值：總懲罰最多 0）
-    el.oninput = el.onchange = () => { st[key] = type === 'bool' ? el.checked : type === 'opt' ? (el.value === '' ? '' : Math.max(0, Math.floor(+el.value) || 0)) : type === 'num' ? (+el.value) : el.value; save(); tablePreview(); goalUi(); updateBaseHint(); if (key === 'rotation' && editing >= 0) drawEditor(); };
+    el.oninput = el.onchange = () => { st[key] = type === 'bool' ? el.checked : type === 'opt0' ? Math.max(0, Math.floor(+el.value) || 0) : type === 'opt' ? (el.value === '' ? '' : Math.max(0, Math.floor(+el.value) || 0)) : type === 'num' ? (+el.value) : el.value; save(); tablePreview(); goalUi(); updateBaseHint(); if (key === 'rotation' && editing >= 0) drawEditor(); };
   }
+  document.querySelectorAll('.gwi').forEach((el) => {
+    const t = el.dataset.t; el.value = st.gw[t] > 0 ? st.gw[t] : '';
+    el.oninput = () => { st.gw[t] = Math.max(0, Math.min(9, Math.floor(+el.value) || 0)); save(); };
+  });
   tablePreview(); goalUi(); updateBaseHint();
 }
 // 任務條件下方的說明：能填的區域全部加起來的基礎攻防（沒有可用同色粒子的區域不算），和門檻比較
@@ -1049,15 +1193,20 @@ function updateBaseHint() {
   const el = $('#baseHint'); if (!el) return;
   const st = state.settings, usable = usableColors();
   let capA = 0, capD = 0, allA = 0, allD = 0;
-  zonesNow.forEach((z) => { allA += z.atk || 0; allD += z.def || 0; if (usable.has(z.color)) { capA += z.atk || 0; capD += z.def || 0; } });
+  effZones().forEach((z) => { allA += z.atk || 0; allD += z.def || 0; if (usable.has(z.color)) { capA += z.atk || 0; capD += z.def || 0; } });
   const minD = Math.max(0, +st.minBaseDef || 0), minA = Math.max(0, +st.minBaseAtk || 0);
-  const bad = minD > capD || minA > capA;
+  const nd = traitNeed(st), capT = { slot: 0, rl: 0, rr: 0 };
+  effZones().forEach((z) => { if (usable.has(z.color)) TRAIT_KEYS.forEach((k) => { capT[k] += z[k] | 0; }); });
+  const badT = nd.slot > capT.slot || nd.rl > capT.rl || nd.rr > capT.rr;
+  const bad = minD > capD || minA > capA || badT;
   el.classList.toggle('warn', bad);
   el.textContent = '「基礎」＝填滿的區域的攻／防加總（遊戲左邊的「基礎攻擊力／基礎防禦力」），和平均效能、懲罰倍率無關；0 或留空＝不限制，求解只找達標的擺放，再照上方目標選最好的。' +
     '　能填的區域全部加起來：防禦 ' + capD + '、攻擊 ' + capA + (capD !== allD || capA !== allA ? '（有些區域沒有可用的同色粒子）' : '') + '。' +
+    (hasNeed(nd) ? '　特性（特性槽／範圍）＝填滿的區域在「✦ 特性槽＋、範圍 左＋右＋」填的數值加總（範圍最多 ' + RANGE_MAX + '），能填的區域全部加起來：特性槽 ' + capT.slot + '、範圍 左 ' + capT.rl + ' 右 ' + capT.rr + '。' : '') +
     (bad ? '　⚠ 門檻比這個還高，一定無解。' : '');
 }
 function goalUi() {
+  { const el = $('#fixEffHint'); if (el) el.textContent = state.settings.fixEff === false ? '' : '目前求解把每顆粒子的效能都當 100（只看形狀與數量；設定分頁可以取消）。下面填的效能照樣保留，也可以匯入庫存。'; }
   const g = state.settings.goal;
   $('#sWA').disabled = $('#sWD').disabled = g !== 'custom';
   $('#goalHint').textContent = '目標「' + GOAL_LABEL[g] + '」：' + ({ balanced: '攻擊力與防禦力一樣重要，求兩者總和最大。', atk: '先求攻擊力最大；攻擊力一樣時，才比防禦力。', def: '先求防禦力最大；防禦力一樣時，才比攻擊力。', custom: '用下面兩個權重自訂：目標 = 攻擊力×權重 + 防禦力×權重。' }[g] || '');
@@ -1070,26 +1219,38 @@ function tablePreview() {
 }
 
 /* ------------------------------------------------------------ 求解 */
+// 粒子效能：預設全部當 100（方便估算，只看形狀與數量；庫存裡填的實際效能還在，設定分頁取消勾選就會用實際效能）
+function stackEffs(s) {
+  const effs = parseEffs(s.effText);
+  if (state.settings.fixEff === false) return effs;
+  const n = effs.reduce((a, e) => a + (e.n || 1), 0);
+  return n > 0 ? [{ v: 100, n }] : [];
+}
+const EXTRA_KEYS = new Set(((BUILTIN && BUILTIN.inventories) || []).flatMap((inv) => inv.stacks.filter((p) => p.extra).map((p) => p.color + '|' + JSON.stringify(p.shape))));
 function buildProblem(goal) {
   const cells = Object.keys(state.board).map((k) => { const [c, row] = keyToOff(k); return offToAxial(c, row); });
-  const zones = zonesNow.map((z) => ({ color: z.color, cells: z.cells, atk: z.atk, def: z.def, name: z.name, must: !!z.must, waive: z.waive | 0, wtype: z.wtype || 'all' }));
+  // 合併的區域：格子相加、名稱用「Z1+Z3」，數值取最前面那個（src＝原本的區域編號，只給介面對回去用）
+  const zones = effZones().map((z) => ({ color: z.color, cells: [].concat(...z.members.map((j) => zonesNow[j].cells)), atk: z.atk, def: z.def, name: z.members.map((j) => zonesNow[j].name).join('+'), must: !!z.must, waive: 0, wtype: 'all', src: z.members.slice(), slot: z.slot | 0, rl: z.rl | 0, rr: z.rr | 0 }));
   const st = state.settings;
-  const stacks = Solver.filterColors(state.stacks.map((s) => ({ color: s.color, cells: s.shape, effs: parseEffs(s.effText), name: CNAME[s.color] + s.shape.length + '格' })), st.useColors);
+  const stacks = Solver.filterColors(state.stacks.map((s) => ({ color: s.color, cells: s.shape, effs: stackEffs(s), name: CNAME[s.color] + s.shape.length + '格', extra: EXTRA_KEYS.has(s.color + '|' + JSON.stringify(s.shape)) })), st.useColors); // extra＝額外粒子（6～8 格的大形狀）：搜尋空間大很多，求解時先不用它們快速解一輪
   const gw = Solver.goalWeights(goal || st.goal, +st.wAtk, +st.wDef);
-  const gwN = Math.max(0, Math.min(9, Math.floor(+st.gwN || 0)));
+  const gwv = {}; for (const t of ['disc', 'overlap', 'out']) { const n = Math.max(0, Math.min(9, Math.floor(+(st.gw || {})[t] || 0))); if (n > 0) gwv[t] = n; }
   return {
     cells, zones, stacks,
-    // 有固定免除「整體／重疊」時，重疊（至少免費的那一次）是可以接受的 → 自動允許重疊（超過免除的部分照樣扣懲罰）
-    settings: { limit: Math.max(1, st.limit | 0), rotation: !!st.rotation, allowOverlap: !!st.overlap || (gwN > 0 && (st.gwType === 'all' || st.gwType === 'overlap')),
-      globalWaive: gwN > 0 ? { [st.gwType || 'all']: gwN } : {}, penaltyCap: Math.max(1, st.cap | 0), penaltyTable: parseTable(st.table) || undefined, wAtk: gw.wAtk, wDef: gw.wDef, minBaseDef: Math.max(0, +st.minBaseDef || 0), minBaseAtk: Math.max(0, +st.minBaseAtk || 0), maxPenalty: st.maxPenalty === '' || st.maxPenalty == null ? undefined : Math.max(0, Math.floor(+st.maxPenalty) || 0) },
+    // 有固定免除「整體／重疊」時，重疊（至少免費的那一次）是可以接受的 → 自動允許重疊；有「超界」免除時自動允許超界擺放（超過免除的部分照樣扣懲罰）
+    settings: { limit: Math.max(1, st.limit | 0), rotation: !!st.rotation, fixEff: st.fixEff !== false, allowOverlap: !!st.overlap || !!gwv.overlap,
+      allowOutside: !!st.outside || !!gwv.out,
+      globalWaive: gwv, penaltyCap: Math.max(1, st.cap | 0), penaltyTable: parseTable(st.table) || undefined, wAtk: gw.wAtk, wDef: gw.wDef, minBaseDef: Math.max(0, +st.minBaseDef || 0), minBaseAtk: Math.max(0, +st.minBaseAtk || 0), minSlots: traitNeed(st).slot, minRangeL: traitNeed(st).rl, minRangeR: traitNeed(st).rr, maxPenalty: st.maxPenalty === '' || st.maxPenalty == null ? undefined : Math.max(0, Math.floor(+st.maxPenalty) || 0) },
   };
 }
 // 回傳 { msg, tab }（缺什麼、該去哪個分頁補），沒問題回傳 null
 function validate(p) {
-  if (!p.zones.length) return { msg: '板子上還沒有彩色區域。先選一個配方，或用「📷 截圖匯入」。', tab: 'zones' };
+  if (!p.zones.length) return { msg: '板子上還沒有彩色區域。先選一個地圖，或用「📷 截圖匯入」。', tab: 'zones' };
   if (!p.zones.some((z) => z.atk > 0 || z.def > 0 || z.must)) return { msg: '所有區域的攻擊／防禦都是 0，請先填「區域」分頁的數值。', tab: 'zones' };
   if (!p.stacks.some((s) => s.effs.length)) return { msg: state.stacks.length ? '目前勾選的顏色裡沒有粒子（見「粒子」分頁的顏色開關），或效能欄沒寫。' : '還沒有粒子庫存，請到「粒子」分頁加入。', tab: 'stacks' };
   const colors = new Set(p.stacks.filter((s) => s.effs.length).map((s) => s.color));
+  { const nd = traitNeed(p.settings), cap = { slot: 0, rl: 0, rr: 0 }; p.zones.forEach((z) => { if (colors.has(z.color)) TRAIT_KEYS.forEach((k) => { cap[k] += z[k] | 0; }); });
+    if (hasNeed(nd) && (nd.slot > cap.slot || nd.rl > cap.rl || nd.rr > cap.rr)) return { msg: '任務條件（' + needText(nd) + '）比所有能填的區域的特性加起來還高：特性槽 ' + cap.slot + '、範圍 左 ' + cap.rl + ' 右 ' + cap.rr + '。請確認各區域的「✦ 特性槽＋／範圍」有填對，或降低門檻。', tab: 'zones' }; }
   const lost = p.zones.filter((z) => z.must && !colors.has(z.color));
   if (lost.length) return { msg: '「一定要觸發」的 ' + lost.map((z) => z.name + '（' + CNAME[z.color] + '）').join('、') + ' 沒有可用的同色粒子，不可能填滿。請加入／勾選該色粒子，或取消「一定要觸發」。', tab: 'zones' };
   if (!p.zones.some((z) => (z.atk > 0 || z.def > 0) && colors.has(z.color))) return { msg: '沒有任何與色彩區域「同色」的粒子，無法填滿任何區域。', tab: 'stacks' };
@@ -1097,15 +1258,103 @@ function validate(p) {
 }
 
 let workerURL = null;
+// 背景執行緒的程式 = 求解器（JS）＋ WASM 引擎的串接碼 ＋ 內嵌的 .wasm（base64）＋ 收發訊息的串接碼。
+// WASM 載入失敗、被關掉、或執行中發生例外時，自動用 JS 版搜尋，結果一樣。
 function getWorkerURL() {
   if (!workerURL) {
-    const glue = '\nself.onmessage=function(e){var m=e.data;var r=self.InfalsusSolver.solve(m.prob,{timeLimitMs:m.timeLimitMs,onProgress:function(p){self.postMessage({type:"progress",p:p});},onImprove:function(b){self.postMessage({type:"improve",b:b});}});self.postMessage({type:"done",r:r});};';
-    workerURL = URL.createObjectURL(new Blob([SOLVER_SRC + glue], { type: 'application/javascript' }));
+    const glue = '\nvar __eng=null,__ready=null;' +
+      'function __init(){if(__ready)return __ready;try{if(typeof WebAssembly==="undefined"||!self.InfalsusWasm){__ready=Promise.resolve();return __ready;}' +
+      'var s=atob(WASM_B64),b=new Uint8Array(s.length);for(var i=0;i<s.length;i++)b[i]=s.charCodeAt(i);' +
+      '__ready=self.InfalsusWasm.load(b,function(){__eng=null;}).then(function(e){__eng=e;},function(){__eng=null;});}catch(e){__ready=Promise.resolve();}return __ready;}' +
+      'self.onmessage=function(e){var m=e.data;__init().then(function(){var eng=m.wasm===false?null:__eng;' +
+      'var r=self.InfalsusSolver.solve(m.prob,{timeLimitMs:m.timeLimitMs,engine:eng||undefined,onProgress:function(p){self.postMessage({type:"progress",p:p});},onImprove:function(b){self.postMessage({type:"improve",b:b});}});' +
+      'self.postMessage({type:"done",r:r,engine:eng&&__eng?"wasm":"js"});});};';
+    workerURL = URL.createObjectURL(new Blob([SOLVER_SRC + '\n' + WASM_GLUE_SRC + '\nvar WASM_B64="' + WASM_B64 + '";' + glue], { type: 'application/javascript' }));
   }
   return workerURL;
 }
 // 在背景執行緒求解一次；背景執行緒用不了時退回主執行緒（求解期間畫面會暫時凍結）
+let NATIVE = null; // 本機伺服器提供原生求解器時：{ cores }
+if (window.__DESKTOP) { // 桌面版（Rust 視窗）：求解交給同一個 exe 的子行程
+  NATIVE = { cores: window.__DESKTOP.cores, desktop: true }; $('#nativeBox').hidden = false;
+  $('#nativeInfo').textContent = '桌面版：原生多執行緒求解器已內建（' + NATIVE.cores + ' 個邏輯核心），多個執行緒共用最佳值一起搜尋，通常比單執行緒 WASM 快很多。';
+} else if (/^https?:$/.test(location.protocol) && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+  fetch('/api/health', { cache: 'no-store' }).then((r) => r.json()).then((j) => {
+    if (j && j.native) { NATIVE = { cores: j.cores }; $('#nativeBox').hidden = false; $('#nativeInfo').textContent = '本機的原生求解器可用（' + j.cores + ' 個邏輯核心）：多個執行緒共用最佳值一起搜尋，通常比單執行緒 WASM 快很多。'; }
+  }).catch(() => {});
+}
+// 原生多執行緒（透過本機伺服器）。伺服器錯誤時 promise 解析成 null，由呼叫端退回背景執行緒
+// 桌面版：在網頁裡 prepare＋攤平，用 IPC 交給 Rust；輸出行（I＝改進、D＝結束）由 __desk 收回來
+const DESK = { id: 0, subs: {} };
+window.__desk = { line: (id, l) => { const f = DESK.subs[id]; if (f) f.line(l); }, end: (id, code, err) => { const f = DESK.subs[id]; if (f) f.end(code, err); } };
+function solveDesktop(prob, limitMs, hooks, threads) {
+  let finished = false, resolveFn, best = null, done = null; const t0 = Date.now(), id = ++DESK.id;
+  const promise = new Promise((resolve) => { resolveFn = resolve; });
+  const finish = (v) => { if (finished) return; finished = true; clearInterval(timer); delete DESK.subs[id]; resolveFn(v); };
+  const timer = setInterval(() => { if (hooks.progress) hooks.progress({ ms: Date.now() - t0, best: best ? best.value : 0 }); }, 400);
+  const EMPTY = { best: null, bestVal: 0, nodes: 0, stop: false, stats: { leaves: 0, tiles: 0, extrasCalls: 0, extrasCands: 0, pruneZone: 0, pruneTile: 0 } };
+  const parseList = (t) => (t ? t.split(',').map((x) => { const [pid, eff] = x.split(':'); return { pid: +pid, eff: +eff }; }) : []);
+  const fin = (parsed) => { const r = Solver.solve(prob, { timeLimitMs: limitMs, engine: () => parsed }); r.ms = Date.now() - t0; r.engine = 'native'; r.threads = threads; finish({ r, status: r.finished ? 'proved' : 'timeout' }); };
+  let S;
+  try { S = Solver.prepare(prob); } catch (e) { setTimeout(() => finish(null), 0); return { promise, cancel() {} }; }
+  if (!(S.order.length && S.M.length && !S.mustMissing.length && !S.baseUnreach)) { setTimeout(() => fin(EMPTY), 0); return { promise, cancel() {} }; }
+  DESK.subs[id] = {
+    line: (line) => {
+      if (line.startsWith('I ')) {
+        const m = /^I (\S+) (\S+) ?(.*)$/.exec(line); if (!m) return;
+        best = { value: +m[1], pieces: Solver.describePieces(S, parseList(m[3])), ms: Date.now() - t0, nodes: +m[2] };
+        if (hooks.improve) hooks.improve(best);
+      } else if (line.startsWith('D ')) {
+        const [head, list] = line.split('|'); const f = head.trim().split(/\s+/).slice(1).map(Number); const b = parseList((list || '').trim());
+        done = { best: b.length ? b : null, bestVal: f[0], nodes: f[1], stop: f[2] !== 0, stats: { leaves: f[3], tiles: f[4], extrasCalls: f[5], extrasCands: f[6], pruneZone: f[7], pruneTile: f[8] } };
+      }
+    },
+    end: (code, err) => { if (finished) return; if (done) return fin(done); if (code === -2) return; finish(null); },
+  };
+  const { ints, floats } = window.InfalsusWasm.marshal(S);
+  const head = new Uint32Array([ints.length, floats.length]);
+  const all = new Uint8Array(8 + ints.byteLength + floats.byteLength);
+  all.set(new Uint8Array(head.buffer), 0); all.set(new Uint8Array(ints.buffer, ints.byteOffset, ints.byteLength), 8); all.set(new Uint8Array(floats.buffer, floats.byteOffset, floats.byteLength), 8 + ints.byteLength);
+  let bin = ''; for (let i = 0; i < all.length; i += 0x8000) bin += String.fromCharCode.apply(null, all.subarray(i, i + 0x8000));
+  window.ipc.postMessage(JSON.stringify({ t: 'solve', id, threads, limit: limitMs || 60000, data: btoa(bin) }));
+  const cancel = () => { if (finished) return; window.ipc.postMessage(JSON.stringify({ t: 'stop', id })); finish({ r: best ? { pieces: best.pieces, value: best.value, score: null, nodes: 0, ms: 0, finished: false } : { pieces: [], score: null, nodes: 0, ms: 0, finished: false }, status: 'stopped' }); };
+  return { promise, cancel };
+}
+function solveNative(prob, limitMs, hooks, threads) {
+  if (NATIVE && NATIVE.desktop) return solveDesktop(prob, limitMs, hooks, threads);
+  let finished = false, resolveFn, best = null; const ac = new AbortController(), t0 = Date.now();
+  const promise = new Promise((resolve) => { resolveFn = resolve; });
+  const finish = (v) => { if (finished) return; finished = true; clearInterval(timer); resolveFn(v); };
+  const timer = setInterval(() => { if (hooks.progress) hooks.progress({ ms: Date.now() - t0, best: best ? best.value : 0 }); }, 400);
+  fetch('/api/solve', { method: 'POST', body: JSON.stringify({ prob, timeLimitMs: limitMs, threads }), signal: ac.signal }).then(async (res) => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rd = res.body.getReader(), dec = new TextDecoder(); let buf = '';
+    for (;;) {
+      const { value, done } = await rd.read(); if (done) break;
+      buf += dec.decode(value, { stream: true }); let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i); buf = buf.slice(i + 1); if (!line) continue;
+        const m = JSON.parse(line);
+        if (m.type === 'improve') { best = m.b; if (hooks.improve) hooks.improve(m.b); }
+        else if (m.type === 'done') { finish({ r: m.r, status: m.r.finished ? 'proved' : 'timeout' }); return; }
+        else if (m.type === 'error') throw new Error(m.message);
+      }
+    }
+    if (!finished) throw new Error('伺服器沒有回傳結果');
+  }).catch((e) => { if (!finished && !ac.signal.aborted) { NATIVE = null; finish(null); } });
+  const cancel = () => { if (finished) return; ac.abort(); finish({ r: best ? { pieces: best.pieces, value: best.value, score: null, nodes: 0, ms: 0, finished: false } : { pieces: [], score: null, nodes: 0, ms: 0, finished: false }, status: 'stopped' }); };
+  return { promise, cancel };
+}
 function solveOnce(prob, limitMs, hooks) {
+  if (NATIVE && state.settings.useNative !== false) {
+    const nat = solveNative(prob, limitMs, hooks, state.settings.threads > 0 ? state.settings.threads : NATIVE.cores);
+    let cancel = nat.cancel;
+    const promise = nat.promise.then((res) => { if (res) return res; const w = solveWorker(prob, limitMs, hooks); cancel = w.cancel; return w.promise; });
+    return { promise, cancel: () => cancel() };
+  }
+  return solveWorker(prob, limitMs, hooks);
+}
+function solveWorker(prob, limitMs, hooks) {
   let finished = false, resolveFn, best = null, w = null;
   const promise = new Promise((resolve) => { resolveFn = resolve; });
   const finish = (r, status) => { if (finished) return; finished = true; if (w) { w.terminate(); w = null; } resolveFn({ r, status }); };
@@ -1116,10 +1365,10 @@ function solveOnce(prob, limitMs, hooks) {
       const m = e.data;
       if (m.type === 'progress') { if (hooks.progress) hooks.progress(m.p); }
       else if (m.type === 'improve') { best = m.b; if (hooks.improve) hooks.improve(m.b); }
-      else if (m.type === 'done') finish(m.r, m.r.finished ? 'proved' : 'timeout');
+      else if (m.type === 'done') { m.r.engine = m.engine; finish(m.r, m.r.finished ? 'proved' : 'timeout'); }
     };
     w.onerror = () => { if (w) { w.terminate(); w = null; } if (!finished) fallback(); };
-    w.postMessage({ prob, timeLimitMs: limitMs });
+    w.postMessage({ prob, timeLimitMs: limitMs, wasm: state.settings.useWasm !== false });
   } catch (e) { fallback(); }
   const cancel = () => { if (!finished) finish(best ? { pieces: best.pieces, value: best.value, score: null, nodes: 0, ms: 0, finished: false } : { pieces: [], score: null, nodes: 0, ms: 0, finished: false }, 'stopped'); };
   return { promise, cancel };
@@ -1127,6 +1376,14 @@ function solveOnce(prob, limitMs, hooks) {
 function scoreOf(run, pieces) {
   if (!run.S) run.S = Solver.prepare(run.prob);
   return Solver.scoreExplicit(run.S, pieces.map((p) => ({ color: p.color, cells: p.cells, eff: p.eff })));
+}
+
+// 任務條件「特性槽／範圍（左右）至少多少」：分支定界在 solver.js（Solver.solveTraits），這裡只是接上引擎和畫面。
+function solveTraits(base, need, limitMs, hooks, run) {
+  let cancelled = false, curC = null;
+  const promise = Solver.solveTraits(base, need, (prob, ms, onImp) => { const h = solveOnce(prob, ms, { progress: () => {}, improve: (b) => { if (onImp) onImp(b); } }); curC = h.cancel; return h.promise.then((x) => { curC = null; return x; }); },
+    { limitMs, score: (pieces) => scoreOf(run, pieces), onProgress: (p) => { if (hooks.progress) hooks.progress(p); }, onImprove: (b) => { if (hooks.improve) hooks.improve(b); }, isCancelled: () => cancelled });
+  return { promise, cancel: () => { cancelled = true; if (curC) curC(); } };
 }
 
 let runs = [], curRun = -1, runSeq = 0, running = false, cancelled = false, curCancel = null, runUITimer = 0;
@@ -1154,16 +1411,38 @@ async function runGoals(goals) {
       const run = { id: ++runSeq, goal: g, label: GOAL_LABEL[g] || g, prob, sig: boardSig(), status: 'running', r: null, S: null };
       if (!firstId) firstId = run.id;
       runs.unshift(run); curRun = 0; renderRuns(); scheduleDraw();
-      const hnd = solveOnce(prob, per, {
+      // 畫面上只留「目前最好」的解（後面階段較差的中途解不會蓋掉前面較好的）
+      let shown = -Infinity;
+      const hooks = {
         progress: (p) => setProgress(p, goals.length > 1 ? run.label : ''),
-        improve: (b) => { run.r = { pieces: b.pieces, score: scoreOf(run, b.pieces), value: b.value }; scheduleRunUI(); },
-      });
-      curCancel = hnd.cancel;
-      const { r, status } = await hnd.promise;
-      curCancel = null;
-      run.r = r.pieces && r.pieces.length && !r.score ? { pieces: r.pieces, score: scoreOf(run, r.pieces), value: r.value } : r;
+        improve: (b) => { const sc = scoreOf(run, b.pieces); if (sc.value > shown + 1e-9) { shown = sc.value; run.r = { pieces: b.pieces, score: sc, value: sc.value }; scheduleRunUI(); } },
+      };
+      const need = traitNeed(prob.settings);
+      const solveAny = (pb, ms) => (hasNeed(need) ? solveTraits(pb, need, ms, hooks, run) : solveOnce(pb, ms, hooks));
+      const t0 = Date.now();
+      const results = []; // [{ r, status }]
+      // 粒子庫存有「額外粒子」（6～8 格的大形狀）時，搜尋空間會大很多、常常很久才找到第一個解：
+      // 先只用一般粒子快速解一輪（通常幾秒就有可用的答案、畫面立刻有結果），再用完整庫存把剩下的時間拿去找更好的。
+      const lite = prob.stacks.some((q) => q.extra) && prob.stacks.some((q) => !q.extra) ? Object.assign({}, prob, { stacks: prob.stacks.filter((q) => !q.extra) }) : null;
+      if (lite) {
+        const hA = solveAny(lite, Math.min(Math.round(per * 0.4), 12000));
+        curCancel = hA.cancel; const rA = await hA.promise; curCancel = null; results.push(rA);
+        if (rA.status === 'stopped' || cancelled) { /* 使用者按了停止：不再跑第二輪 */ }
+        else { const left = per - (Date.now() - t0); if (left > 300) { const hB = solveAny(prob, left); curCancel = hB.cancel; results.push(await hB.promise); curCancel = null; } }
+      } else {
+        const h1 = solveAny(prob, per);
+        curCancel = h1.cancel; results.push(await h1.promise); curCancel = null;
+      }
+      // 取最好的那個（兩輪都有解時比分數）；狀態以最後完整庫存那輪為準（它跑完＝最優）
+      const scored = results.map((x) => (x.r && x.r.pieces && x.r.pieces.length ? { x, sc: scoreOf(run, x.r.pieces) } : null)).filter(Boolean);
+      scored.sort((p, q) => q.sc.value - p.sc.value);
+      const last = results[results.length - 1];
+      const r = scored.length ? Object.assign({}, scored[0].x.r, { score: scored[0].sc, value: scored[0].sc.value }) : last.r;
+      const status = last.status === 'proved' && lite && results.length < 2 ? 'timeout' : last.status;
+      r.ms = Date.now() - t0; r.nodes = results.reduce((a, x) => a + ((x.r && x.r.nodes) || 0), 0);
+      run.r = r;
       const has = run.r && run.r.pieces && run.r.pieces.length;
-      run.status = has ? status : (r.infeasible ? 'infeasible' : status === 'proved' ? 'none' : status);
+      run.status = has ? status : (last.r.infeasible ? 'infeasible' : status === 'proved' ? 'none' : status);
       run.ms = r.ms; run.nodes = r.nodes;
       if (has) logCard(run);
       renderRuns(); scheduleDraw();
@@ -1202,7 +1481,7 @@ function renderRuns() {
     row.innerHTML = '<span class="nm">' + run.label + '</span>' +
       '<span>攻 <b class="' + (a !== null && a === maxA && runs.length > 1 ? 'best' : '') + '">' + (a === null ? '—' : a) + '</b></span>' +
       '<span>防 <b class="' + (d !== null && d === maxD && runs.length > 1 ? 'best' : '') + '">' + (d === null ? '—' : d) + '</b></span>' +
-      '<span class="st">' + (s ? s.n + ' / ' + run.prob.settings.limit + ' 顆・' : '') + (STATUS[run.status] || STATUS.none)[1] + (run.sig !== boardSig() ? '・板子已改，擺放不再對應' : '') + '</span>';
+      '<span class="st">' + (s ? s.n + ' / ' + run.prob.settings.limit + ' 顆・' : '') + (STATUS[run.status] || STATUS.none)[1] + (run.ms ? '・' + (run.ms / 1000).toFixed(1) + ' 秒' + (run.r && run.r.engine === 'wasm' ? '（WASM）' : run.r && run.r.engine === 'native' ? '（原生 ' + run.r.threads + ' 執行緒）' : '') : '') + (run.sig !== boardSig() ? '・板子已改，擺放不再對應' : '') + '</span>';
     row.onclick = () => { curRun = i; renderRuns(); scheduleDraw(); };
     box.appendChild(row);
   });
@@ -1212,7 +1491,8 @@ function updateBadge() {
   const b = $('#resultBadge'), run = activeRun();
   if (!run || !run.r.score || !state.ui.showPieces || isEdit()) { b.hidden = true; return; }
   const s = run.r.score;
-  b.innerHTML = run.label + '　攻擊 <b>' + Math.round(s.finalAtk) + '</b>　防禦 <b>' + Math.round(s.finalDef) + '</b>';
+  const need = traitNeed(run.prob.settings), tot = traitTotals(run.prob, s.completeZones), showT = hasNeed(need) || run.prob.zones.some((z) => traitText(z));
+  b.innerHTML = run.label + '　攻擊 <b>' + Math.round(s.finalAtk) + '</b>　防禦 <b>' + Math.round(s.finalDef) + '</b>' + (showT ? '　特性槽 <b>' + tot.slot + '</b>　範圍 左 <b>' + tot.rl + '</b> 右 <b>' + tot.rr + '</b>' : '');
   b.hidden = false;
 }
 // 無解／找不到時的診斷：每個區域「單獨」能不能填滿，哪些區域是被粒子的顏色／形狀／數量／粒子數上限卡住
@@ -1254,10 +1534,10 @@ function diagBox(run) {
 function waiveText(sc) {
   if (!sc.waive) return '';
   const parts = [];
-  ['disc', 'over', 'overlap'].forEach((t) => {
+  ['out', 'overlap', 'disc', 'over'].forEach((t) => {
     if (sc.waiveBy[t] > 0) { const got = sc[t] - sc.effBy[t]; parts.push(WTYPE_NAME[t] + ' −' + got + (got < sc.waiveBy[t] ? '（可免 ' + sc.waiveBy[t] + '）' : '')); }
   });
-  if (sc.waiveBy.all > 0) { const got = sc.effBy.disc + sc.effBy.over + sc.effBy.overlap - sc.effAll; parts.push('整體 −' + got + (got < sc.waiveBy.all ? '（可免 ' + sc.waiveBy.all + '）' : '')); }
+  if (sc.waiveBy.all > 0) { const got = sc.effBy.disc + sc.effBy.over + sc.effBy.overlap + sc.effBy.out - sc.effAll; parts.push('整體 −' + got + (got < sc.waiveBy.all ? '（可免 ' + sc.waiveBy.all + '）' : '')); }
   return '・🛡免除 ' + parts.join('、') + '・有效懲罰 ' + sc.Peff;
 }
 function renderRunDetail() {
@@ -1273,6 +1553,7 @@ function renderRunDetail() {
       if (bi && bi.unreachable) return '任務條件（' + baseTxt + '）比所有「能填的區域」全部加起來還高：能填的區域最多只有 防禦 ' + bi.capDef + '、攻擊 ' + bi.capAtk + '。請確認各區域數值有填對、各顏色粒子有加入並勾選，或降低門檻。';
       const parts = [];
       if (musts.length) parts.push('同時填滿「一定要觸發」的 ' + musts.join('、'));
+      { const nd = traitNeed(bs); if (hasNeed(nd)) parts.push('達到 ' + needText(nd)); }
       if (baseTxt) parts.push('達到 ' + baseTxt);
       return '沒有任何擺放能' + parts.join('並') + '。可能原因：粒子數上限（含可承受的懲罰）放不下需要填滿的區域、該色粒子形狀／數量不夠、或懲罰太重。請降低門檻、取消其中幾個「一定要觸發」，或放寬「設定」分頁的粒子數／懲罰。';
     };
@@ -1293,8 +1574,8 @@ function renderRunDetail() {
     '<tr><td>基礎 攻 / 防</td><td>' + sc.atk + ' / ' + sc.def + (prob.settings.minBaseAtk > 0 || prob.settings.minBaseDef > 0
       ? '　任務條件：' + [prob.settings.minBaseDef > 0 ? '防禦 ≥ ' + prob.settings.minBaseDef + (sc.def >= prob.settings.minBaseDef ? ' ✓' : ' ✗') : '', prob.settings.minBaseAtk > 0 ? '攻擊 ≥ ' + prob.settings.minBaseAtk + (sc.atk >= prob.settings.minBaseAtk ? ' ✓' : ' ✗') : ''].filter(Boolean).join('、') : '') + '</td></tr>' +
     '<tr><td>平均粒子效能</td><td>' + sc.avg.toFixed(1) + '　→ ×' + (sc.avg / 100).toFixed(2) + '</td></tr>' +
-    '<tr><td>懲罰</td><td>乖離 ' + sc.disc + '・過載 ' + sc.over + '・重疊 ' + sc.overlap + waiveText(sc) + '　→ 倍率 ' + (sc.mult * 100).toFixed(1) + '%</td></tr>' +
-    '<tr><td>使用粒子</td><td>' + sc.n + ' / ' + prob.settings.limit + '</td></tr></table>');
+    '<tr><td>懲罰</td><td>超界 ' + sc.out + '・重疊 ' + sc.overlap + '・乖離 ' + sc.disc + '・過載 ' + sc.over + waiveText(sc) + '　→ 倍率 ' + (sc.mult * 100).toFixed(1) + '%</td></tr>' +
+    '<tr><td>使用粒子</td><td>' + sc.n + ' / ' + prob.settings.limit + '</td></tr>' + traitRows(run) + '</table>');
   box.innerHTML = html.join('');
   box.appendChild(renderGuide(run));
 }
@@ -1316,14 +1597,19 @@ function miniMap(run, hi) {
   const prob = run.prob, R = 6, pieces = run.r.pieces;
   const svg = svgEl('svg', { class: 'mini' });
   const info = prob.cells.map(([q, r]) => { const [c, row] = axialToOff(q, r); return { k: q + ',' + r, p: center(c, row, R) }; });
+  // 粒子可以（在「超界」被免除時）放到板子外面：板外的格子也要畫進小地圖，否則整顆粒子找不到格子而出錯
+  const onBoard = new Set(info.map((a) => a.k));
+  pieces.forEach((p) => p.qr.forEach(([q, r]) => { const k = q + ',' + r; if (onBoard.has(k)) return; onBoard.add(k); const [c, row] = axialToOff(q, r); info.push({ k, p: center(c, row, R) }); }));
   const zoneColor = new Map(); prob.zones.forEach((z) => z.cells.forEach((c) => zoneColor.set(c[0] + ',' + c[1], z.color)));
   const owner = new Map(); pieces.forEach((p, i) => p.qr.forEach((c) => owner.set(c[0] + ',' + c[1], i)));
+  // 重疊時，後面的粒子會蓋掉前面的格子：被點選的這顆一律以自己的格子為準，不然整顆被蓋住時就找不到它
+  pieces[hi].qr.forEach((c) => owner.set(c[0] + ',' + c[1], hi));
   const xs = info.map((a) => a.p[0]), ys = info.map((a) => a.p[1]);
   const x0 = Math.min(...xs) - R, y0 = Math.min(...ys) - R * SQ / 2;
   svg.setAttribute('viewBox', [x0, y0, Math.max(...xs) + R - x0, Math.max(...ys) + R * SQ / 2 - y0].join(' '));
   info.forEach((a) => {
     const o = owner.get(a.k), zc = zoneColor.get(a.k);
-    let fill = '#2a333d', op = 1, stroke = '#0b1015', sw = 0.6;
+    let fill = '#2c4a56', op = 1, stroke = '#07161c', sw = 0.6;
     if (zc !== undefined) { fill = COLORS[zc]; op = 0.3; }
     if (o !== undefined && o !== hi) { fill = COLORS[pieces[o].color]; op = 0.5; }
     if (o === hi) { fill = COLORS[pieces[o].color]; op = 1; stroke = '#fff'; sw = 1.4; }
@@ -1342,9 +1628,9 @@ function guideText(run) {
   L.push((state.curRecipe && state.curRecipeSig === run.sig ? state.curRecipe + '　' : '') + '目標：' + run.label + '　最終 攻擊 ' + Math.round(sc.finalAtk) + ' / 防禦 ' + Math.round(sc.finalDef));
   ps.forEach((p, i) => {
     const cover = pieceCover(prob, p);
-    L.push((i + 1) + '. ' + CNAME[p.color] + p.size + '格　效能 ' + p.eff + ' → ' + (cover.length ? '蓋住 ' + cover.map((c) => c.name + '（' + c.n + '/' + c.total + '格）').join('、') : '額外粒子（看板子上的位置）'));
+    L.push((i + 1) + '. ' + CNAME[p.color] + p.size + '格' + (prob.settings.fixEff ? '' : '　效能 ' + p.eff) + ' → ' + (cover.length ? '蓋住 ' + cover.map((c) => c.name + '（' + c.n + '/' + c.total + '格）').join('、') : '額外粒子（看板子上的位置）'));
   });
-  L.push('放完後面板應顯示：已使用粒子數 ' + sc.n + '/' + prob.settings.limit + '、平均粒子效能 ' + sc.avg.toFixed(1) + '、乖離 ' + sc.disc + '、過載 ' + sc.over + '、重疊 ' + sc.overlap + '、攻擊力 ' + Math.round(sc.finalAtk) + '、防禦力 ' + Math.round(sc.finalDef));
+  L.push('放完後面板應顯示：已使用粒子數 ' + sc.n + '/' + prob.settings.limit + '、平均粒子效能 ' + sc.avg.toFixed(1) + '、超界 ' + sc.out + '、重疊 ' + sc.overlap + '、乖離 ' + sc.disc + '、過載 ' + sc.over + '、攻擊力 ' + Math.round(sc.finalAtk) + '、防禦力 ' + Math.round(sc.finalDef));
   return L.join('\n');
 }
 function renderGuide(run) {
@@ -1358,25 +1644,28 @@ function renderGuide(run) {
     const ok = () => toast('已複製擺放清單', 'good'), bad = () => toast('無法複製（瀏覽器不允許）', 'bad');
     try { navigator.clipboard.writeText(txt).then(ok, bad); } catch (e) { bad(); }
   };
-  head.appendChild(cp); wrap.appendChild(head);
+  const wd = h('button', 'ghost', state.ui.sideNarrow ? '⇔ 放寬' : '⇔ 收窄'); wd.title = '右邊面板放寬／收窄（放寬時步驟卡和小地圖比較大）';
+  wd.onclick = () => { state.ui.sideNarrow = !state.ui.sideNarrow; save(); applyWide(); wd.textContent = state.ui.sideNarrow ? '⇔ 放寬' : '⇔ 收窄'; };
+  head.append(wd, cp); wrap.appendChild(head);
   // 先備料：同形狀的粒子歸成一堆，列出要取哪幾顆（效能由高到低）
   const groups = new Map();
   ps.forEach((p, i) => { const k = p.stack; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); });
-  const prep = h('div', 'prep'); prep.appendChild(h('div', 'muted', '先從「粒子」庫存取出這些（點選時挑該堆「最高」的那顆，同堆依序取）：'));
+  const prep = h('div', 'prep'); const fx = prob.settings.fixEff;
+  prep.appendChild(h('div', 'muted', fx ? '先從「粒子」庫存取出這些（效能以 100 估算，不用管實際效能）：' : '先從「粒子」庫存取出這些（點選時挑該堆「最高」的那顆，同堆依序取）：'));
   const lst = h('ul');
-  groups.forEach((ids) => { const p0 = ps[ids[0]]; const li = h('li'); li.innerHTML = '<span class="dot" style="background:' + COLORS[p0.color] + '"></span>' + CNAME[p0.color] + p0.size + ' 格 ×' + ids.length + '：效能 <b>' + ids.map((i) => ps[i].eff).join('、') + '</b>'; lst.appendChild(li); });
+  groups.forEach((ids) => { const p0 = ps[ids[0]]; const li = h('li'); li.innerHTML = '<span class="dot" style="background:' + COLORS[p0.color] + '"></span>' + CNAME[p0.color] + p0.size + ' 格 ×' + ids.length + (fx ? '' : '：效能 <b>' + ids.map((i) => ps[i].eff).join('、') + '</b>'); lst.appendChild(li); });
   prep.appendChild(lst); wrap.appendChild(prep);
   ps.forEach((p, i) => {
     const card = h('div', 'step' + (pin.i === i ? ' pin' : ''));
     const hd = h('div', 'shd');
     const badge = h('div', 'badge', String(i + 1)); badge.style.background = PIECE_STROKE[i % PIECE_STROKE.length];
-    const tt = h('div'); tt.innerHTML = '<b>' + CNAME[p.color] + '色 ' + p.size + ' 格</b>　效能 <b>' + p.eff + '</b>';
+    const tt = h('div'); tt.innerHTML = '<b>' + CNAME[p.color] + '色 ' + p.size + ' 格</b>' + (fx ? '' : '　效能 <b>' + p.eff + '</b>');
     hd.append(badge, shapeSvg(p.qr, COLORS[p.color], 11), tt);
     const cover = pieceCover(prob, p), same = groups.get(p.stack);
     const how = h('div', 'how');
     how.innerHTML = (cover.length ? '蓋住 ' + cover.map((c) => '<b>' + esc2(c.name) + '</b>（' + c.n + '/' + c.total + ' 格）').join('、') : '<b>額外粒子</b>：不用蓋區域，拿來拉高平均效能／把分開的粒子連起來') +
       '<div class="muted">' + (prob.settings.rotation ? '照上圖的方向放（需要的話先旋轉成這個方向）。' : '不要旋轉，形狀照上圖的方向。') +
-      (same.length > 1 ? '同形狀共 ' + same.length + ' 顆，這是第 ' + (same.indexOf(i) + 1) + ' 顆（效能 ' + p.eff + '）。' : '') + '位置看下面的小地圖（亮的那顆）。</div>';
+      (same.length > 1 ? '同形狀共 ' + same.length + ' 顆，這是第 ' + (same.indexOf(i) + 1) + ' 顆' + (fx ? '' : '（效能 ' + p.eff + '）') + '。' : '') + '位置看下面的小地圖（亮的那顆）。</div>';
     card.append(hd, how, miniMap(run, i));
     card.onmouseenter = () => { pieceHL = i; scheduleDraw(); };
     card.onmouseleave = () => { pieceHL = pin.i; scheduleDraw(); };
@@ -1384,8 +1673,9 @@ function renderGuide(run) {
     wrap.appendChild(card);
   });
   const v = h('div', 'verify');
-  v.innerHTML = '<b>放完後，遊戲左邊面板應該顯示：</b><br>已使用粒子數 <b>' + sc.n + ' / ' + prob.settings.limit + '</b>・平均粒子效能 <b>' + sc.avg.toFixed(1) + '</b>・粒子過載 ' + sc.over + '／超界 0／重疊 ' + sc.overlap + '／乖離 ' + sc.disc +
+  v.innerHTML = '<b>放完後，遊戲左邊面板應該顯示：</b><br>已使用粒子數 <b>' + sc.n + ' / ' + prob.settings.limit + '</b>・平均粒子效能 <b>' + sc.avg.toFixed(1) + '</b>・粒子超界 ' + sc.out + '／重疊 ' + sc.overlap + '／乖離 ' + sc.disc + '／過載 ' + sc.over +
     '・粒子效能倍率 ×' + (sc.avg / 100).toFixed(2) + '・懲罰倍率 ' + (sc.mult * 100).toFixed(0) + '%<br>卡牌預覽：攻擊力 <b>' + Math.round(sc.finalAtk) + '</b>、防禦力 <b>' + Math.round(sc.finalDef) + '</b>（和這裡不一樣就是哪一步放錯了，或粒子效能與庫存不符）';
+  if (fx) v.appendChild(h('div', 'muted', '※ 目前求解把每顆粒子效能都當 100 估算，遊戲裡實際的「平均粒子效能」和最終攻防會依你取的粒子效能而不同。'));
   wrap.appendChild(v);
   return wrap;
 }
@@ -1400,13 +1690,16 @@ function logCard(run) {
   const atk = Math.round(sc.finalAtk), def = Math.round(sc.finalDef);
   const minDef = run.prob.settings.minBaseDef || 0, minAtk = run.prob.settings.minBaseAtk || 0;
   const sig = [recipe, run.goal, atk, def, minDef, minAtk, JSON.stringify(pieces)].join('|');
+  const snap = snapshotMap(); delete snap.t;
+  const snapId = 's' + (function (t) { let x = 5381; for (let i = 0; i < t.length; i++) x = ((x << 5) + x + t.charCodeAt(i)) | 0; return (x >>> 0).toString(36); })(JSON.stringify(snap));
+  if (!state.snaps[snapId]) state.snaps[snapId] = snap;
   const hit = state.cards.find((c) => c.sig === sig);
   if (hit) { hit.times = (hit.times || 1) + 1; hit.t = Date.now(); save(); renderCards(); return; }
   state.cards.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), times: 1, sig,
-    recipe, goal: run.goal, goalLabel: run.label, status: run.status, atk, def,
+    recipe, snap: snapId, goal: run.goal, goalLabel: run.label, status: run.status, atk, def,
     baseAtk: sc.atk, baseDef: sc.def, minBaseDef: minDef, minBaseAtk: minAtk, avg: Math.round(sc.avg * 10) / 10, mult: Math.round(sc.mult * 1000) / 1000, n: sc.n, limit: run.prob.settings.limit,
-    pen: { disc: sc.disc, over: sc.over, overlap: sc.overlap },
+    pen: { disc: sc.disc, over: sc.over, overlap: sc.overlap, out: sc.out },
     zones: sc.completeZones.map((i) => ({ name: run.prob.zones[i].name, atk: run.prob.zones[i].atk, def: run.prob.zones[i].def })),
     pieces, note: '',
   });
@@ -1437,8 +1730,9 @@ function renderCards() {
       (c.status === 'proved' ? '' : '・非最優（' + (STATUS[c.status] || STATUS.none)[1] + '）') + (c.times > 1 ? '・重複 ' + c.times + ' 次' : ''));
     const det = h('details'); det.appendChild(h('summary', 'muted', '擺放與區域'));
     det.appendChild(h('div', 'cdet', '填滿：' + (c.zones.length ? c.zones.map((z) => z.name + '(' + z.atk + '/' + z.def + ')').join('、') : '無') +
-      '　基礎 ' + c.baseAtk + ' / ' + c.baseDef + (c.minBaseDef || c.minBaseAtk ? '（任務條件：' + [c.minBaseDef ? '防禦 ≥ ' + c.minBaseDef : '', c.minBaseAtk ? '攻擊 ≥ ' + c.minBaseAtk : ''].filter(Boolean).join('、') + '）' : '') + '　懲罰 乖離' + c.pen.disc + '・過載' + c.pen.over + '・重疊' + c.pen.overlap));
+      '　基礎 ' + c.baseAtk + ' / ' + c.baseDef + (c.minBaseDef || c.minBaseAtk ? '（任務條件：' + [c.minBaseDef ? '防禦 ≥ ' + c.minBaseDef : '', c.minBaseAtk ? '攻擊 ≥ ' + c.minBaseAtk : ''].filter(Boolean).join('、') + '）' : '') + '　懲罰 超界' + (c.pen.out || 0) + '・重疊' + c.pen.overlap + '・乖離' + c.pen.disc + '・過載' + c.pen.over));
     det.appendChild(h('div', 'cdet', '粒子：' + piecesText(c.pieces)));
+    if (c.snap && state.snaps[c.snap]) { const lb = h('button', 'ghost', '🗺 載入當時的地圖與數值'); lb.title = '把板子、各區域數值與任務條件還原成這筆紀錄求解當時的樣子'; lb.onclick = (e) => { e.stopPropagation(); if (applyMap(state.snaps[c.snap], c.recipe)) toast('已還原這筆紀錄的地圖與數值', 'good'); }; det.appendChild(lb); }
     const note = h('input', 'cnote'); note.type = 'text'; note.value = c.note || ''; note.placeholder = '備註（例如：已在遊戲裡製作）';
     note.onchange = () => { c.note = note.value; save(); };
     row.append(top, st, det, note);
@@ -1447,24 +1741,26 @@ function renderCards() {
 }
 function cardsCsv() {
   const q = (v) => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const head = ['時間', '配方／卡名', '目標', '攻擊', '防禦', '基礎攻', '基礎防', '基礎防禦門檻', '基礎攻擊門檻', '平均效能', '倍率', '粒子數', '粒子上限', '乖離', '過載', '重疊', '填滿區域', '狀態', '重複次數', '粒子', '備註'];
-  const rows = state.cards.map((c) => [fmtTime(c.t), c.recipe, c.goalLabel || c.goal, c.atk, c.def, c.baseAtk, c.baseDef, c.minBaseDef || '', c.minBaseAtk || '', c.avg, c.mult, c.n, c.limit, c.pen.disc, c.pen.over, c.pen.overlap,
+  const head = ['時間', '配方／卡名', '目標', '攻擊', '防禦', '基礎攻', '基礎防', '基礎防禦門檻', '基礎攻擊門檻', '平均效能', '倍率', '粒子數', '粒子上限', '超界', '重疊', '乖離', '過載', '填滿區域', '狀態', '重複次數', '粒子', '備註'];
+  const rows = state.cards.map((c) => [fmtTime(c.t), c.recipe, c.goalLabel || c.goal, c.atk, c.def, c.baseAtk, c.baseDef, c.minBaseDef || '', c.minBaseAtk || '', c.avg, c.mult, c.n, c.limit, c.pen.out || 0, c.pen.overlap, c.pen.disc, c.pen.over,
     c.zones.map((z) => z.name).join(' '), c.status === 'proved' ? '最優' : '非最優', c.times || 1, piecesText(c.pieces), c.note]);
   return '﻿' + [head].concat(rows).map((r) => r.map(q).join(',')).join('\r\n');
 }
 $('#btnCardsCsv').onclick = () => { if (!state.cards.length) { toast('還沒有紀錄可以匯出', 'bad'); return; } download('infalsus-cards.csv', cardsCsv(), 'text/csv;charset=utf-8'); };
 $('#btnCardsClear').onclick = () => { if (state.cards.length && confirm('清除全部 ' + state.cards.length + ' 筆卡牌紀錄？（無法復原；建議先匯出 CSV）')) { state.cards = []; save(); renderCards(); } };
 
-/* ------------------------------------------------------------ 配方、匯入匯出、示範 */
+/* ------------------------------------------------------------ 地圖、匯入匯出 */
 function renderRecipes() {
   const sel = $('#recipeSel'); const keep = sel.value; sel.innerHTML = '';
+  const none = h('option', '', '（目前的板子，未對應地圖）'); none.value = ''; sel.appendChild(none);
   const addGroup = (label, items) => {
     if (!items.length) return;
     const g = document.createElement('optgroup'); g.label = label;
     items.forEach(([v, t]) => { const o = h('option', '', t); o.value = v; g.appendChild(o); });
     sel.appendChild(g);
   };
-  addGroup('預設配方（板子 + 粒子數上限；攻防值要自己填）', (BUILTIN.recipes || []).map((r, i) => ['preset:' + i, r.name]));
+  // 內建地圖：自己的存檔裡有同名的就以存檔為準（只列一次）；存檔不見時，內建的還在
+  addGroup('內建地圖（程式內附，有些已填好各區域攻防）', (BUILTIN.recipes || []).map((r, i) => ['preset:' + i, r.name]).filter(([, n]) => !state.recipes[n]));
   addGroup('我的存檔', Object.keys(state.recipes).map((n) => ['my:' + n, n]));
   if (keep && [...sel.options].some((o) => o.value === keep)) sel.value = keep;
 }
@@ -1472,27 +1768,115 @@ function loadRecipeByValue(v) {
   let r = null;
   if (v.indexOf('preset:') === 0) r = (BUILTIN.recipes || [])[+v.slice(7)]; else if (v.indexOf('my:') === 0) r = state.recipes[v.slice(3)];
   if (!r) return false;
-  if (Object.keys(state.board).length && !confirm('載入配方會取代目前的板子，確定嗎？（可以用「編輯板子」裡的復原回來）')) return false;
+  return applyMap(r, r.name || v.slice(v.indexOf(':') + 1));
+}
+
+/* ------------------------------------------------------------ 地圖庫：板子＋各區域數值＋任務條件，存起來、載入、匯出入 */
+const MAP_TASK_KEYS = ['rotation', 'overlap', 'outside', 'cap', 'table', 'minBaseDef', 'minBaseAtk', 'minSlots', 'minRangeL', 'minRangeR', 'maxPenalty', 'gw', 'goal', 'wAtk', 'wDef'];
+const clone = (o) => JSON.parse(JSON.stringify(o));
+// 目前的板子、各區域數值（zv：攻防、必觸發、免除、備註）、粒子上限與任務條件
+function snapshotMap() {
+  const task = {}; MAP_TASK_KEYS.forEach((k) => { task[k] = clone(state.settings[k]); });
+  return { board: clone(state.board), zv: clone(state.zv), limit: state.settings.limit, task, t: Date.now() };
+}
+function applyMap(rec, name) {
+  if (Object.keys(state.board).length && !confirm('載入會取代目前的板子、各區域數值與任務條件，確定嗎？（板子可以用「編輯板子」裡的復原回來；想保留目前的就先到「地圖」分頁儲存）')) return false;
   pushHist();
-  state.board = JSON.parse(JSON.stringify(r.board)); state.zv = JSON.parse(JSON.stringify(r.zv || []));
-  state.curRecipe = r.name || v.slice(v.indexOf(':') + 1); state.curRecipeSig = boardSig();
-  if (r.limit) { state.settings.limit = r.limit; $('#sLimit').value = r.limit; }
-  selZone = -1; save(); drawBoard(); refreshZones(); fitView();
+  state.board = clone(rec.board); state.zv = clone(rec.zv || []);
+  if (rec.limit) state.settings.limit = rec.limit;
+  if (rec.task) MAP_TASK_KEYS.forEach((k) => { if (rec.task[k] !== undefined) state.settings[k] = clone(rec.task[k]); });
+  state.curRecipe = name || ''; state.curRecipeSig = boardSig();
+  selZone = -1; save(); bindSettings(); drawBoard(); refreshZones(); fitView(); renderMaps();
+  syncRecipeSel(rec, name);
   return true;
 }
-$('#btnRecipeLoad').onclick = () => { if (loadRecipeByValue($('#recipeSel').value)) toast('已載入配方：區域攻防值請到「區域」分頁填寫', 'good'); };
-$('#btnRecipeSave').onclick = () => {
-  const name = $('#recipeName').value.trim(); if (!name) { toast('請先輸入配方名稱', 'bad'); return; }
-  state.recipes[name] = { board: JSON.parse(JSON.stringify(state.board)), zv: JSON.parse(JSON.stringify(state.zv)), limit: state.settings.limit };
+// 上方的配方下拉選單要跟著目前載入的地圖走（不然板子換了，選單還停在舊的）
+function syncRecipeSel(rec, name) {
+  const sel = $('#recipeSel'); if (!sel) return;
+  let v = '';
+  if (name && state.recipes[name]) v = 'my:' + name;
+  else { const i = (BUILTIN.recipes || []).findIndex((r) => r === rec || r.name === name); if (i >= 0) v = 'preset:' + i; }
+  renderRecipes();
+  sel.value = v && [...sel.options].some((o) => o.value === v) ? v : '';
+}
+// 換成一張新板子（截圖匯入、清空）時，上一張地圖的任務條件不能留著，否則新板子會莫名其妙無解
+function resetTaskConditions() {
+  const st = state.settings, cleared = [];
+  if (+st.minBaseDef > 0) { cleared.push('基礎防禦 ≥ ' + st.minBaseDef); st.minBaseDef = 0; }
+  if (+st.minBaseAtk > 0) { cleared.push('基礎攻擊 ≥ ' + st.minBaseAtk); st.minBaseAtk = 0; }
+  if (+st.minSlots > 0) { cleared.push('特性槽 ≥ ' + st.minSlots); st.minSlots = 0; }
+  if (+st.minRangeL > 0) { cleared.push('範圍左 ≥ ' + st.minRangeL); st.minRangeL = 0; }
+  if (+st.minRangeR > 0) { cleared.push('範圍右 ≥ ' + st.minRangeR); st.minRangeR = 0; }
+  if (st.maxPenalty !== '' && st.maxPenalty != null) { cleared.push('總懲罰 ≤ ' + st.maxPenalty); st.maxPenalty = ''; }
+  const gw = st.gw || {};
+  if (['all', 'disc', 'over', 'overlap', 'out'].some((k) => +gw[k] > 0)) { cleared.push('固定免除'); st.gw = { all: 0, disc: 0, over: 0, overlap: 0, out: 0 }; }
+  state.curRecipe = ''; state.curRecipeSig = '';
+  return cleared;
+}
+function saveMap(name, silent) {
+  const old = state.recipes[name];
+  const rec = snapshotMap(); if (old && old.note) rec.note = old.note;
+  state.recipes[name] = rec;
   state.curRecipe = name; state.curRecipeSig = boardSig();
-  save(); renderRecipes(); $('#recipeSel').value = 'my:' + name; toast('已儲存配方「' + name + '」（含各區域的攻防值）', 'good');
+  save(); renderRecipes(); renderMaps(); syncRecipeSel(rec, name);
+  if (!silent) toast('已儲存地圖「' + name + '」（板子、各區域數值、任務條件都存了）', 'good');
+}
+const fmtDay = (t) => (t ? fmtTime(t) : '');
+function mapInfo(r) {
+  const cells = Object.keys(r.board || {}).length, zs = (r.zv || []).length, filled = (r.zv || []).filter((z) => z.atk > 0 || z.def > 0).length;
+  return cells + ' 格・' + zs + ' 區域・已填數值 ' + filled + '/' + zs + (r.limit ? '・粒子上限 ' + r.limit : '');
+}
+function zonesCsv() {
+  const q = (v) => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const head = ['區域', '顏色', '格數', '攻擊', '防禦', '一定要觸發', '免除種類', '免除點數', '備註', '合併到'];
+  const rows = zonesNow.map((z, i) => [z.name, CNAME[z.color], z.size, z.atk || 0, z.def || 0, z.must ? '是' : '', z.waive ? WTYPE_NAME[z.wtype || 'all'] : '', z.waive || '', z.note || '', z.lead !== i ? zonesNow[z.lead].name : '']);
+  return '\ufeff' + [head].concat(rows).map((r) => r.map(q).join(',')).join('\r\n');
+}
+function renderMaps() {
+  const box = $('#mapList'); if (!box) return;
+  box.innerHTML = '';
+  const mine = Object.keys(state.recipes);
+  $('#bdMaps').textContent = mine.length ? mine.length : '';
+  const row = (name, r, preset) => {
+    const el = h('div', 'maprow' + (state.curRecipe === name && state.curRecipeSig === boardSig() ? ' cur' : ''));
+    const top = h('div', 'mtop');
+    const nm = h('b', '', (preset ? '📦 ' : '🗺 ') + name); top.appendChild(nm);
+    const bs = h('div', 'mbtns');
+    const mkb = (txt, fn, cls, title) => { const b = h('button', cls || 'ghost', txt); if (title) b.title = title; b.onclick = fn; bs.appendChild(b); return b; };
+    if (!preset) {
+      mkb('覆蓋', () => { if (confirm('用目前的板子與數值覆蓋「' + name + '」？')) saveMap(name); }, '', '把目前的狀態存回這個名稱');
+      mkb('匯出', () => download('infalsus-map-' + name + '.json', JSON.stringify({ recipes: { [name]: r } }, null, 1)), '', '只匯出這一張地圖');
+      mkb('刪除', () => { if (confirm('刪除地圖「' + name + '」？（無法復原；建議先匯出）')) { delete state.recipes[name]; save(); renderRecipes(); renderMaps(); } }, 'ghost danger');
+    }
+    top.appendChild(bs);
+    const info = h('div', 'minfo', mapInfo(r) + (r.t ? '・存於 ' + fmtDay(r.t) : ''));
+    el.append(top, info);
+    if (!preset) {
+      const note = h('input', 'cnote'); note.type = 'text'; note.value = r.note || ''; note.placeholder = '備註（例如：任務要求基礎防禦 ≥ 3100）';
+      note.onchange = () => { r.note = note.value; save(); };
+      el.appendChild(note);
+    }
+    box.appendChild(el);
+  };
+  if (!mine.length) box.appendChild(h('p', 'hint', '還沒有存任何自己的地圖。填好板子與各區域數值後，在上面輸入名稱按「儲存目前」。'));
+  mine.slice().sort((a, b) => (state.recipes[b].t || 0) - (state.recipes[a].t || 0)).forEach((n) => row(n, state.recipes[n], false));
+  box.appendChild(h('p', 'hint', '內建地圖（' + (BUILTIN.recipes || []).length + ' 張）在最上方的地圖選單裡；載入後想留住修改，用上面的「儲存目前」存成自己的。'));
+}
+$('#btnMapSave').onclick = () => {
+  const name = $('#mapName').value.trim() || state.curRecipe;
+  if (!name) { toast('請先輸入地圖名稱', 'bad'); $('#mapName').focus(); return; }
+  if (state.recipes[name] && !confirm('已經有「' + name + '」，要用目前的內容覆蓋嗎？')) return;
+  saveMap(name); $('#mapName').value = '';
 };
-$('#btnRecipeDel').onclick = () => {
-  const v = $('#recipeSel').value; if (v.indexOf('my:') !== 0) { toast('預設配方不能刪除，只能刪除自己存的。', 'bad'); return; }
-  const n = v.slice(3); if (confirm('刪除配方「' + n + '」？')) { delete state.recipes[n]; save(); renderRecipes(); }
+$('#mapName').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#btnMapSave').click(); } };
+$('#btnMapsExport').onclick = () => {
+  if (!Object.keys(state.recipes).length) { toast('還沒有存任何地圖', 'bad'); return; }
+  download('infalsus-maps.json', JSON.stringify({ recipes: state.recipes }, null, 1));
 };
-$('#btnClearBoard').onclick = () => { if (confirm('清空整個板子？（可以復原）')) { pushHist(); state.board = {}; state.zv = []; save(); drawBoard(); refreshZones(); } };
-$('#btnReset').onclick = () => { if (confirm('把所有資料還原成初始狀態（預設粒子庫存、預設配方的板子；自己存的配方會被清除，卡牌紀錄會保留）？')) { const keepCards = state.cards; state = firstRun(); state.cards = keepCards; hist.length = 0; runs = []; curRun = -1; save(); initAll(true); if ((BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0'; } };
+$('#btnMapCsv').onclick = () => { if (!zonesNow.length) { toast('目前沒有區域', 'bad'); return; } download('infalsus-zones.csv', zonesCsv(), 'text/csv;charset=utf-8'); };
+$('#btnRecipeLoad').onclick = () => { if (loadRecipeByValue($('#recipeSel').value)) toast('已載入地圖', 'good'); };
+$('#btnClearBoard').onclick = () => { if (confirm('清空整個板子？（可以復原）')) { pushHist(); state.board = {}; state.zv = []; resetTaskConditions(); save(); bindSettings(); drawBoard(); refreshZones(); syncRecipeSel(null, ''); } };
+$('#btnReset').onclick = () => { if (confirm('把所有資料還原成初始狀態（預設粒子庫存、第一張內建地圖；自己存的地圖會被清除，卡牌紀錄會保留）？')) { const keepCards = state.cards; state = firstRun(); state.cards = keepCards; hist.length = 0; runs = []; curRun = -1; save(); initAll(true); if ((BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0'; } };
 function download(name, text, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime || 'application/json' })); a.download = name; a.click(); }
 $('#btnExport').onclick = () => download('infalsus-data.json', JSON.stringify(state, null, 1));
 $('#btnExportParticles').onclick = () => download('infalsus-particles.json', JSON.stringify({ stacks: state.stacks }, null, 1));
@@ -1503,10 +1887,22 @@ $('#fileImport').onchange = (e) => {
     try {
       // 只覆蓋檔案裡有的欄位：只含 stacks 的檔案（粒子庫存）不會洗掉板子；配方存檔也會保留
       const o = JSON.parse(rd.result);
+      // 只有地圖的檔案（「只有地圖」或單張地圖匯出）：逐張加入，同名的先問要不要覆蓋，不動其他資料
+      if (o && o.recipes && typeof o.recipes === 'object' && !o.board && !o.stacks && !o.settings && !o.cards) {
+        let n = 0, rep = 0;
+        for (const name of Object.keys(o.recipes)) {
+          const r = o.recipes[name]; if (!r || typeof r.board !== 'object') continue;
+          if (state.recipes[name]) { if (!confirm('已經有「' + name + '」，用匯入的覆蓋嗎？')) continue; rep++; }
+          state.recipes[name] = r; n++;
+        }
+        save(); renderRecipes(); renderMaps(); toast('匯入 ' + n + ' 張地圖' + (rep ? '（覆蓋 ' + rep + ' 張）' : ''), n ? 'good' : 'bad');
+        return;
+      }
       const merged = Object.assign({}, state, o);
       if (o.recipes) merged.recipes = Object.assign({}, state.recipes, o.recipes);
       if (o.settings) merged.settings = Object.assign({}, state.settings, o.settings);
       if (o.ui) merged.ui = Object.assign({}, state.ui, o.ui);
+      if (o.snaps) merged.snaps = Object.assign({}, state.snaps, o.snaps);
       if (Array.isArray(o.cards)) { // 卡牌紀錄用 id 合併，不會蓋掉現有的
         const have = new Set(state.cards.map((c) => c.id));
         merged.cards = state.cards.concat(o.cards.filter((c) => c && c.id && !have.has(c.id) && Array.isArray(c.pieces) && Array.isArray(c.zones) && c.pen)).sort((p, q) => q.t - p.t);
@@ -1516,23 +1912,6 @@ $('#fileImport').onchange = (e) => {
   };
   rd.readAsText(f); e.target.value = '';
 };
-// 示範板子（「終焉盡頭」上半部形狀；效果值僅供示範）：只換板子與區域數值，不動粒子庫存
-$('#btnDemo').onclick = () => {
-  if (Object.keys(state.board).length && !confirm('載入示範會取代目前的板子，確定嗎？')) return;
-  pushHist();
-  const B = {};
-  const put = (c, row, t) => { B[c + ',' + row] = { t, g: 0 }; };
-  [[2, 0]].forEach(([c, r]) => put(c, r, 1));
-  [[0, 1], [4, 1], [1, 1], [3, 1], [2, 2]].forEach(([c, r]) => put(c, r, 1));
-  [[0, 5], [2, 5], [1, 5], [3, 5], [1, 6], [3, 6], [2, 7], [4, 7]].forEach(([c, r]) => put(c, r, 1));
-  [[1, 0], [3, 0], [1, 2], [3, 2], [2, 3], [2, 4], [4, 5], [0, 6], [0, 7], [4, 6], [2, 8]].forEach(([c, r]) => put(c, r, 0));
-  state.board = B; state.zv = []; state.settings.limit = 6; selZone = -1;
-  initAll(true);
-  const vals = { 1: 300, 5: 700, 8: 800 };
-  zonesNow.forEach((z, i) => { const v = vals[z.size] || 0; state.zv[i].atk = v; state.zv[i].def = v; z.atk = v; z.def = v; });
-  renderZoneList(); drawLabels(); updateReady(); save();
-};
-
 /* ------------------------------------------------------------ 從截圖匯入板子 */
 let shot = null;
 const SHOT_COL = { 0: '#e6edf3', 1: COLORS[0], 2: COLORS[1], 3: COLORS[2], 4: COLORS[3], 5: COLORS[4] };
@@ -1580,10 +1959,12 @@ $('#btnShotOk').onclick = () => {
   if (Object.keys(state.board).length && !confirm('匯入會取代目前板子上的內容（可以復原），確定嗎？')) return;
   pushHist();
   const B = {}; for (const k in shot.r.cells) B[k] = { t: shot.r.cells[k], g: 0 };
-  state.board = B; state.zv = []; selZone = -1; save();
+  state.board = B; state.zv = []; selZone = -1;
+  const cleared = resetTaskConditions();
+  save();
   $('#shotModal').hidden = true; shot = null;
-  drawBoard(); refreshZones(); fitView(); showTab('zones');
-  toast('已匯入板子：請到「區域」分頁填各區域的攻防值', 'good', 5000);
+  bindSettings(); drawBoard(); refreshZones(); fitView(); showTab('zones'); syncRecipeSel(null, '');
+  toast('已匯入板子：請到「區域」分頁填各區域的攻防值' + (cleared.length ? '（上一張地圖的任務條件已清掉：' + cleared.join('、') + '）' : ''), 'good', 6000);
 };
 window.addEventListener('paste', (e) => {
   const items = (e.clipboardData && e.clipboardData.items) || [];
@@ -1602,14 +1983,17 @@ function showTab(t) {
   state.ui.tab = t; save();
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('.tabpage').forEach((p) => { p.hidden = p.id !== 'tab-' + t; });
+  applyWide();
 }
+// 「結果」分頁有擺放說明：右邊面板自動放寬（小地圖和步驟卡都放大），可以在擺放說明標題旁按「⇔」切回窄版
+function applyWide() { const w = $('#workspace'); if (w) { w.classList.toggle('wide', state.ui.tab === 'result' && !state.ui.sideNarrow); scheduleDraw(); } }
 document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
 function setChip(sel, kind, text, tab) {
   const c = $(sel); c.className = 'chip ' + kind; c.textContent = text; c.onclick = () => { if (tab) showTab(tab); };
 }
 function updateReady() {
-  const nCells = Object.keys(state.board).length, nz = zonesNow.length;
-  const filled = zonesNow.filter((z) => z.atk > 0 || z.def > 0).length;
+  const nCells = Object.keys(state.board).length, ez = effZones(), nz = ez.length;
+  const filled = ez.filter((z) => z.atk > 0 || z.def > 0).length;
   const nst = state.stacks.length;
   const usedColors = [0, 1, 2, 3, 4].filter((ci) => state.settings.useColors[ci] !== false && state.stacks.some((s) => s.color === ci)).length;
   setChip('#chipBoard', nz ? 'ok' : 'bad', '板子 ' + nCells + ' 格・' + nz + ' 區域', 'zones');
@@ -1626,7 +2010,7 @@ $('#btnGuideOk').onclick = () => { state.ui.guideDone = true; save(); updateGuid
 const menu = $('#menu');
 $('#btnMenu').onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; $('#btnMenu').setAttribute('aria-expanded', String(!menu.hidden)); };
 document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target) && e.target !== $('#btnMenu')) { menu.hidden = true; } });
-menu.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' && e.target.id !== 'btnRecipeSave' && e.target.id !== 'btnRecipeDel') menu.hidden = true; });
+menu.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') menu.hidden = true; });
 window.addEventListener('keydown', (e) => {
   const tag = e.target && e.target.tagName; const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   if (e.key === 'Escape') {
@@ -1645,12 +2029,14 @@ window.addEventListener('keyup', (e) => { if (e.code === 'Space') { spaceDown = 
 function initAll(fit) {
   view = state.view || (state.view = { x: 260, y: 220, z: 1 });
   buildTools(); drawBoard(); refreshZones(); renderInventory(); bindSettings(); renderRecipes(); closeEditor();
-  showTab(state.ui.tab || 'zones'); setMode(state.ui.mode || 'view'); renderRuns(); renderCards(); updateGuide(); updateReady(); updateUndoBtn();
+  showTab(state.ui.tab || 'zones'); setMode(state.ui.mode || 'view'); renderRuns(); renderCards(); renderMaps(); updateGuide(); updateReady(); updateUndoBtn();
   $('#showPieces').checked = !!state.ui.showPieces;
   if (fit) { requestAnimationFrame(fitView); setTimeout(fitView, 120); }
 }
 initAll(FIRST);
 if (FIRST && (BUILTIN.recipes || []).length) $('#recipeSel').value = 'preset:0';
+else if (state.curRecipe && state.curRecipeSig === boardSig()) syncRecipeSel(null, state.curRecipe); // 重新整理後，選單也要對應目前的板子
+else $('#recipeSel').value = '';
 window.__app = {
   get state() { return state; }, get runs() { return runs; }, get cards() { return state.cards; }, cardsCsv, buildProblem, refreshZones, runGoals, Solver,
   startSolve() { return runGoals([state.settings.goal]); },

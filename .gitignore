@@ -14,3 +14,9 @@ Thumbs.db
 savestate*
 remotecache.vdf
 Player.log
+
+# 部署用的建置輸出與 wrangler 暫存
+dist/
+.wrangler/
+release/
+desktop/icon_preview.png

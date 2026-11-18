@@ -13,5 +13,30 @@ jobs:
         with:
           node-version: 22
       - run: npm test
-      - name: 成品 infalsus_solver.html 必須是最新的（改完 src/ 或 data/ 要先 npm run build 再提交）
+      - name: 成品 infalsus_solver.html 必須是最新的（改完 src/、data/ 或 wasm/solver.wasm 要先 npm run build 再提交）
         run: git diff --exit-code -- infalsus_solver.html
+
+  wasm-from-source:
+    # 從 Rust 原始碼重新編一份 WASM，確認能編譯，而且和 JS 引擎逐題一致
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: rustup target add wasm32-unknown-unknown
+      - run: node wasm/build.js
+      - run: node test/wasm.test.js
+      - run: node test/solver.test.js --wasm
+      - run: npm run build:native
+      - run: node test/native.test.js
+
+  desktop-build:
+    # 桌面版（Rust 視窗）要能在 Windows 上編譯
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: cargo build --release --manifest-path desktop/Cargo.toml

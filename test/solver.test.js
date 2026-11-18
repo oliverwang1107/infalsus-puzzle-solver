@@ -1,6 +1,13 @@
 'use strict';
 const assert = require('assert');
 const Solver = require('../src/solver.js');
+// --wasm（或 SOLVER_ENGINE=wasm）：整份測試改用 WASM 搜尋引擎跑（和 JS 版必須得到一模一樣的最佳值）
+if (process.env.SOLVER_ENGINE === 'wasm' || process.argv.includes('--wasm')) {
+  const engine = require('../src/solver_wasm.js').loadSync(require('fs').readFileSync(require('path').join(__dirname, '..', 'wasm', 'solver.wasm')));
+  const jsSolve = Solver.solve;
+  Solver.solve = (prob, opts) => jsSolve(prob, Object.assign({}, opts, { engine }));
+  console.log('（使用 WASM 搜尋引擎）');
+}
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -644,6 +651,59 @@ console.log('\n免除整體懲罰');
   }
 }
 
+/* ---------- 7c. 超界擺放（allowOutside）與「超界」免除 ---------- */
+console.log('\n超界擺放與超界免除');
+{
+  // 板子只有 (0,0) 一格（紅區 500 攻）。一顆 1 格（效能 100）、一顆 2 格（效能 300）：2 格那顆一定要伸出板外
+  const prob = (st, zw) => ({
+    cells: [[0, 0]],
+    zones: [Object.assign({ color: 0, cells: [[0, 0]], atk: 500, def: 0 }, zw || {})],
+    stacks: [{ color: 0, cells: [[0, 0]], effs: [100] }, { color: 0, cells: [[0, 0], [1, 0]], effs: [300] }],
+    settings: Object.assign({ limit: 2, rotation: false }, st || {}),
+  });
+  check('不允許超界：2 格那顆放不進板子，只能用 1 格那顆 → 500', () => {
+    const r = Solver.solve(prob(), { timeLimitMs: 5000 }); near(r.value, 500); assert.strictEqual(r.score.out, 0);
+  });
+  check('允許超界：2 格那顆伸出板外（超界 1 → 倍率 8/9），平均效能 300 → 1333', () => {
+    const r = Solver.solve(prob({ allowOutside: true }), { timeLimitMs: 5000 });
+    near(r.value, 500 * 3 * 8 / 9, 0.01); assert.strictEqual(r.score.out, 1); assert.strictEqual(r.score.P, 1); assert.deepStrictEqual(r.pieces[0].qr.length, 2);
+  });
+  check('超界免除 1 點（區域或固定）：超界不算懲罰 → 1500；「整體」也算；只免乖離不行', () => {
+    near(Solver.solve(prob({ allowOutside: true, globalWaive: { out: 1 } }), { timeLimitMs: 5000 }).value, 1500, 0.01);
+    near(Solver.solve(prob({ allowOutside: true, globalWaive: { all: 1 } }), { timeLimitMs: 5000 }).value, 1500, 0.01);
+    near(Solver.solve(prob({ allowOutside: true }, { waive: 1, wtype: 'out' }), { timeLimitMs: 5000 }).value, 1500, 0.01);
+    near(Solver.solve(prob({ allowOutside: true, globalWaive: { disc: 1 } }), { timeLimitMs: 5000 }).value, 500 * 3 * 8 / 9, 0.01);
+  });
+  check('每顆粒子最多算一次超界（伸出板外好幾格也只 +1）；完全在板外的不產生', () => {
+    const p = { cells: [[0, 0]], zones: [{ color: 0, cells: [[0, 0]], atk: 100, def: 0 }], stacks: [{ color: 0, cells: [[0, 0], [1, 0], [2, 0]], effs: [100] }], settings: { limit: 1, rotation: false, allowOutside: true } };
+    const r = Solver.solve(p, { timeLimitMs: 5000 });
+    assert.strictEqual(r.score.out, 1);
+    const S = Solver.prepare(p); assert.ok(S.PL.every((x) => x.cells.some((c) => c < S.NB)), '有完全在板外的擺放');
+  });
+
+  let mm = 0, cs = 0, used = 0, changed = 0;
+  for (let t = 0; t < 260; t++) {
+    const prob2 = randomProblem();
+    if (!prob2.zones.length) continue;
+    prob2.settings.limit = ri(1, 3); prob2.settings.allowOutside = true;
+    if (rnd() < 0.3) prob2.settings.penaltyCap = ri(2, 4);
+    if (rnd() < 0.5) { const g = {}; g[['out', 'all', 'disc'][ri(0, 2)]] = ri(1, 2); prob2.settings.globalWaive = g; }
+    prob2.zones.forEach((z) => { if (rnd() < 0.3) { z.waive = ri(1, 2); z.wtype = ['out', 'all', 'over'][ri(0, 2)]; } });
+    const S = Solver.prepare(prob2);
+    if (S.PL.length > 110 || S.maxPieces > 7) continue;
+    cs++;
+    const bf = bruteForce(prob2);
+    const r = Solver.solve(prob2, { timeLimitMs: 30000 });
+    if (Math.abs(bf - r.value) > 1e-6) { mm++; if (mm <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'solver=', r.value.toFixed(3), JSON.stringify(prob2.settings)); }
+    else if (r.score && Math.abs(r.score.value - r.internal) > 1e-4) { mm++; console.log('   內部計分與獨立計分不一致', r.score.value, r.internal); }
+    if (r.score && r.score.out > 0) used++;
+    const inb = bruteForce(Object.assign({}, prob2, { settings: Object.assign({}, prob2.settings, { allowOutside: false }) }));
+    if (Math.abs(bf - inb) > 1e-6) changed++;
+  }
+  console.log('   統計:', cs, '題，最佳解用到超界', used, '題、允許超界改變最佳值', changed, '題');
+  check(`${cs} 題隨機超界題與暴力解完全一致`, () => { assert.strictEqual(mm, 0); assert.ok(used > 0 && changed > 0, '測資沒有涵蓋超界'); });
+}
+
 /* ---------- 8. 基礎攻防門檻（任務條件）：填滿的區域攻／防加總至少要達到某值 ---------- */
 console.log('\n基礎攻防門檻');
 {
@@ -776,5 +836,94 @@ console.log('\n基礎攻防門檻');
   }
 }
 
-console.log(`\n${pass} 通過, ${fail} 失敗`);
-process.exit(fail ? 1 : 0);
+/* ---------- 合併區域：兩個（可能不相連的）同色區域併成一個，要一起填滿才算 ---------- */
+console.log('\n合併區域（介面把兩個同色區域的格子相加成一個區域）');
+{
+  let cs = 0, mm = 0, changed = 0;
+  for (let t = 0; t < 400 && cs < 120; t++) {
+    const prob = randomProblem();
+    const zs = prob.zones; let a = -1, b = -1;
+    for (let i = 0; i < zs.length && a < 0; i++) for (let j = i + 1; j < zs.length; j++) if (zs[i].color === zs[j].color) { a = i; b = j; break; }
+    if (a < 0) continue;
+    const merged = zs.map((z, i) => (i === a ? Object.assign({}, z, { cells: z.cells.concat(zs[b].cells) }) : z)).filter((z, i) => i !== b);
+    const mp = Object.assign({}, prob, { zones: merged });
+    if (Solver.prepare(mp).PL.length > 260) continue;
+    cs++;
+    const bf = bruteForce(mp), r = Solver.solve(mp, { timeLimitMs: 20000 });
+    if (Math.abs(bf - r.value) > 1e-6) { mm++; if (mm <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'solver=', r.value.toFixed(3)); }
+    if (Math.abs(bf - bruteForce(prob)) > 1e-6) changed++;
+  }
+  check(`${cs} 題「合併區域」與暴力解完全一致（其中 ${changed} 題合併後最佳值和不合併不同）`, () => { assert.strictEqual(mm, 0); assert.ok(cs >= 30 && changed > 0, '測資沒有涵蓋合併改變最佳值的情形'); });
+  check('合併區域：只填滿其中一塊不算；兩塊都填滿才拿到合併後那一組攻防', () => {
+    const cells = [[0, 0], [1, 0], [5, 0], [6, 0]];
+    const stacks = [{ color: 0, cells: [[0, 0], [1, 0]], effs: [{ v: 100, n: 1 }] }];
+    const mk = (n) => ({ cells, stacks: stacks.map((s) => Object.assign({}, s, { effs: [{ v: 100, n }] })), settings: { limit: 4, rotation: false },
+      zones: [{ color: 0, cells: [[0, 0], [1, 0], [5, 0], [6, 0]], atk: 500, def: 500 }] });
+    assert.strictEqual(Solver.solve(mk(1), { timeLimitMs: 5000 }).value, 0, '只有一顆，填不滿整個合併區域');
+    assert.ok(Solver.solve(mk(2), { timeLimitMs: 5000 }).value > 0, '兩顆各填一塊 → 合併區域填滿');
+  });
+}
+
+/* ---------- 超界：可承受＋可免除的懲罰是 0 時不考慮板外格子（要和「不省略」的暴力解一致） ---------- */
+{
+  let cs = 0, mm = 0, pruned = 0;
+  for (let t = 0; t < 800 && cs < 120; t++) {
+    const prob = randomProblem(); if (!prob.zones.length) continue;
+    prob.settings.limit = ri(1, 3); prob.settings.allowOutside = true;
+    if (rnd() < 0.5) prob.settings.maxPenalty = 0; else prob.settings.penaltyCap = ri(1, 2);
+    if (rnd() < 0.4) { const g = {}; g[['disc', 'overlap', 'over', 'out', 'all'][ri(0, 4)]] = ri(1, 2); prob.settings.globalWaive = g; }
+    prob.zones.forEach((z) => { if (rnd() < 0.3) { z.waive = ri(1, 2); z.wtype = ['out', 'all', 'over', 'disc'][ri(0, 3)]; } }); // 暴力解不考慮重疊，所以不開 allowOverlap
+    const keep = Object.assign({}, prob, { settings: Object.assign({}, prob.settings, { keepOutside: true }) });
+    const S = Solver.prepare(prob), K = Solver.prepare(keep);
+    if (K.PL.length > 130 || K.maxPieces > 7) continue;
+    cs++; if (K.N !== S.N) pruned++;
+    const bf = bruteForce(keep), r = Solver.solve(prob, { timeLimitMs: 30000 });
+    if (Math.abs(bf - r.value) > 1e-6) { mm++; if (mm <= 3) console.log('   不一致', 'brute(不省略)=', bf.toFixed(3), 'solver=', r.value.toFixed(3), JSON.stringify(prob.settings)); }
+  }
+  check(`${cs} 題「允許超界但承受不了任何超界」與不省略板外格子的暴力解完全一致（其中 ${pruned} 題真的省略了板外格子）`, () => { assert.strictEqual(mm, 0); assert.ok(pruned >= 20, '測資沒有涵蓋省略的情形'); });
+}
+
+/* ---------- 區域特性（特性槽／卡牌範圍）與任務條件：分支定界要和暴力解一致 ---------- */
+(async () => {
+  console.log('\n區域特性門檻（特性槽、範圍左右至少多少）');
+  const bruteTraits = (prob, need) => {
+    const S = Solver.prepare(prob); let bestV = 0, found = false;
+    const used = new Int32Array(S.M.length), chosen = [];
+    (function rec(startPid) {
+      if (chosen.length) {
+        const sc = Solver.scoreExplicit(S, chosen.map((x) => ({ color: S.PL[x.pid].color, cells: S.PL[x.pid].cells, eff: x.eff })));
+        if (sc.value > 0 && Solver.traitMet(Solver.traitTotals(prob, sc.completeZones), need) && sc.value > bestV + 1e-9) { bestV = sc.value; found = true; }
+      }
+      if (chosen.length >= S.maxPieces) return;
+      for (let pid = startPid; pid < S.PL.length; pid++) {
+        const p = S.PL[pid]; if (used[p.s] >= S.M[p.s].effs.length) continue;
+        let clash = false; for (const x of chosen) { const q = S.PL[x.pid]; for (let w = 0; w < S.W; w++) if (q.mask[w] & p.mask[w]) clash = true; }
+        if (clash) continue;
+        chosen.push({ pid, eff: S.M[p.s].effs[used[p.s]] }); used[p.s]++; rec(pid + 1); used[p.s]--; chosen.pop();
+      }
+    })(0);
+    return found ? bestV : 0;
+  };
+  let cs = 0, mm = 0, changed = 0, infeas = 0;
+  for (let t = 0; t < 800 && cs < 100; t++) {
+    const prob = randomProblem(); if (prob.zones.length < 2) continue;
+    prob.zones.forEach((z) => { z.slot = ri(0, 2); z.rl = ri(0, 2); z.rr = ri(0, 2); if (rnd() < 0.3) { z.slot = 0; z.rl = 0; z.rr = 0; } });
+    const need = { slot: rnd() < 0.6 ? ri(1, 3) : 0, rl: rnd() < 0.5 ? ri(1, 3) : 0, rr: rnd() < 0.5 ? ri(1, 3) : 0 };
+    if (!need.slot && !need.rl && !need.rr) need.slot = 1;
+    if (Solver.prepare(prob).PL.length > 260) continue;
+    cs++;
+    const bf = bruteTraits(prob, need);
+    const res = await Solver.solveTraits(prob, need, async (p) => { const r = Solver.solve(p, { timeLimitMs: 20000 }); return { r, status: r.finished ? 'proved' : 'timeout' }; }, { limitMs: 120000 });
+    const res2 = await Solver.solveTraits(prob, need, async (p) => { const r = Solver.solve(p, { timeLimitMs: 20000 }); return { r, status: r.finished ? 'proved' : 'timeout' }; }, { limitMs: 120000, maxCovers: 0 }); // 組合太多時的分支定界後備路徑
+    if (Math.abs((res2.r.pieces.length ? res2.r.score.value : 0) - bf) > 1e-6) { mm++; if (mm <= 3) console.log('   分支定界後備路徑不一致', bf.toFixed(3)); }
+    const v = res.r.pieces.length ? res.r.score.value : 0;
+    if (Math.abs(bf - v) > 1e-6) { mm++; if (mm <= 3) console.log('   不一致', 'brute=', bf.toFixed(3), 'bnb=', v.toFixed(3), JSON.stringify(need)); }
+    else if (res.r.pieces.length && !Solver.traitMet(Solver.traitTotals(prob, res.r.score.completeZones), need)) { mm++; console.log('   回傳的解沒達標'); }
+    if (bf === 0) infeas++;
+    if (Math.abs(bruteForce(prob) - bf) > 1e-6) changed++;
+  }
+  check(`${cs} 題隨機「特性門檻」與暴力解完全一致（無解 ${infeas} 題；門檻改變最佳值 ${changed} 題）`, () => { assert.strictEqual(mm, 0); assert.ok(changed > 5, '測資沒有涵蓋門檻改變最佳值的情形'); });
+  console.log(`\n${pass} 通過, ${fail} 失敗`);
+  process.exit(fail ? 1 : 0);
+})();
+

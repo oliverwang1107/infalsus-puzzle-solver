@@ -1,0 +1,10 @@
+{
+  // 靜態資產型 Worker：把 dist/（npm run build 產生）上線。求解在使用者的瀏覽器裡跑（背景執行緒＋WASM），
+  // Worker 本身不做運算，所以不受 Worker 的 CPU 時間限制，也不會消耗伺服器額度。
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "infalsus-solver",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}

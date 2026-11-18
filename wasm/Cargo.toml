@@ -1,0 +1,22 @@
+[package]
+name = "infalsus_solver"
+version = "0.1.0"
+edition = "2021"
+description = "In Falsus 製卡求解器的搜尋核心（src/solver.js 的 searchJS 的 Rust 版）：編成 WASM（瀏覽器），或原生多執行緒執行檔（solver_native）"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "solver_native"
+path = "src/bin/solver_native.rs"
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

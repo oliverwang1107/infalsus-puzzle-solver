@@ -23,6 +23,7 @@
   // 實測：2000×1250 的截圖，垂直相鄰格心距離 = 56 px
   const D_RATIO = 56 / 1250;
   const GRAY = 0;
+  const CAP = 40; // 格線高通強度的封頂值
 
   // 色相 → 顏色代碼（1 紅、2 黃、3 綠、4 藍、5 紫）；飽和度不足 → 0
   function classifyRGB(r, g, b) {
@@ -96,9 +97,11 @@
         for (let j = jMin; j <= jMax; j++) {
           const cy = oy + d * j + off;
           if (cx - hx < roi.x0 || cx + hx > roi.x1 || cy < roi.y0 || cy + a > roi.y1) continue;
-          sum += E[Math.round(cy + a) * W + Math.round(cx)]
-               + E[Math.round(cy + hy) * W + Math.round(cx + hx)]
-               + E[Math.round(cy + hy) * W + Math.round(cx - hx)];
+          // 邊中點的線條強度（封頂，避免標籤或圖示的亮點壓過格線）減去格內對應點（離邊較遠）的強度：
+          // 顏色多、紋理多的大板子上，錯位的晶格也會剛好踩到不少亮點，只比邊上強度會選錯相位
+          const e1 = E[Math.round(cy + a) * W + Math.round(cx)], e2 = E[Math.round(cy + hy) * W + Math.round(cx + hx)], e3 = E[Math.round(cy + hy) * W + Math.round(cx - hx)];
+          const i1 = E[Math.round(cy + a * 0.5) * W + Math.round(cx)], i2 = E[Math.round(cy + hy * 0.5) * W + Math.round(cx + hx * 0.5)], i3 = E[Math.round(cy + hy * 0.5) * W + Math.round(cx - hx * 0.5)];
+          sum += Math.min(e1, CAP) + Math.min(e2, CAP) + Math.min(e3, CAP) - Math.min(i1, CAP) - Math.min(i2, CAP) - Math.min(i3, CAP);
           cnt += 3;
         }
       }
