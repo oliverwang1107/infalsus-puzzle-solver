@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "In Falsus 製作卡牌六角格拼圖的最佳擺放求解器（離線網頁工具；求解核心 JS＋WASM，可部署到 Cloudflare Worker，也有 Rust 桌面版）",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "build:wasm": "node wasm/build.js",
     "build:native": "cargo build --release --bin solver_native --manifest-path wasm/Cargo.toml",
